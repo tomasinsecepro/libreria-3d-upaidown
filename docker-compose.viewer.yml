@@ -1,0 +1,9 @@
+services:
+  viewer-3d:
+    build:
+      context: .
+      dockerfile: Dockerfile.viewer
+    container_name: viewer-3d-ingeteam
+    ports:
+      - "3333:3333"
+    restart: unless-stopped

@@ -1,0 +1,18 @@
+{
+  "name": "up-eye-dawn-3d",
+  "version": "1.0.0",
+  "description": "Procedural 3D agriculture scenes and NDVI surface components extracted from up-eye-dawn-demo",
+  "main": "index.ts",
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "three": ">=0.160.0",
+    "@react-three/fiber": ">=8.0.0",
+    "@react-three/drei": ">=9.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/three": "^0.185.0",
+    "typescript": "^5.0.0"
+  }
+}

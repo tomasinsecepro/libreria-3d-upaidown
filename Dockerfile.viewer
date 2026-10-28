@@ -1,0 +1,12 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json ./
+COPY viewer-server.cjs ./
+COPY viewer.html ./
+COPY extracted-3d-lib ./extracted-3d-lib
+
+EXPOSE 3333
+
+CMD ["node", "viewer-server.cjs"]

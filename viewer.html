@@ -1,0 +1,2652 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hub de Modelos 3D · SCADA & Gemelos Digitales (INSECE & Upaidown)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #090d12;
+      color: #c9d1d9;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #11161d;
+      border-bottom: 1px solid #262c36;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+      flex-wrap: wrap;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #58a6ff;
+      letter-spacing: -0.01em;
+    }
+    .brand span {
+      font-size: 11px;
+      color: #3fb950;
+      background: rgba(35, 134, 54, 0.15);
+      border: 1px solid rgba(46, 160, 67, 0.4);
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: #090d12;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 6px 12px;
+      gap: 8px;
+      width: 250px;
+    }
+    .search-box input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #f0f6fc;
+      font-size: 12px;
+      width: 100%;
+    }
+    .search-box input::placeholder {
+      color: #6e7681;
+    }
+    .category-bar {
+      display: flex;
+      background: #0d121a;
+      border-bottom: 1px solid #1f2530;
+      padding: 8px 18px;
+      gap: 8px;
+      overflow-x: auto;
+      flex-shrink: 0;
+      align-items: center;
+    }
+    .category-bar::-webkit-scrollbar {
+      height: 4px;
+    }
+    .category-bar::-webkit-scrollbar-thumb {
+      background: #30363d;
+      border-radius: 4px;
+    }
+    .cat-btn {
+      background: #161c24;
+      border: 1px solid #30363d;
+      color: #8b949e;
+      padding: 6px 14px;
+      border-radius: 18px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+    .cat-btn:hover {
+      background: #21262d;
+      color: #f0f6fc;
+      border-color: #58a6ff;
+    }
+    .cat-btn.active {
+      background: #238636;
+      color: #ffffff;
+      border-color: #2ea043;
+      box-shadow: 0 0 8px rgba(46, 160, 67, 0.35);
+    }
+    .models-bar {
+      display: flex;
+      background: #111620;
+      border-bottom: 2px solid #21262d;
+      padding: 10px 18px;
+      gap: 8px;
+      overflow-x: auto;
+      flex-shrink: 0;
+      align-items: center;
+      min-height: 56px;
+    }
+    .models-bar::-webkit-scrollbar {
+      height: 6px;
+    }
+    .models-bar::-webkit-scrollbar-track {
+      background: #0d1117;
+    }
+    .models-bar::-webkit-scrollbar-thumb {
+      background: #1f6feb;
+      border-radius: 4px;
+    }
+    .tab-btn {
+      background: #161b24;
+      border: 1px solid #30363d;
+      color: #c9d1d9;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 38px;
+      flex-shrink: 0;
+    }
+    .tab-btn:hover {
+      background: #21262d;
+      color: #f0f6fc;
+      border-color: #8b949e;
+      transform: translateY(-1px);
+    }
+    .tab-btn.active {
+      background: #1f6feb;
+      color: #ffffff;
+      border-color: #58a6ff;
+      box-shadow: 0 0 12px rgba(31, 111, 235, 0.45);
+    }
+    #viewer-container {
+      flex: 1;
+      position: relative;
+      background: radial-gradient(circle at 50% 50%, #151b24 0%, #06090e 100%);
+      min-height: 0;
+    }
+    #canvas-3d {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .scada-badge {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: rgba(17, 22, 29, 0.92);
+      border: 1px solid #30363d;
+      backdrop-filter: blur(14px);
+      padding: 14px 18px;
+      border-radius: 10px;
+      max-width: 440px;
+      z-index: 5;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+    .scada-badge h2 {
+      font-size: 14px;
+      color: #f0f6fc;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .scada-badge .cat-tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #21262d;
+      color: #58a6ff;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .scada-badge p {
+      font-size: 11px;
+      color: #8b949e;
+      line-height: 1.45;
+      margin-bottom: 8px;
+    }
+    .scada-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .scada-tag {
+      font-size: 10px;
+      background: #1c2128;
+      border: 1px solid #373e47;
+      color: #79c0ff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    .react-pill {
+      margin-top: 8px;
+      font-size: 11px;
+      background: rgba(56, 139, 253, 0.1);
+      border: 1px dashed rgba(56, 139, 253, 0.4);
+      color: #58a6ff;
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      cursor: pointer;
+    }
+    .react-pill:hover {
+      background: rgba(56, 139, 253, 0.2);
+    }
+    .panel-controls {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(17, 22, 29, 0.90);
+      border: 1px solid #30363d;
+      backdrop-filter: blur(12px);
+      padding: 12px 14px;
+      border-radius: 8px;
+      width: 210px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 5;
+      font-size: 11px;
+    }
+    .panel-controls h3 {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #8b949e;
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 4px;
+    }
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 32px;
+      height: 16px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; inset: 0;
+      background-color: #30363d;
+      transition: .25s;
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute; content: "";
+      height: 12px; width: 12px; left: 2px; bottom: 2px;
+      background-color: white;
+      transition: .25s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #238636; }
+    input:checked + .slider:before { transform: translateX(16px); }
+
+    .instructions {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: rgba(17, 22, 29, 0.85);
+      border: 1px solid #30363d;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      color: #8b949e;
+      pointer-events: none;
+      line-height: 1.4;
+    }
+    .instructions b { color: #c9d1d9; }
+    #loader {
+      position: absolute;
+      inset: 0;
+      background: rgba(9, 13, 18, 0.65);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 20;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #30363d;
+      border-top-color: #58a6ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://esm.sh/three@0.160.0",
+        "three/addons/": "https://esm.sh/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>Librería 3D Agrovoltaica & SCADA</h1>
+      <span>18 Activos 3D Listos</span>
+    </div>
+    <div class="search-box">
+      <span>🔍</span>
+      <input type="text" id="search-input" placeholder="Buscar modelo o tag SCADA...">
+    </div>
+  </header>
+
+  <!-- Filtro por categorías -->
+  <div class="category-bar">
+    <button class="cat-btn active" data-cat="all">🌟 Todos (18)</button>
+    <button class="cat-btn" data-cat="solar">☀️ Fotovoltaica</button>
+    <button class="cat-btn" data-cat="crops">🌿 Cultivos</button>
+    <button class="cat-btn" data-cat="hydro">💧 Hidráulica & Riego</button>
+    <button class="cat-btn" data-cat="robotics">🚜 Maquinaria & Drones</button>
+    <button class="cat-btn" data-cat="terrain">🗺️ Topografía NDVI</button>
+    <button class="cat-btn" data-cat="special">🔤 Especiales</button>
+  </div>
+
+  <!-- Botones de modelos -->
+  <div class="models-bar" id="models-container"></div>
+
+  <div id="viewer-container">
+    <div class="scada-badge">
+      <h2 id="info-title">Inversor Ingeteam INGECON SUN 3Play 110TL M9 <span class="cat-tag" id="info-cat">Fotovoltaica</span></h2>
+      <p id="info-desc">Modelo procedural PBR según planos oficiales de Ingeteam: Chasis RAL 7035 con 10 tornillos M8, compartimento AC independiente, 18 conectores MC4 (9 MPPTs), glándula de comunicaciones roja, desconectador DC y disipador de 28 aletas.</p>
+      <div id="info-tags" class="scada-tags"></div>
+      <div class="react-pill" id="copy-react-pill" title="Clic para copiar código React">
+        📋 Copiar componente: <code id="react-comp-name">&lt;IngeteamInverter3D /&gt;</code>
+      </div>
+    </div>
+
+    <div class="panel-controls">
+      <h3>Controles 3D</h3>
+      <div class="control-row">
+        <label for="auto-rotate">Auto-rotación</label>
+        <label class="switch">
+          <input type="checkbox" id="auto-rotate" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="control-row">
+        <label for="wireframe">Malla / Wireframe</label>
+        <label class="switch">
+          <input type="checkbox" id="wireframe">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="control-row">
+        <label for="grid">Cuadrícula Suelo</label>
+        <label class="switch">
+          <input type="checkbox" id="grid" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="control-row">
+        <label for="shadows">Sombras PBR</label>
+        <label class="switch">
+          <input type="checkbox" id="shadows" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <button id="reset-cam" style="background:#21262d; border:1px solid #30363d; color:#c9d1d9; padding:5px; border-radius:4px; cursor:pointer; font-size:10px; margin-top:2px;">
+        Centrar Cámara
+      </button>
+    </div>
+
+    <div class="instructions">
+      🖱️ <b>Arrastrar:</b> Rotar 360° | <b>Rueda:</b> Zoom | <b>Clic Derecho:</b> Desplazar
+    </div>
+
+    <div id="loader">
+      <div class="spinner"></div>
+      <span id="loader-text" style="font-size: 13px; color: #8b949e;">Cargando activo 3D...</span>
+    </div>
+
+    <canvas id="canvas-3d"></canvas>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+    // =========================================================================
+    // BASE DE DATOS MODULAR DE MODELOS 3D (FACILMENTE AMPLIABLE)
+    // =========================================================================
+    const CATALOG = [
+      {
+        id: 'inversor-ingeteam-110kw',
+        name: 'Inversor Ingeteam 110TL M9',
+        category: 'solar',
+        icon: '☀️',
+        title: 'Inversor Ingeteam INGECON SUN 3Play 110TL M9 (110 kW)',
+        desc: 'Inversor string de alta eficiencia para plantas utility y autoconsumo industrial. Chasis RAL 7035 con 10 tornillos M8, compartimento AC independiente, 18 conectores MC4 (9 MPPTs), glándula con precinto rojo y disipador de 28 aletas.',
+        tags: ['INV_KW_AC: 110.0', 'INV_VOLT_DC: 850V', 'MPPT_STRINGS: 18', 'MODBUS_ADDR: 0x01', 'STATUS: RUNNING'],
+        reactComp: '<IngeteamInverter3D position={[0,0,0]} scale={1} />',
+        type: 'procedural',
+        builder: buildIngeteamInverter
+      },
+      {
+        id: 'placas-solares-bifila',
+        name: 'Placas Solares (4 Mesas × 100)',
+        category: 'solar',
+        icon: '⚡',
+        title: 'Estructura Fotovoltaica Bi-Fila (4 Mesas × 100 Placas = 400 Placas)',
+        desc: 'Parque fotovoltaico completo de 4 mesas de 53m de longitud (50 módulos arriba + 50 abajo por mesa = 400 placas en total), estructura galvanizada a 28°, inversores en cabecera, viales de servicio y fijación por grapas.',
+        tags: ['TOTAL_PANELS: 400', 'PEAK_POWER: 220 kWp', 'TILT_ANGLE: 28°', 'TABLES_COUNT: 4', 'IRRADIANCE: 980 W/m²'],
+        reactComp: '<SolarPanels3D tables={4} panelsPerTable={100} tiltDeg={28} />',
+        file: 'placas-solares.glb',
+        builder: buildSolarPanelsProcedural
+      },
+      {
+        id: 'bomba-pozo-solar',
+        name: 'Bomba de Pozo Solar',
+        category: 'solar',
+        icon: '💧',
+        title: 'Bomba Solar Sumergible de Pozo Profundo con Cuadro VFD',
+        desc: 'Sistema de bombeo solar directo con variador de frecuencia, cabezal de impulsión en acero inoxidable, manómetro de glicerina, sensor de nivel freático y motor sumergible.',
+        tags: ['PUMP_HZ: 48.5', 'PUMP_FLOW: 120 m³/h', 'WELL_PRESSURE: 6.2 bar', 'WELL_LEVEL: -45.2 m'],
+        reactComp: '<BombaPozo3D running={true} flowM3h={120} />',
+        file: 'bomba-pozo.glb',
+        builder: buildBombaPozoProcedural
+      },
+      {
+        id: 'bomba-dosificadora-500',
+        name: 'Bomba Dosificadora 500 L/h',
+        category: 'hydro',
+        icon: '🧪',
+        title: 'Bomba Dosificadora Electromecánica de Diafragma 500 L/h',
+        desc: 'Bomba dosificadora industrial de membrana/pistón para fertirrigación y tratamiento de agua. Motor asíncrono con aletas de refrigeración en aluminio, cabezal de alta resistencia con brida de 6 pernos Allen, tapones de seguridad rojos en aspiración/impulsión y dial de ajuste micrométrico.',
+        tags: ['FLOW_RATE: 500 L/h', 'MAX_PRESSURE: 10 bar', 'STROKE_LEN: 100%', 'MOTOR_POWER: 0.75 kW', 'STATUS: DOSING_RUN'],
+        reactComp: '<BombaDosificadora3D strokePercent={100} flowLh={500} />',
+        type: 'procedural',
+        builder: buildDosingPumpProcedural
+      },
+      {
+        id: 'vina-espaldera',
+        name: 'Viñedo en Espaldera',
+        category: 'crops',
+        icon: '🍇',
+        title: 'Viña / Viñedo en Espaldera con Cepas y Uvas Tempranillo',
+        desc: 'Plantación vitícola en espaldera guiada por alambres tensores galvanizados sobre postes metálicos ranurados, cepas leñosas con poda en cordón Royat doble, follaje denso y racimos de uva tinta.',
+        tags: ['CROP_TYPE: VID_TEMPRANILLO', 'SPACING: 2.4m x 1.2m', 'SOIL_MOISTURE: 22%', 'CANOPY_HEALTH: OPTIMAL'],
+        reactComp: '<Vineyard3D rows={3} vinesPerRow={6} windBreeze={true} />',
+        type: 'procedural',
+        builder: buildVineyardProcedural
+      },
+      {
+        id: 'arbol-olivo',
+        name: 'Olivo Picual Centenario',
+        category: 'crops',
+        icon: '🫒',
+        title: 'Olivo Centenario (Olea europaea) de Gran Calibre',
+        desc: 'Olivo centenario con tronco retorcido y acanalado, oquedad central, corteza plateada rugosa, 38 racimos de hojas con envés plateado brillante y aceitunas colgantes en envero.',
+        tags: ['VARIETY: PICUAL', 'AGE_EST: 120 YEARS', 'NDVI_INDEX: 0.74', 'WATER_STRESS: LOW'],
+        reactComp: '<OliveTree3D windBreeze={true} scale={1} />',
+        file: 'arbol-olivo.glb'
+      },
+      {
+        id: 'arbol-almendro',
+        name: 'Almendro con Drupa',
+        category: 'crops',
+        icon: '🌸',
+        title: 'Árbol Almendro (Prunus dulcis)',
+        desc: 'Almendro mediterráneo de porte abierto, hojas simples lanceoladas de verde brillante, tronco oscuro y frutos en drupa con hollejo afelpado verde y cáscara de sutura leñosa.',
+        tags: ['SPECIES: PRUNUS_DULCIS', 'CANOPY_DIAM: 4.5m', 'FRUIT_STATUS: RIPENING'],
+        reactComp: '<AlmondTree3D windBreeze={true} />',
+        file: 'arbol-almendro.glb'
+      },
+      {
+        id: 'arbol-pistacho',
+        name: 'Pistachero en Vaso',
+        category: 'crops',
+        icon: '🌿',
+        title: 'Pistachero Kerman en Vaso Español (Pistacia vera)',
+        desc: 'Pistachero con poda de formación en vaso abierto a 120°, 3 ramas maestras, hojas compuestas coriáceas y racimos colgantes pesados con rubor rosáceo de maduración.',
+        tags: ['SPECIES: PISTACIA_VERA', 'TRAINING: OPEN_CENTER_VASO', 'NUT_CLUSTERS: HEAVY'],
+        reactComp: '<PistachioTree3D windBreeze={true} />',
+        file: 'arbol-pistacho.glb'
+      },
+      {
+        id: 'embalse-riego',
+        name: 'Embalse con Geomembrana',
+        category: 'hydro',
+        icon: '🌊',
+        title: 'Balsa de Riego con Geomembrana PEAD y Caseta de Bombeo',
+        desc: 'Embalse impermeabilizado con lámina de polietileno de alta densidad (PEAD) de 1.5mm, camino de coronación, lámina de agua reflectante, toma flotante de succión y caseta de filtros.',
+        tags: ['EMB_LEVEL_PCT: 85%', 'VOLUME_M3: 45000', 'VALVE_STATE: OPEN', 'CHLORINE_PPM: 0.8'],
+        reactComp: '<EmbalseRiego3D waterLevelPercent={85} pumpRunning={true} />',
+        file: 'embalse-riego.glb'
+      },
+      {
+        id: 'pivot-riego-7t',
+        name: 'Pívot Central (7 Torres)',
+        category: 'hydro',
+        icon: '🔄',
+        title: 'Pívot Central de Riego Automatizado (7 Tramos)',
+        desc: 'Sistema de riego pivotante de gran envergadura con pirámide central de anclaje, 7 tramos con torres de celosía galvanizada, ruedas motrices de tracción, tubería y aspersores sectoriales.',
+        tags: ['PIVOT_ANGLE: 142°', 'ROTATION_SPEED: 2.4 m/min', 'WATER_PRESSURE: 3.8 bar', 'APPLICATION_MM: 12'],
+        reactComp: '<PivotRiego3D angle={142} running={true} />',
+        file: 'pivot-riego-7t.glb'
+      },
+      {
+        id: 'tractor-ebro-684',
+        name: 'Tractor Ebro 684E',
+        category: 'robotics',
+        icon: '🚜',
+        title: 'Tractor Agrícola Clásico EBRO 684E con Apero',
+        desc: 'Tractor clásico de labranza con capó azul distintivo Ebro, faros delanteros, motor diésel con aletas, tubo de escape vertical, ruedas agrícolas traseras de gran tracción y arado.',
+        tags: ['RPM: 1850', 'GEAR: 2H', 'PTO_STATUS: ENGAGED', 'SPEED_KMH: 7.2'],
+        reactComp: '<TractorEbro3D position={[0,0,0]} />',
+        file: 'tractor-ebro.glb',
+        builder: buildTractorEbroProcedural
+      },
+      {
+        id: 'rover-campo',
+        name: 'Rover Autónomo UGV',
+        category: 'robotics',
+        icon: '🤖',
+        title: 'Rover Autónomo de Inspección Agrícola Upaidown',
+        desc: 'Vehículo terrestre no tripulado con chasis sellado IP67, doble oruga de tracción todoterreno, torre de sensores LiDAR, cámara espectral, antena Starlink y brazo de muestreo de suelo.',
+        tags: ['BATTERY: 92%', 'AUTONOMOUS_MODE: ACTIVE', 'RTK_ACCURACY: 1.4 cm', 'MISSION: SOIL_PROBING'],
+        reactComp: '<Rover3D probing={false} />',
+        file: 'rover.glb'
+      },
+      {
+        id: 'drone-multiespectral',
+        name: 'Dron Multirrotor',
+        category: 'robotics',
+        icon: '🚁',
+        title: 'Dron Autónomo de Reconocimiento y Teledetección',
+        desc: 'Dron agrícola con 4 brazos de fibra de carbono, hélices de alta sustentación, tren de aterrizaje, gimbal estabilizado con sensor multiespectral y luces estroboscópicas de navegación.',
+        tags: ['FLIGHT_MODE: WAYPOINT', 'ALTITUDE_AGL: 45 m', 'HEADING: 280°', 'SENSOR: MULTISPECTRAL_4K'],
+        reactComp: '<Drone3D active={true} />',
+        file: 'drone.glb'
+      },
+      {
+        id: 'satelite-sentinel-2',
+        name: 'Mástil / Torre Sentinel',
+        category: 'robotics',
+        icon: '🗼',
+        title: 'Torre de Teledetección y Comunicaciones Sentinel V3',
+        desc: 'Mástil telescópico con módulo solar autónomo, pasarela IoT LoRaWAN / 4G, domo meteorológico, anemómetro ultrasónico y bahía de despegue de drones.',
+        tags: ['MAST_HEIGHT: 5.0m', 'WIND_SPEED: 14 km/h', 'SOLAR_CHARGE: 14.2V', 'LORA_RSSI: -78 dBm'],
+        reactComp: '<Sentinel3D height={1.0} bayOpen={false} />',
+        file: 'sentinel.glb'
+      },
+      {
+        id: 'montanas-ndvi',
+        name: 'Montañas & Topografía NDVI',
+        category: 'terrain',
+        icon: '🏔️',
+        title: 'Malla Topográfica de Relieve con Mapa de Vigor Vegetativo NDVI',
+        desc: 'Superficie 3D sintética de alta resolución generada a partir de curvas de nivel y batimetría, con gradiente cromático de sanidad vegetal (rojo estresado -> amarillo medio -> verde vigoroso) y contorno de anomalía.',
+        tags: ['GRID_RESOLUTION: 72x48', 'NDVI_MEAN: 0.68', 'ANOMALY_AREA: 2.1 ha', 'ELEVATION_DELTA: 18m'],
+        reactComp: '<NdviSurface3D />',
+        type: 'procedural',
+        builder: buildNdviSurfaceProcedural
+      },
+      {
+        id: 'campo-completo',
+        name: 'Escena de Campo Upaidown',
+        category: 'terrain',
+        icon: '🌾',
+        title: 'Escena Agrícola Completa con Finca, Dron y Gemelo Digital',
+        desc: 'Entorno integral de finca con suelo terroso, franjas de cultivo en hilera, mástil Sentinel y rover operando simultáneamente.',
+        tags: ['SCENE: INTEGRATED_FIELD', 'AGENTS_ACTIVE: 3', 'WEATHER: CLEAR'],
+        reactComp: '<FieldScene3D snapshot={snapshot} />',
+        type: 'procedural',
+        builder: buildFieldSceneProcedural
+      },
+      {
+        id: 'logo-insece-3d',
+        name: 'Logo INSECE 3D',
+        category: 'special',
+        icon: '🔤',
+        title: 'Logotipo Oficial INSECE 3D Extruido con Isotipo y Tipografía',
+        desc: 'Logotipo corporativo oficial de INSECE en 3D: Isotipo de 10 aspas en vórtice cóncavo (gradiente cyan a azul marino) idéntico al logo real, con tipografía 3D INSECE ELECTRICIDAD E INNOVACION.',
+        tags: ['BRAND: INSECE', 'EXPORT_READY: YES', 'TYPE: LOGO_EXTRUDED'],
+        reactComp: '<LogoInsece3D />',
+        type: 'procedural',
+        builder: buildLogoInseceProcedural
+      },
+      {
+        id: 'perro-salchicha-teckel',
+        name: 'Perro Salchicha (Teckel)',
+        category: 'special',
+        icon: '🐕',
+        title: 'Perro Salchicha / Teckel Pelo Corto (Negro y Fuego)',
+        desc: 'Modelo anatómico de Teckel con proporciones características, cuerpo alargado, patas cortas y musculosas, hocico perfilado y orejas caídas.',
+        tags: ['ASSET: DACHSHUND', 'COAT: BLACK_AND_TAN', 'EYES: GLOSS_PBR'],
+        reactComp: '<DachshundDog3D />',
+        file: 'perro-salchicha.glb',
+        builder: buildDachshundProcedural
+      }
+    ];
+
+    // =========================================================================
+    // INICIALIZACIÓN THREE.JS
+    // =========================================================================
+    const container = document.getElementById('viewer-container');
+    const canvas = document.getElementById('canvas-3d');
+    const loaderEl = document.getElementById('loader');
+    const loaderText = document.getElementById('loader-text');
+    const infoTitle = document.getElementById('info-title');
+    const infoDesc = document.getElementById('info-desc');
+    const infoCat = document.getElementById('info-cat');
+    const infoTags = document.getElementById('info-tags');
+    const reactCompName = document.getElementById('react-comp-name');
+    const copyPill = document.getElementById('copy-react-pill');
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0d14);
+    scene.fog = new THREE.FogExp2(0x0a0d14, 0.04);
+
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.05, 500);
+    camera.position.set(2, 1.5, 2.5);
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.0;
+    controls.maxPolarAngle = Math.PI / 2 + 0.08;
+
+    const hemiLight = new THREE.HemisphereLight(0xe8f2ff, 0x1a2028, 0.85);
+    scene.add(hemiLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2.2);
+    dirLight.position.set(5, 9, 6);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    dirLight.shadow.bias = -0.0001;
+    scene.add(dirLight);
+
+    const fillLight = new THREE.DirectionalLight(0x7aa2d6, 0.8);
+    fillLight.position.set(-6, 4, -4);
+    scene.add(fillLight);
+
+    const gridHelper = new THREE.GridHelper(30, 60, 0x30363d, 0x181f28);
+    gridHelper.position.y = 0;
+    scene.add(gridHelper);
+
+    const shadowPlaneGeo = new THREE.PlaneGeometry(30, 30);
+    const shadowPlaneMat = new THREE.ShadowMaterial({ opacity: 0.35 });
+    const shadowPlane = new THREE.Mesh(shadowPlaneGeo, shadowPlaneMat);
+    shadowPlane.rotation.x = -Math.PI / 2;
+    shadowPlane.position.y = -0.001;
+    shadowPlane.receiveShadow = true;
+    scene.add(shadowPlane);
+
+    let currentModel = null;
+    const gltfLoader = new GLTFLoader();
+
+    // =========================================================================
+    // BUILDERS PROCEDURALES (WEBGL DIRECTO)
+    // =========================================================================
+    function buildIngeteamInverter(T) {
+      const root = new T.Group();
+      root.name = 'Ingeteam_110TL_M9';
+
+      const totalW = 0.936, totalH = 0.678, mainChassisD = 0.285, rearSinkD = 0.080, frontDoorD = 0.022;
+      const mainBayW = 0.670, acBayW = totalW - mainBayW;
+      const centerY = totalH / 2 + 0.08, originZ = 0;
+
+      const chassisMat = new T.MeshStandardMaterial({ color: 0x22262d, roughness: 0.55, metalness: 0.35 });
+      const doorMat = new T.MeshStandardMaterial({ color: 0xd6dbdf, roughness: 0.40, metalness: 0.15 });
+      const ledMat = new T.MeshStandardMaterial({ color: 0x00ff66, emissive: 0x00ff66, emissiveIntensity: 2.0 });
+      const mc4Mat = new T.MeshStandardMaterial({ color: 0x151515, roughness: 0.45 });
+      const boltMat = new T.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.25 });
+      const brassMat = new T.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, roughness: 0.25 });
+      const redMat = new T.MeshStandardMaterial({ color: 0xd32f2f, roughness: 0.4 });
+
+      function m(geo, mat, pos = [0,0,0], rot = [0,0,0]) {
+        const mesh = new T.Mesh(geo, mat);
+        mesh.position.set(...pos);
+        mesh.rotation.set(...rot);
+        mesh.castShadow = true; mesh.receiveShadow = true;
+        root.add(mesh);
+        return mesh;
+      }
+
+      const mainX = -totalW / 2 + mainBayW / 2;
+      m(new T.BoxGeometry(mainBayW, totalH, mainChassisD), chassisMat, [mainX, centerY, originZ]);
+
+      const doorZ = originZ + mainChassisD / 2 + frontDoorD / 2;
+      m(new T.BoxGeometry(mainBayW - 0.015, totalH - 0.012, frontDoorD), doorMat, [mainX, centerY, doorZ]);
+
+      // Badge Ingeteam
+      const badgeCv = document.createElement('canvas');
+      badgeCv.width = 512; badgeCv.height = 256;
+      const ctx = badgeCv.getContext('2d');
+      ctx.fillStyle = '#0c0f14'; ctx.fillRect(0, 0, 512, 256);
+      ctx.strokeStyle = '#2d3748'; ctx.lineWidth = 6; ctx.strokeRect(8, 8, 496, 240);
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 64px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Ingeteam', 256, 95);
+      ctx.fillStyle = '#00e575'; ctx.fillRect(150, 140, 212, 6);
+      ctx.fillStyle = '#94a3b8'; ctx.font = '600 24px sans-serif'; ctx.fillText('INGECON SUN 3Play 110TL', 256, 175);
+      const badgeTex = new T.CanvasTexture(badgeCv);
+
+      const badgeMat = new T.MeshStandardMaterial({ map: badgeTex, roughness: 0.3, metalness: 0.4 });
+      m(new T.BoxGeometry(0.34, 0.17, 0.005), badgeMat, [mainX, centerY + 0.04, doorZ + frontDoorD / 2 + 0.003]);
+
+      const ledGeo = new T.CylinderGeometry(0.0055, 0.0055, 0.004, 16);
+      ledGeo.rotateX(Math.PI / 2);
+      m(ledGeo, ledMat, [mainX + 0.14, centerY + 0.04 + 0.055, doorZ + frontDoorD / 2 + 0.006]);
+
+      // AC Compartment
+      const acX = totalW / 2 - acBayW / 2;
+      m(new T.BoxGeometry(acBayW, totalH, mainChassisD), chassisMat, [acX, centerY, originZ]);
+      m(new T.BoxGeometry(acBayW - 0.01, totalH - 0.012, frontDoorD), doorMat, [acX, centerY, doorZ]);
+      m(new T.CylinderGeometry(0.038, 0.042, 0.055, 18), mc4Mat, [acX, centerY - totalH / 2 - 0.025, originZ]);
+
+      // 18 MC4 connectors
+      const bottomPlateY = centerY - totalH / 2;
+      for (let i = 0; i < 18; i++) {
+        const cx = (mainX - mainBayW / 2 + 0.095) + i * ((mainBayW - 0.22) / 17);
+        m(new T.CylinderGeometry(0.009, 0.010, 0.04, 10), mc4Mat, [cx, bottomPlateY - 0.02, originZ + 0.02]);
+      }
+
+      // Ground & Glands
+      m(new T.CylinderGeometry(0.007, 0.008, 0.04, 12), brassMat, [mainX + mainBayW / 2 - 0.055, bottomPlateY - 0.05, originZ + 0.02]);
+      m(new T.CylinderGeometry(0.012, 0.012, 0.008, 14), redMat, [mainX + mainBayW / 2 - 0.055, bottomPlateY - 0.03, originZ + 0.02]);
+
+      // Rear Heat sink
+      const finW = mainBayW * 0.88, finH = totalH * 0.82;
+      for (let f = 0; f < 28; f++) {
+        const fx = mainX - finW / 2 + f * (finW / 27);
+        m(new T.BoxGeometry(0.004, finH, rearSinkD), chassisMat, [fx, centerY, originZ - mainChassisD / 2 - rearSinkD / 2]);
+      }
+
+      return root;
+    }
+
+    function createVineLeafTexture(T) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, 256, 256);
+
+      ctx.save();
+      ctx.translate(128, 230);
+
+      // Forma auténtica de hoja de vid / parra (5 lóbulos palmeados)
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      // Seno peciolar y lóbulo basal izquierdo
+      ctx.bezierCurveTo(-28, -15, -65, -22, -82, -55);
+      ctx.bezierCurveTo(-78, -70, -75, -85, -100, -115);
+      // Lóbulo lateral izquierdo
+      ctx.bezierCurveTo(-78, -125, -68, -140, -82, -172);
+      // Lóbulo central superior
+      ctx.bezierCurveTo(-48, -185, -28, -205, 0, -228);
+      // Lóbulo lateral derecho
+      ctx.bezierCurveTo(28, -205, 48, -185, 82, -172);
+      // Lóbulo medio derecho
+      ctx.bezierCurveTo(68, -140, 78, -125, 100, -115);
+      // Lóbulo basal derecho y cierre
+      ctx.bezierCurveTo(75, -85, 78, -70, 82, -55);
+      ctx.bezierCurveTo(65, -22, 28, -15, 0, 0);
+      ctx.closePath();
+
+      // Gradiente verde vitícola realista con luz solar
+      const grad = ctx.createRadialGradient(0, -110, 15, 0, -110, 125);
+      grad.addColorStop(0, '#5cb832');
+      grad.addColorStop(0.5, '#429420');
+      grad.addColorStop(1, '#2c6d17');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Dientes y borde aserrado
+      ctx.strokeStyle = '#235912';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Nervaduras palmeadas principales (5 nervios que irradian del peciolo)
+      ctx.strokeStyle = '#b8f082';
+      ctx.lineCap = 'round';
+
+      // Nervio central
+      ctx.lineWidth = 3.6;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.quadraticCurveTo(-2, -115, 0, -224);
+      ctx.stroke();
+
+      // Nervios laterales superiores
+      ctx.lineWidth = 2.8;
+      ctx.beginPath();
+      ctx.moveTo(0, -25);
+      ctx.quadraticCurveTo(-38, -105, -78, -168);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(0, -25);
+      ctx.quadraticCurveTo(38, -105, 78, -168);
+      ctx.stroke();
+
+      // Nervios laterales basales
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(0, -15);
+      ctx.quadraticCurveTo(-45, -55, -94, -110);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(0, -15);
+      ctx.quadraticCurveTo(45, -55, 94, -110);
+      ctx.stroke();
+
+      // Nervaduras secundarias ramificadas
+      ctx.lineWidth = 1.3;
+      ctx.strokeStyle = '#a4e470';
+      for (let s = -1; s <= 1; s += 2) {
+        for (let y = -50; y >= -185; y -= 32) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.quadraticCurveTo(s * 22, y - 12, s * 42, y - 24);
+          ctx.stroke();
+        }
+      }
+
+      // Rabillo / peciolo leñoso
+      ctx.strokeStyle = '#6e4f30';
+      ctx.lineWidth = 4.5;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(0, 22);
+      ctx.stroke();
+
+      ctx.restore();
+
+      const tex = new T.CanvasTexture(canvas);
+      tex.colorSpace = T.SRGBColorSpace;
+      return tex;
+    }
+
+    function buildVineyardProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Vineyard_Espaldera_Upaidown';
+
+      // =======================================================================
+      // MATERIALES PBR DE ALTA DEFINICIÓN
+      // =======================================================================
+      const woodTrunkMat = new T.MeshStandardMaterial({ color: 0x483224, roughness: 0.95 });
+      const woodPostMat = new T.MeshStandardMaterial({ color: 0x564132, roughness: 0.9 });
+      const steelWireMat = new T.MeshStandardMaterial({ color: 0xa6b2bc, metalness: 0.85, roughness: 0.25 });
+      const anchorSteelMat = new T.MeshStandardMaterial({ color: 0x76828c, metalness: 0.9, roughness: 0.3 });
+
+      const leafTex = createVineLeafTexture(T);
+      const leafMat = new T.MeshStandardMaterial({
+        map: leafTex,
+        transparent: true,
+        alphaTest: 0.35,
+        side: T.DoubleSide,
+        roughness: 0.65
+      });
+
+      // Uvas Tempranillo brillantes y maduras
+      const grapeMat = new T.MeshStandardMaterial({
+        color: 0x1c102b,
+        roughness: 0.22,
+        metalness: 0.18
+      });
+      const grapeStemMat = new T.MeshStandardMaterial({ color: 0x4b3828, roughness: 0.9 });
+
+      // Suelo agrícola labrado
+      const soilMat = new T.MeshStandardMaterial({ color: 0x634f3a, roughness: 0.95 });
+      const furrowMat = new T.MeshStandardMaterial({ color: 0x52412f, roughness: 0.98 });
+      const stoneMat = new T.MeshStandardMaterial({ color: 0x8a8479, roughness: 0.85 });
+      const weedMat = new T.MeshStandardMaterial({ color: 0x5f8034, roughness: 0.8 });
+
+      // =======================================================================
+      // 1. TERRENO AGRÍCOLA CON SURCOS Y PIEDRAS
+      // =======================================================================
+      const ground = new T.Mesh(new T.BoxGeometry(11.5, 0.2, 7.8), soilMat);
+      ground.position.y = -0.1;
+      ground.receiveShadow = true;
+      root.add(ground);
+
+      // Surcos de laboreo y huellas de paso del apero
+      for (let z of [-2.6, -1.3, 0, 1.3, 2.6]) {
+        const furrow = new T.Mesh(new T.BoxGeometry(11.2, 0.04, 0.45), furrowMat);
+        furrow.position.set(0, 0.015, z);
+        furrow.receiveShadow = true;
+        root.add(furrow);
+      }
+
+      // Pequeñas piedras de grava caliza dispersas en el suelo
+      const stoneGeo = new T.DodecahedronGeometry(0.045, 0);
+      for (let s = 0; s < 50; s++) {
+        const stone = new T.Mesh(stoneGeo, stoneMat);
+        const sx = (Math.sin(s * 13.7) * 4.8);
+        const sz = (Math.cos(s * 9.1) * 3.2);
+        stone.position.set(sx, 0.02, sz);
+        stone.scale.set(0.6 + (s % 3) * 0.4, 0.4 + (s % 2) * 0.3, 0.7 + (s % 4) * 0.3);
+        stone.rotation.set(s, s * 0.5, s * 0.3);
+        root.add(stone);
+      }
+
+      // =======================================================================
+      // 2. DOS HILERAS DE ESPALDERA (MARCO 2.6m ENTRE FILAS × 1.2m ENTRE CEPAS)
+      // =======================================================================
+      const rowPositionsZ = [-1.3, 1.3];
+      const postDistance = 2.4;
+      const rowLength = 9.0;
+      const wireHeights = [0.65, 1.05, 1.38, 1.68];
+      const leafQuadGeo = new T.PlaneGeometry(0.26, 0.30);
+
+      rowPositionsZ.forEach((rowZ, rIdx) => {
+        // Alambres tensores de espaldera galvanizados
+        wireHeights.forEach((wy) => {
+          const wire = new T.Mesh(new T.CylinderGeometry(0.0035, 0.0035, rowLength, 8), steelWireMat);
+          wire.rotation.z = Math.PI / 2;
+          wire.position.set(0, wy, rowZ);
+          root.add(wire);
+        });
+
+        // Postes de madera tratada / estacas de viñedo
+        const postXPositions = [-4.0, -1.6, 0.8, 3.2, 4.2];
+        postXPositions.forEach((px, pIdx) => {
+          const isEndPost = (pIdx === 0 || pIdx === postXPositions.length - 1);
+          const postH = 1.95;
+          const post = new T.Mesh(new T.CylinderGeometry(0.05, 0.055, postH, 12), woodPostMat);
+          post.position.set(px, postH / 2, rowZ);
+          post.castShadow = true;
+          post.receiveShadow = true;
+
+          // Postes de cabecera ligeramente inclinados hacia el exterior
+          if (isEndPost) {
+            post.rotation.z = pIdx === 0 ? 0.08 : -0.08;
+            // Tensor y riostra de anclaje a tierra en cabecera
+            const anchor = new T.Mesh(new T.CylinderGeometry(0.005, 0.005, 1.3, 8), anchorSteelMat);
+            const anchorDir = pIdx === 0 ? -1 : 1;
+            anchor.position.set(px + anchorDir * 0.5, 0.6, rowZ);
+            anchor.rotation.z = anchorDir * 0.75;
+            root.add(anchor);
+
+            // Piqueta de anclaje
+            const stake = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, 0.35, 8), anchorSteelMat);
+            stake.position.set(px + anchorDir * 0.95, 0.12, rowZ);
+            root.add(stake);
+          }
+          root.add(post);
+        });
+
+        // Cepas y vegetación a lo largo de la hilera (7 cepas por hilera)
+        const vinesCount = 7;
+        for (let v = 0; v < vinesCount; v++) {
+          const vineX = -3.3 + v * 1.1;
+
+          // Tronco leñoso añoso y retorcido (Cepa)
+          const trunkGroup = new T.Group();
+          trunkGroup.position.set(vineX, 0, rowZ);
+
+          const trunkBase = new T.Mesh(new T.CylinderGeometry(0.038, 0.058, 0.42, 8), woodTrunkMat);
+          trunkBase.position.y = 0.21;
+          trunkBase.rotation.z = (v % 2 === 0 ? 0.06 : -0.05);
+          trunkBase.castShadow = true;
+          trunkGroup.add(trunkBase);
+
+          const trunkTop = new T.Mesh(new T.CylinderGeometry(0.032, 0.038, 0.28, 8), woodTrunkMat);
+          trunkTop.position.set((v % 2 === 0 ? 0.02 : -0.02), 0.52, 0);
+          trunkTop.rotation.z = (v % 2 === 0 ? -0.08 : 0.07);
+          trunkTop.castShadow = true;
+          trunkGroup.add(trunkTop);
+
+          // Cordón Royat bilateral (brazos horizontales sobre el primer alambre)
+          const leftArm = new T.Mesh(new T.CylinderGeometry(0.022, 0.028, 0.52, 8), woodTrunkMat);
+          leftArm.rotation.z = Math.PI / 2;
+          leftArm.position.set(-0.25, 0.65, 0);
+          trunkGroup.add(leftArm);
+
+          const rightArm = new T.Mesh(new T.CylinderGeometry(0.022, 0.028, 0.52, 8), woodTrunkMat);
+          rightArm.rotation.z = Math.PI / 2;
+          rightArm.position.set(0.25, 0.65, 0);
+          trunkGroup.add(rightArm);
+
+          // Pulgares y sarmientos verticales ascendentes
+          for (let s = -0.42; s <= 0.42; s += 0.18) {
+            const shoot = new T.Mesh(new T.CylinderGeometry(0.009, 0.014, 1.05, 6), woodTrunkMat);
+            shoot.position.set(s, 1.20, (s % 0.3) * 0.04);
+            shoot.rotation.z = s * 0.12;
+            shoot.rotation.x = Math.sin(s * 8) * 0.07;
+            trunkGroup.add(shoot);
+          }
+          root.add(trunkGroup);
+
+          // Follaje formado exclusivamente por hojas auténticas de vid (sin bloques geométricos)
+          const leafCount = 64;
+          for (let l = 0; l < leafCount; l++) {
+            const leaf = new T.Mesh(leafQuadGeo, leafMat);
+            const seed = v * 73 + l;
+
+            // Distribución orgánica a lo largo de la espaldera y sarmientos
+            const lx = vineX + (Math.sin(seed * 1.57) * 0.54);
+            const ly = 0.78 + (Math.abs(Math.sin(seed * 2.11)) * 1.05);
+            const lz = rowZ + (Math.cos(seed * 2.89) * 0.22);
+
+            leaf.position.set(lx, ly, lz);
+            leaf.rotation.x = Math.sin(seed * 3.7) * 0.75;
+            leaf.rotation.y = Math.cos(seed * 4.9) * 1.35;
+            leaf.rotation.z = Math.sin(seed * 6.3) * 0.55;
+
+            const scale = 0.85 + (l % 5) * 0.10;
+            leaf.scale.set(scale, scale, scale);
+            leaf.castShadow = true;
+            root.add(leaf);
+          }
+
+          // Racimos de uva Tempranillo colgantes bajo el cordón (totalmente visibles)
+          const bunches = [-0.28, 0.0, 0.28];
+          bunches.forEach((bx, bIdx) => {
+            const grapeCluster = new T.Group();
+            grapeCluster.position.set(vineX + bx, 0.68, rowZ + (bIdx % 2 === 0 ? 0.11 : -0.11));
+
+            // Raspón / pedúnculo
+            const peduncle = new T.Mesh(new T.CylinderGeometry(0.005, 0.007, 0.08, 6), grapeStemMat);
+            peduncle.position.y = 0.04;
+            grapeCluster.add(peduncle);
+
+            // Racimo piramidal de bayas
+            const clusterCore = new T.Mesh(new T.ConeGeometry(0.065, 0.18, 12), grapeMat);
+            clusterCore.rotation.x = Math.PI;
+            clusterCore.position.y = -0.06;
+            clusterCore.castShadow = true;
+            grapeCluster.add(clusterCore);
+
+            // Granos de uva individuales sobresalientes para realismo táctil
+            const berryGeo = new T.SphereGeometry(0.018, 8, 8);
+            for (let g = 0; g < 14; g++) {
+              const berry = new T.Mesh(berryGeo, grapeMat);
+              const angle = g * 0.9;
+              const rad = 0.038 * (1 - (g / 18));
+              berry.position.set(Math.cos(angle) * rad, -0.02 - (g * 0.01), Math.sin(angle) * rad);
+              grapeCluster.add(berry);
+            }
+            root.add(grapeCluster);
+          });
+        }
+      });
+
+      // =======================================================================
+      // 3. ROVER AUTÓNOMO UPAIDOWN EN LA CALLE CENTRAL (IDÉNTICO A LA FOTO)
+      // =======================================================================
+      const rover = new T.Group();
+      rover.name = 'Upaidown_Autonomous_Rover';
+      rover.position.set(0.6, 0.16, 0); // En el centro de la calle entre las 2 filas
+
+      const roverBodyMat = new T.MeshStandardMaterial({ color: 0x1f242b, roughness: 0.5, metalness: 0.6 });
+      const orangeAccentMat = new T.MeshStandardMaterial({ color: 0xfa7a18, roughness: 0.4, metalness: 0.2 });
+      const tireMat = new T.MeshStandardMaterial({ color: 0x121417, roughness: 0.9 });
+      const rimMat = new T.MeshStandardMaterial({ color: 0xd0d7de, metalness: 0.85, roughness: 0.2 });
+      const sensorMat = new T.MeshStandardMaterial({ color: 0x090c10, roughness: 0.3 });
+      const lidarGlowMat = new T.MeshStandardMaterial({ color: 0x00f0ff, emissive: 0x00b4d8, emissiveIntensity: 0.8 });
+      const headlightMat = new T.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfffae0, emissiveIntensity: 1.0 });
+
+      // Chasis principal sellado IP67
+      const chassis = new T.Mesh(new T.BoxGeometry(0.85, 0.22, 0.52), roverBodyMat);
+      chassis.position.y = 0.12;
+      chassis.castShadow = true;
+      rover.add(chassis);
+
+      // Franja identificativa de seguridad reflectante naranja upAIdown
+      const stripe = new T.Mesh(new T.BoxGeometry(0.86, 0.05, 0.53), orangeAccentMat);
+      stripe.position.y = 0.15;
+      rover.add(stripe);
+
+      // Paragolpes delantero tubular y protector de sensores
+      const bumper = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, 0.56, 8), orangeAccentMat);
+      bumper.rotation.x = Math.PI / 2;
+      bumper.position.set(0.44, 0.14, 0);
+      rover.add(bumper);
+
+      // 4 Ruedas todoterreno agrícolas con dibujo de tacos
+      const wheelPositions = [
+        [0.28, 0.0, 0.31],
+        [-0.28, 0.0, 0.31],
+        [0.28, 0.0, -0.31],
+        [-0.28, 0.0, -0.31]
+      ];
+
+      wheelPositions.forEach(([wx, wy, wz]) => {
+        const wheel = new T.Group();
+        wheel.position.set(wx, wy, wz);
+
+        const tire = new T.Mesh(new T.CylinderGeometry(0.16, 0.16, 0.14, 18), tireMat);
+        tire.rotation.x = Math.PI / 2;
+        tire.castShadow = true;
+        wheel.add(tire);
+
+        const rim = new T.Mesh(new T.CylinderGeometry(0.09, 0.09, 0.145, 14), rimMat);
+        rim.rotation.x = Math.PI / 2;
+        wheel.add(rim);
+
+        rover.add(wheel);
+      });
+
+      // Mástil de inspección con LiDAR 3D, cámaras y receptor RTK
+      const mast = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, 0.45, 10), roverBodyMat);
+      mast.position.set(0.15, 0.45, 0);
+      rover.add(mast);
+
+      // Sensor LiDAR 360° en cabeza de mástil
+      const lidarBase = new T.Mesh(new T.CylinderGeometry(0.05, 0.05, 0.07, 16), sensorMat);
+      lidarBase.position.set(0.15, 0.70, 0);
+      rover.add(lidarBase);
+
+      const lidarRing = new T.Mesh(new T.CylinderGeometry(0.052, 0.052, 0.02, 16), lidarGlowMat);
+      lidarRing.position.set(0.15, 0.70, 0);
+      rover.add(lidarRing);
+
+      // Cámara estereoscópica frontal de análisis de vigor/racimos
+      const camBar = new T.Mesh(new T.BoxGeometry(0.05, 0.04, 0.16), sensorMat);
+      camBar.position.set(0.35, 0.28, 0);
+      rover.add(camBar);
+
+      [-0.05, 0.05].forEach(cz => {
+        const lens = new T.Mesh(new T.CylinderGeometry(0.012, 0.012, 0.02, 10), lidarGlowMat);
+        lens.rotation.z = Math.PI / 2;
+        lens.position.set(0.38, 0.28, cz);
+        rover.add(lens);
+      });
+
+      // Faros LED de iluminación nocturna de trabajo
+      [-0.18, 0.18].forEach(fz => {
+        const light = new T.Mesh(new T.CylinderGeometry(0.025, 0.025, 0.02, 12), headlightMat);
+        light.rotation.z = Math.PI / 2;
+        light.position.set(0.43, 0.19, fz);
+        rover.add(light);
+      });
+
+      // Antena GPS / RTK GNSS blanca
+      const rtkDome = new T.Mesh(new T.SphereGeometry(0.04, 14, 14), new T.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 }));
+      rtkDome.position.set(-0.25, 0.32, -0.12);
+      rover.add(rtkDome);
+
+      // Mini-panel solar auxiliar superior
+      const solarAux = new T.Mesh(new T.BoxGeometry(0.32, 0.01, 0.36), new T.MeshStandardMaterial({ color: 0x0a1f3d, metalness: 0.8, roughness: 0.2 }));
+      solarAux.position.set(-0.15, 0.24, 0);
+      rover.add(solarAux);
+
+      root.add(rover);
+
+      return root;
+    }
+
+    function buildSolarPanelsProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Solar_Park_4_Tables';
+
+      const legMat = new T.MeshStandardMaterial({ color: 0x9aa7b2, metalness: 0.8, roughness: 0.3 });
+      const frameMat = new T.MeshStandardMaterial({ color: 0xc4cdd5, metalness: 0.85, roughness: 0.25 });
+      const cellMat = new T.MeshStandardMaterial({ color: 0x0a2550, metalness: 0.75, roughness: 0.15 });
+      const busbarMat = new T.MeshStandardMaterial({ color: 0xe0e6ed, metalness: 0.9, roughness: 0.2 });
+      const conduitMat = new T.MeshStandardMaterial({ color: 0x1f2328, roughness: 0.7 });
+      const boxMat = new T.MeshStandardMaterial({ color: 0x3d444d, roughness: 0.5 });
+      const footingMat = new T.MeshStandardMaterial({ color: 0x767c85, roughness: 0.9 });
+
+      const tableSpacingZ = 4.2;
+      const tableSpacingX = 6.4;
+
+      for (let tx = 0; tx < 2; tx++) {
+        for (let tz = 0; tz < 2; tz++) {
+          const tableGroup = new T.Group();
+          tableGroup.position.set((tx - 0.5) * tableSpacingX, 0, (tz - 0.5) * tableSpacingZ);
+
+          const postPositionsX = [-2.4, -0.8, 0.8, 2.4];
+          for (const px of postPositionsX) {
+            const footing = new T.Mesh(new T.CylinderGeometry(0.12, 0.14, 0.2, 12), footingMat);
+            footing.position.set(px, 0.1, 0);
+            footing.receiveShadow = true;
+            tableGroup.add(footing);
+
+            const post = new T.Mesh(new T.BoxGeometry(0.08, 1.25, 0.08), legMat);
+            post.position.set(px, 0.65, 0);
+            post.castShadow = true;
+            tableGroup.add(post);
+
+            const brace = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, 1.1, 8), legMat);
+            brace.rotation.x = 0.5;
+            brace.position.set(px, 0.6, -0.22);
+            brace.castShadow = true;
+            tableGroup.add(brace);
+          }
+
+          const tiltGroup = new T.Group();
+          tiltGroup.position.set(0, 1.25, 0);
+          tiltGroup.rotation.x = 25 * (Math.PI / 180);
+
+          for (let py of [-0.95, -0.32, 0.32, 0.95]) {
+            const purlin = new T.Mesh(new T.BoxGeometry(5.6, 0.04, 0.06), legMat);
+            purlin.position.set(0, 0, py);
+            tiltGroup.add(purlin);
+          }
+
+          const cols = 10, rows = 2;
+          const panelW = 0.52, panelH = 0.98, gap = 0.02;
+          for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+              const px = (c - (cols - 1) / 2) * (panelW + gap);
+              const pz = (r - (rows - 1) / 2) * (panelH + gap);
+
+              const frame = new T.Mesh(new T.BoxGeometry(panelW, 0.03, panelH), frameMat);
+              frame.position.set(px, 0.03, pz);
+              frame.castShadow = true;
+              tiltGroup.add(frame);
+
+              const cell = new T.Mesh(new T.BoxGeometry(panelW - 0.02, 0.005, panelH - 0.02), cellMat);
+              cell.position.set(px, 0.045, pz);
+              tiltGroup.add(cell);
+
+              for (let b of [-0.12, 0, 0.12]) {
+                const busbar = new T.Mesh(new T.BoxGeometry(0.006, 0.002, panelH - 0.04), busbarMat);
+                busbar.position.set(px + b, 0.049, pz);
+                tiltGroup.add(busbar);
+              }
+            }
+          }
+
+          const jbox = new T.Mesh(new T.BoxGeometry(0.24, 0.28, 0.14), boxMat);
+          jbox.position.set(0, 0.75, 0);
+          jbox.castShadow = true;
+          tableGroup.add(jbox);
+
+          const conduit = new T.Mesh(new T.CylinderGeometry(0.025, 0.025, 0.75, 10), conduitMat);
+          conduit.position.set(0.05, 0.38, 0);
+          tableGroup.add(conduit);
+
+          tableGroup.add(tiltGroup);
+          root.add(tableGroup);
+        }
+      }
+      return root;
+    }
+
+    function buildTractorEbroProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Tractor_Ebro_684E';
+
+      const ebroBlue = new T.MeshStandardMaterial({ color: 0x0d5ba6, metalness: 0.45, roughness: 0.32 });
+      const ebroBlueDark = new T.MeshStandardMaterial({ color: 0x093f75, metalness: 0.5, roughness: 0.35 });
+      const creamRim = new T.MeshStandardMaterial({ color: 0xede8da, metalness: 0.25, roughness: 0.4 });
+      const tireRubber = new T.MeshStandardMaterial({ color: 0x181b19, roughness: 0.88 });
+      const darkChassis = new T.MeshStandardMaterial({ color: 0x222527, metalness: 0.8, roughness: 0.4 });
+      const chrome = new T.MeshStandardMaterial({ color: 0xc0c8cc, metalness: 0.95, roughness: 0.15 });
+      const exhaustSteel = new T.MeshStandardMaterial({ color: 0x2b2d2f, metalness: 0.6, roughness: 0.5 });
+      const glass = new T.MeshStandardMaterial({ color: 0x234455, transparent: true, opacity: 0.55 });
+      const plowFrameRed = new T.MeshStandardMaterial({ color: 0xb8261e, metalness: 0.5, roughness: 0.35 });
+      const plowSteel = new T.MeshStandardMaterial({ color: 0x85929e, metalness: 0.85, roughness: 0.25 });
+
+      const ch1 = new T.Mesh(new T.BoxGeometry(0.85, 0.55, 2.8), darkChassis);
+      ch1.position.set(0, 0.6, 0);
+      ch1.castShadow = true; ch1.receiveShadow = true;
+      root.add(ch1);
+
+      const ch2 = new T.Mesh(new T.BoxGeometry(0.95, 0.6, 1.2), darkChassis);
+      ch2.position.set(0, 0.65, 0.8);
+      ch2.castShadow = true; ch2.receiveShadow = true;
+      root.add(ch2);
+
+      const hood = new T.Group();
+      hood.position.set(0, 1.15, -0.6);
+
+      const hoodMain = new T.Mesh(new T.BoxGeometry(0.92, 0.65, 1.95), ebroBlue);
+      hoodMain.castShadow = true; hoodMain.receiveShadow = true;
+      hood.add(hoodMain);
+
+      const hoodRidge = new T.Mesh(new T.BoxGeometry(0.65, 0.08, 1.85), ebroBlueDark);
+      hoodRidge.position.set(0, 0.35, 0);
+      hood.add(hoodRidge);
+
+      const grill = new T.Group();
+      grill.position.set(0, 0, -1.0);
+      const grillBase = new T.Mesh(new T.BoxGeometry(0.84, 0.58, 0.06), darkChassis);
+      grill.add(grillBase);
+
+      for (let y of [-0.2, -0.1, 0, 0.1, 0.2]) {
+        const slat = new T.Mesh(new T.BoxGeometry(0.72, 0.02, 0.04), chrome);
+        slat.position.set(0, y, 0.02);
+        grill.add(slat);
+      }
+
+      const badgeOuter = new T.Mesh(new T.BoxGeometry(0.38, 0.09, 0.04), creamRim);
+      badgeOuter.position.set(0, 0.16, 0.035);
+      grill.add(badgeOuter);
+
+      const badgeInner = new T.Mesh(new T.BoxGeometry(0.32, 0.06, 0.04), ebroBlueDark);
+      badgeInner.position.set(0, 0.16, 0.04);
+      grill.add(badgeInner);
+
+      for (let x of [-0.3, 0.3]) {
+        const headlight = new T.Group();
+        headlight.position.set(x, 0.02, 0.02);
+        headlight.rotation.x = Math.PI / 2;
+
+        const hlRim = new T.Mesh(new T.CylinderGeometry(0.1, 0.1, 0.06, 20), chrome);
+        headlight.add(hlRim);
+
+        const hlLens = new T.Mesh(new T.CylinderGeometry(0.08, 0.08, 0.06, 20), new T.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff3cc, emissiveIntensity: 0.9 }));
+        hlLens.position.y = 0.02;
+        headlight.add(hlLens);
+
+        grill.add(headlight);
+      }
+      hood.add(grill);
+
+      const exhaust = new T.Group();
+      exhaust.position.set(-0.36, 0.32, -0.4);
+      const pipe1 = new T.Mesh(new T.CylinderGeometry(0.05, 0.05, 1.35, 16), exhaustSteel);
+      pipe1.position.set(0, 0.67, 0);
+      pipe1.castShadow = true;
+      exhaust.add(pipe1);
+      const pipe2 = new T.Mesh(new T.CylinderGeometry(0.07, 0.07, 0.35, 16), exhaustSteel);
+      pipe2.position.set(0, 0.8, 0);
+      exhaust.add(pipe2);
+      hood.add(exhaust);
+
+      const airFilter = new T.Group();
+      airFilter.position.set(0.36, 0.32, -0.6);
+      const afStem = new T.Mesh(new T.CylinderGeometry(0.04, 0.04, 0.85, 14), darkChassis);
+      afStem.position.set(0, 0.42, 0);
+      airFilter.add(afStem);
+      const afBody = new T.Mesh(new T.CylinderGeometry(0.11, 0.11, 0.18, 18), darkChassis);
+      afBody.position.set(0, 0.85, 0);
+      airFilter.add(afBody);
+      const afCap = new T.Mesh(new T.CylinderGeometry(0.12, 0.12, 0.04, 18), creamRim);
+      afCap.position.set(0, 0.94, 0);
+      airFilter.add(afCap);
+      hood.add(airFilter);
+
+      root.add(hood);
+
+      const cabin = new T.Group();
+      cabin.position.set(0, 1.1, 0.7);
+
+      const plat = new T.Mesh(new T.BoxGeometry(1.4, 0.1, 1.3), darkChassis);
+      plat.position.set(0, -0.15, 0);
+      plat.receiveShadow = true;
+      cabin.add(plat);
+
+      const seat = new T.Group();
+      seat.position.set(0, 0.15, 0.2);
+      const seatBottom = new T.Mesh(new T.BoxGeometry(0.55, 0.08, 0.5), darkChassis);
+      seatBottom.position.set(0, 0.18, 0);
+      seat.add(seatBottom);
+      const seatBack = new T.Mesh(new T.BoxGeometry(0.55, 0.45, 0.08), darkChassis);
+      seatBack.position.set(0, 0.4, 0.22);
+      seat.add(seatBack);
+      cabin.add(seat);
+
+      const wheelGroup = new T.Group();
+      wheelGroup.position.set(0, 0.25, -0.35);
+      const col = new T.Mesh(new T.CylinderGeometry(0.035, 0.035, 0.55, 12), darkChassis);
+      col.rotation.x = -0.4;
+      col.position.set(0, 0.22, 0);
+      wheelGroup.add(col);
+      const stWheel = new T.Mesh(new T.TorusGeometry(0.2, 0.024, 8, 24), darkChassis);
+      stWheel.position.set(0, 0.46, -0.1);
+      stWheel.rotation.x = 1.17;
+      wheelGroup.add(stWheel);
+      cabin.add(wheelGroup);
+
+      for (let x of [-0.72, 0.72]) {
+        for (let z of [-0.45, 0.45]) {
+          const pillar = new T.Mesh(new T.BoxGeometry(0.08, 1.55, 0.08), ebroBlueDark);
+          pillar.position.set(x, 0.7, z);
+          pillar.castShadow = true;
+          cabin.add(pillar);
+        }
+      }
+      const roof = new T.Mesh(new T.BoxGeometry(1.65, 0.09, 1.25), creamRim);
+      roof.position.set(0, 1.54, 0);
+      roof.castShadow = true;
+      cabin.add(roof);
+
+      const windshield = new T.Mesh(new T.BoxGeometry(1.36, 0.85, 0.02), glass);
+      windshield.position.set(0, 0.95, -0.45);
+      cabin.add(windshield);
+
+      for (let x of [-0.88, 0.88]) {
+        const fender = new T.Group();
+        fender.position.set(x, 0.4, 0.2);
+        const fb = new T.Mesh(new T.BoxGeometry(0.42, 0.08, 1.45), ebroBlue);
+        fb.castShadow = true; fb.receiveShadow = true;
+        fender.add(fb);
+
+        const tailLamp = new T.Mesh(new T.BoxGeometry(0.12, 0.16, 0.04), new T.MeshStandardMaterial({ color: 0xd11a1a, emissive: 0xaa1010, emissiveIntensity: 0.6 }));
+        tailLamp.position.set(0, 0.15, 0.73);
+        fender.add(tailLamp);
+        cabin.add(fender);
+      }
+      root.add(cabin);
+
+      const fAxle = new T.Mesh(new T.CylinderGeometry(0.06, 0.06, 1.6, 12), darkChassis);
+      fAxle.rotation.z = Math.PI / 2;
+      fAxle.position.set(0, 0.46, -1.25);
+      root.add(fAxle);
+
+      for (let x of [-0.86, 0.86]) {
+        const fWheel = new T.Group();
+        fWheel.position.set(x, 0.46, -1.25);
+        fWheel.rotation.z = Math.PI / 2;
+
+        const fTire = new T.Mesh(new T.CylinderGeometry(0.46, 0.46, 0.24, 30), tireRubber);
+        fTire.castShadow = true;
+        fWheel.add(fTire);
+
+        const fRim = new T.Mesh(new T.CylinderGeometry(0.28, 0.28, 0.26, 24), creamRim);
+        fWheel.add(fRim);
+
+        const fHub = new T.Mesh(new T.CylinderGeometry(0.1, 0.1, 0.28, 16), ebroBlue);
+        fWheel.add(fHub);
+
+        root.add(fWheel);
+      }
+
+      for (let x of [-1.08, 1.08]) {
+        const rWheel = new T.Group();
+        rWheel.position.set(x, 0.82, 0.88);
+        rWheel.rotation.z = Math.PI / 2;
+
+        const rTire = new T.Mesh(new T.CylinderGeometry(0.85, 0.85, 0.44, 36), tireRubber);
+        rTire.castShadow = true;
+        rWheel.add(rTire);
+
+        const rRim = new T.Mesh(new T.CylinderGeometry(0.54, 0.54, 0.4, 28), creamRim);
+        rWheel.add(rRim);
+
+        const rHub = new T.Mesh(new T.CylinderGeometry(0.18, 0.18, 0.46, 16), darkChassis);
+        rWheel.add(rHub);
+
+        for (let i = 0; i < 24; i++) {
+          const lug = new T.Mesh(new T.BoxGeometry(0.38, 0.07, 0.12), tireRubber);
+          lug.position.set(0, Math.cos((i / 24) * Math.PI * 2) * 0.86, Math.sin((i / 24) * Math.PI * 2) * 0.86);
+          rWheel.add(lug);
+        }
+        root.add(rWheel);
+      }
+
+      const plow = new T.Group();
+      plow.position.set(0, 0.55, 1.6);
+
+      for (let x of [-0.32, 0.32]) {
+        const arm = new T.Mesh(new T.CylinderGeometry(0.035, 0.035, 0.8, 12), darkChassis);
+        arm.position.set(x, 0.05, 0.35);
+        arm.rotation.x = 0.4;
+        plow.add(arm);
+      }
+
+      const beam = new T.Mesh(new T.CylinderGeometry(0.065, 0.065, 1.8, 16), plowFrameRed);
+      beam.position.set(0.2, 0.1, 0.65);
+      beam.rotation.set(0.4, -0.3, 0);
+      beam.castShadow = true;
+      plow.add(beam);
+
+      for (let b = 0; b < 3; b++) {
+        const body = new T.Group();
+        body.position.set(0.05 + b * 0.22, 0.2 - b * 0.08, 0.2 + b * 0.55);
+
+        const leg = new T.Mesh(new T.BoxGeometry(0.06, 0.65, 0.1), plowFrameRed);
+        leg.position.set(0, -0.15, 0);
+        leg.castShadow = true;
+        body.add(leg);
+
+        const share = new T.Mesh(new T.BoxGeometry(0.03, 0.15, 0.42), plowSteel);
+        share.position.set(0.08, -0.42, -0.1);
+        body.add(share);
+
+        const moldboard = new T.Mesh(new T.BoxGeometry(0.38, 0.38, 0.04), plowSteel);
+        moldboard.position.set(0.22, -0.32, 0.08);
+        moldboard.rotation.set(-0.3, 0.45, 0.35);
+        moldboard.castShadow = true;
+        body.add(moldboard);
+
+        plow.add(body);
+      }
+      root.add(plow);
+
+      return root;
+    }
+
+    function buildBombaPozoProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Bomba_Pozo_Solar';
+
+      const concreteMat = new T.MeshStandardMaterial({ color: 0x6e7681, roughness: 0.95 });
+      const steelMat = new T.MeshStandardMaterial({ color: 0xa0abb6, metalness: 0.85, roughness: 0.25 });
+      const pipeMat = new T.MeshStandardMaterial({ color: 0x245a82, metalness: 0.6, roughness: 0.4 });
+      const brassMat = new T.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, roughness: 0.2 });
+      const darkMat = new T.MeshStandardMaterial({ color: 0x1f2328, roughness: 0.6 });
+      const ledRun = new T.MeshStandardMaterial({ color: 0x00ff66, emissive: 0x00ff66, emissiveIntensity: 2 });
+      const ledPower = new T.MeshStandardMaterial({ color: 0x388bfd, emissive: 0x388bfd, emissiveIntensity: 1.5 });
+      const valveMat = new T.MeshStandardMaterial({ color: 0xb32424, roughness: 0.4 });
+
+      const pad = new T.Mesh(new T.BoxGeometry(2.4, 0.2, 2.4), concreteMat);
+      pad.position.y = 0.1;
+      pad.receiveShadow = true;
+      root.add(pad);
+
+      const wellCasing = new T.Mesh(new T.CylinderGeometry(0.32, 0.32, 0.6, 24), steelMat);
+      wellCasing.position.set(-0.35, 0.4, 0);
+      wellCasing.castShadow = true;
+      root.add(wellCasing);
+
+      const flange = new T.Mesh(new T.CylinderGeometry(0.38, 0.38, 0.08, 24), steelMat);
+      flange.position.set(-0.35, 0.72, 0);
+      flange.castShadow = true;
+      root.add(flange);
+
+      const vertPipe = new T.Mesh(new T.CylinderGeometry(0.08, 0.08, 0.8, 20), pipeMat);
+      vertPipe.position.set(-0.35, 1.1, 0);
+      vertPipe.castShadow = true;
+      root.add(vertPipe);
+
+      const elbow = new T.Mesh(new T.TorusGeometry(0.12, 0.08, 16, 20, Math.PI / 2), pipeMat);
+      elbow.position.set(-0.23, 1.5, 0);
+      elbow.rotation.z = -Math.PI / 2;
+      root.add(elbow);
+
+      const horizPipe = new T.Mesh(new T.CylinderGeometry(0.08, 0.08, 1.6, 20), pipeMat);
+      horizPipe.rotation.z = Math.PI / 2;
+      horizPipe.position.set(0.6, 1.62, 0);
+      horizPipe.castShadow = true;
+      root.add(horizPipe);
+
+      const gaugeStem = new T.Mesh(new T.CylinderGeometry(0.015, 0.015, 0.12, 12), brassMat);
+      gaugeStem.position.set(0.15, 1.76, 0);
+      root.add(gaugeStem);
+
+      const gaugeBody = new T.Mesh(new T.CylinderGeometry(0.09, 0.09, 0.04, 24), steelMat);
+      gaugeBody.rotation.x = Math.PI / 2;
+      gaugeBody.position.set(0.15, 1.86, 0);
+      root.add(gaugeBody);
+
+      const gaugeDial = new T.Mesh(new T.CircleGeometry(0.08, 24), new T.MeshBasicMaterial({ color: 0xffffff }));
+      gaugeDial.position.set(0.15, 1.86, 0.022);
+      root.add(gaugeDial);
+
+      const valveBody = new T.Mesh(new T.BoxGeometry(0.22, 0.22, 0.22), steelMat);
+      valveBody.position.set(0.75, 1.62, 0);
+      root.add(valveBody);
+
+      const valveStem = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, 0.16, 12), steelMat);
+      valveStem.position.set(0.75, 1.8, 0);
+      root.add(valveStem);
+
+      const valveWheel = new T.Mesh(new T.TorusGeometry(0.12, 0.02, 12, 24), valveMat);
+      valveWheel.rotation.x = Math.PI / 2;
+      valveWheel.position.set(0.75, 1.88, 0);
+      root.add(valveWheel);
+
+      const postVFD = new T.Mesh(new T.BoxGeometry(0.08, 1.4, 0.08), steelMat);
+      postVFD.position.set(-0.85, 0.7, 0.7);
+      root.add(postVFD);
+
+      const vfdEnclosure = new T.Mesh(new T.BoxGeometry(0.48, 0.65, 0.26), new T.MeshStandardMaterial({ color: 0xd6dbdf, metalness: 0.3, roughness: 0.4 }));
+      vfdEnclosure.position.set(-0.85, 1.35, 0.7);
+      vfdEnclosure.castShadow = true;
+      root.add(vfdEnclosure);
+
+      const vfdLcd = new T.Mesh(new T.BoxGeometry(0.18, 0.08, 0.01), darkMat);
+      vfdLcd.position.set(-0.85, 1.5, 0.835);
+      root.add(vfdLcd);
+
+      const led1 = new T.Mesh(new T.SphereGeometry(0.015, 12, 12), ledRun);
+      led1.position.set(-0.95, 1.38, 0.835);
+      root.add(led1);
+
+      const led2 = new T.Mesh(new T.SphereGeometry(0.015, 12, 12), ledPower);
+      led2.position.set(-0.75, 1.38, 0.835);
+      root.add(led2);
+
+      const cableDrop = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, 0.9, 10), darkMat);
+      cableDrop.position.set(-0.6, 0.9, 0.35);
+      cableDrop.rotation.z = -0.4;
+      root.add(cableDrop);
+
+      return root;
+    }
+
+    function createDosingPumpBadge(T) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, 512, 512);
+
+      // Fondo circular negro
+      ctx.fillStyle = '#15171a';
+      ctx.beginPath();
+      ctx.arc(256, 256, 250, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Círculo blanco interior
+      ctx.fillStyle = '#f0f3f6';
+      ctx.beginPath();
+      ctx.arc(256, 256, 175, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Borde circular fino
+      ctx.strokeStyle = '#22262c';
+      ctx.lineWidth = 6;
+      ctx.stroke();
+
+      // Número central grande en negrita "500"
+      ctx.fillStyle = '#111417';
+      ctx.font = '900 120px "Segoe UI", Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('500', 256, 260);
+
+      // Triángulos de advertencia
+      function drawTriangle(x, y, size) {
+        ctx.fillStyle = '#111417';
+        ctx.beginPath();
+        ctx.moveTo(x, y - size);
+        ctx.lineTo(x + size * 0.86, y + size * 0.5);
+        ctx.lineTo(x - size * 0.86, y + size * 0.5);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#f0f3f6';
+        ctx.fillRect(x - 2, y - size * 0.4, 4, size * 0.5);
+        ctx.beginPath();
+        ctx.arc(x, y + size * 0.3, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      drawTriangle(256, 135, 26);
+      drawTriangle(365, 250, 24);
+      drawTriangle(256, 365, 24);
+
+      const tex = new T.CanvasTexture(canvas);
+      tex.colorSpace = T.SRGBColorSpace;
+      return tex;
+    }
+
+    function createMotorArrowTexture(T) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256; canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 256, 128);
+
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(4, 4, 248, 120);
+
+      // Flecha negra
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.moveTo(40, 64);
+      ctx.lineTo(100, 30);
+      ctx.lineTo(100, 50);
+      ctx.lineTo(180, 50);
+      ctx.lineTo(180, 78);
+      ctx.lineTo(100, 78);
+      ctx.lineTo(100, 98);
+      ctx.closePath();
+      ctx.fill();
+
+      // Triángulo amarillo de precaución
+      ctx.fillStyle = '#f5c518';
+      ctx.beginPath();
+      ctx.moveTo(215, 34);
+      ctx.lineTo(240, 84);
+      ctx.lineTo(190, 84);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(213, 48, 4, 18);
+      ctx.beginPath(); ctx.arc(215, 74, 2.5, 0, Math.PI * 2); ctx.fill();
+
+      const tex = new T.CanvasTexture(canvas);
+      tex.colorSpace = T.SRGBColorSpace;
+      return tex;
+    }
+
+    function buildDosingPumpProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Bomba_Dosificadora_500_Lh';
+
+      // Materiales PBR
+      const chassisMat = new T.MeshStandardMaterial({ color: 0x1f2227, roughness: 0.55, metalness: 0.4 });
+      const motorBodyMat = new T.MeshStandardMaterial({ color: 0x9aa4af, metalness: 0.75, roughness: 0.35 });
+      const motorFinMat = new T.MeshStandardMaterial({ color: 0xa4adb7, metalness: 0.80, roughness: 0.30 });
+      const motorCowlMat = new T.MeshStandardMaterial({ color: 0x15171a, roughness: 0.50 });
+      const stainlessMat = new T.MeshStandardMaterial({ color: 0xd8e0e8, metalness: 0.92, roughness: 0.16 });
+      const boltMat = new T.MeshStandardMaterial({ color: 0xb5bfc9, metalness: 0.95, roughness: 0.18 });
+      const redCapMat = new T.MeshStandardMaterial({ color: 0xd93025, roughness: 0.35, metalness: 0.10 });
+      const transparentLanternMat = new T.MeshPhysicalMaterial({
+        color: 0xecf3f9,
+        transmission: 0.88,
+        transparent: true,
+        opacity: 0.65,
+        roughness: 0.15,
+        ior: 1.5
+      });
+      const headMat = new T.MeshStandardMaterial({ color: 0x16181b, roughness: 0.45, metalness: 0.25 });
+      const silverDialMat = new T.MeshStandardMaterial({ color: 0xd0d7de, metalness: 0.85, roughness: 0.25 });
+
+      // Plinto de apoyo de taller
+      const floorPlate = new T.Mesh(new T.BoxGeometry(0.9, 0.02, 0.7), new T.MeshStandardMaterial({ color: 0x181a1f, roughness: 0.85 }));
+      floorPlate.position.y = 0.01;
+      floorPlate.receiveShadow = true;
+      root.add(floorPlate);
+
+      // 1. Patas de fijación de chapa de acero doblada
+      [-0.14, 0.14].forEach((fz) => {
+        const foot = new T.Mesh(new T.BoxGeometry(0.24, 0.14, 0.025), chassisMat);
+        foot.position.set(-0.20, 0.08, fz);
+        foot.castShadow = true;
+        root.add(foot);
+
+        // Agujeros de anclaje
+        const boltPad = new T.Mesh(new T.BoxGeometry(0.06, 0.015, 0.06), chassisMat);
+        boltPad.position.set(-0.20, 0.01, fz + (fz > 0 ? 0.03 : -0.03));
+        root.add(boltPad);
+      });
+
+      // 2. Caja reductora de fundición (Gearbox)
+      const gearbox = new T.Mesh(new T.BoxGeometry(0.36, 0.30, 0.28), chassisMat);
+      gearbox.position.set(-0.20, 0.24, 0);
+      gearbox.castShadow = true;
+      root.add(gearbox);
+
+      // Mando de regulación micrométrica de carrera en la parte trasera del reductor
+      const strokeDialBase = new T.Mesh(new T.CylinderGeometry(0.048, 0.048, 0.035, 24), chassisMat);
+      strokeDialBase.rotation.z = Math.PI / 2;
+      strokeDialBase.position.set(-0.395, 0.24, 0);
+      root.add(strokeDialBase);
+
+      const strokeDialRing = new T.Mesh(new T.CylinderGeometry(0.050, 0.050, 0.012, 24), silverDialMat);
+      strokeDialRing.rotation.z = Math.PI / 2;
+      strokeDialRing.position.set(-0.415, 0.24, 0);
+      root.add(strokeDialRing);
+
+      const strokeKnob = new T.Mesh(new T.CylinderGeometry(0.038, 0.038, 0.03, 24), motorCowlMat);
+      strokeKnob.rotation.z = Math.PI / 2;
+      strokeKnob.position.set(-0.435, 0.24, 0);
+      root.add(strokeKnob);
+
+      // Placa de características lateral plateada
+      const nameplate = new T.Mesh(new T.PlaneGeometry(0.12, 0.07), silverDialMat);
+      nameplate.rotation.y = -Math.PI / 2;
+      nameplate.position.set(-0.20, 0.24, -0.142);
+      root.add(nameplate);
+
+      // 3. Motor eléctrico asíncrono montado completamente VERTICAL
+      const motorGroup = new T.Group();
+      motorGroup.position.set(-0.20, 0.39, 0);
+      motorGroup.rotation.set(0, 0, 0); // Posición 100% vertical directa sobre el reductor
+
+      // Brida B14 de anclaje al reductor
+      const motorFlange = new T.Mesh(new T.CylinderGeometry(0.135, 0.135, 0.035, 28), motorBodyMat);
+      motorFlange.position.y = 0.02;
+      motorGroup.add(motorFlange);
+
+      // Carcasa cilíndrica de aluminio
+      const motorCasing = new T.Mesh(new T.CylinderGeometry(0.118, 0.118, 0.36, 28), motorBodyMat);
+      motorCasing.position.y = 0.21;
+      motorCasing.castShadow = true;
+      motorGroup.add(motorCasing);
+
+      // 16 Aletas de refrigeración longitudinales extruidas
+      for (let i = 0; i < 16; i++) {
+        const a = (i * Math.PI * 2) / 16;
+        const fin = new T.Mesh(new T.BoxGeometry(0.024, 0.34, 0.007), motorFinMat);
+        fin.position.set(Math.cos(a) * 0.122, 0.21, Math.sin(a) * 0.122);
+        fin.rotation.y = -a;
+        fin.castShadow = true;
+        motorGroup.add(fin);
+      }
+
+      // Caja de bornes (terminal box) lateral
+      const termBox = new T.Mesh(new T.BoxGeometry(0.13, 0.17, 0.09), motorBodyMat);
+      termBox.position.set(0, 0.21, 0.155);
+      termBox.castShadow = true;
+      motorGroup.add(termBox);
+
+      const termCover = new T.Mesh(new T.BoxGeometry(0.135, 0.175, 0.015), motorFinMat);
+      termCover.position.set(0, 0.21, 0.205);
+      motorGroup.add(termCover);
+
+      const cableGland = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, 0.04, 12), chassisMat);
+      cableGland.position.set(0, 0.11, 0.155);
+      motorGroup.add(cableGland);
+
+      // Caperuza del ventilador (cowl) en negro con chaflán
+      const cowlBody = new T.Mesh(new T.CylinderGeometry(0.124, 0.124, 0.16, 28), motorCowlMat);
+      cowlBody.position.y = 0.45;
+      cowlBody.castShadow = true;
+      motorGroup.add(cowlBody);
+
+      const cowlCap = new T.Mesh(new T.CylinderGeometry(0.095, 0.124, 0.045, 28), motorCowlMat);
+      cowlCap.position.y = 0.55;
+      motorGroup.add(cowlCap);
+
+      // Pegatina con flecha de sentido de giro del motor
+      const arrowTex = createMotorArrowTexture(T);
+      const arrowLabel = new T.Mesh(new T.PlaneGeometry(0.10, 0.05), new T.MeshBasicMaterial({ map: arrowTex, transparent: true }));
+      arrowLabel.rotation.y = -Math.PI / 2;
+      arrowLabel.position.set(0.01, 0.47, -0.125);
+      motorGroup.add(arrowLabel);
+
+      root.add(motorGroup);
+
+      // 4. Zona intermedia: Linterna / mirilla cilíndrica transparente y vástago
+      const lantern = new T.Mesh(new T.CylinderGeometry(0.122, 0.122, 0.12, 32), transparentLanternMat);
+      lantern.rotation.z = Math.PI / 2;
+      lantern.position.set(0.04, 0.24, 0);
+      root.add(lantern);
+
+      // Vástago interior en acero cromado
+      const pistonRod = new T.Mesh(new T.CylinderGeometry(0.038, 0.038, 0.18, 20), stainlessMat);
+      pistonRod.rotation.z = Math.PI / 2;
+      pistonRod.position.set(0.04, 0.24, 0);
+      root.add(pistonRod);
+
+      // Anillo de apriete en acero inoxidable
+      const lanternRing = new T.Mesh(new T.CylinderGeometry(0.126, 0.126, 0.024, 32), stainlessMat);
+      lanternRing.rotation.z = Math.PI / 2;
+      lanternRing.position.set(0.105, 0.24, 0);
+      root.add(lanternRing);
+
+      // 5. Cabezal de dosificación cilíndrico de alta resistencia
+      const headGroup = new T.Group();
+      headGroup.position.set(0.24, 0.24, 0);
+
+      // Bloque cilíndrico negro del cabezal
+      const headBody = new T.Mesh(new T.CylinderGeometry(0.124, 0.124, 0.21, 32), headMat);
+      headBody.rotation.z = Math.PI / 2;
+      headBody.castShadow = true;
+      headGroup.add(headBody);
+
+      // Brida frontal de acero inoxidable pulido
+      const frontFlange = new T.Mesh(new T.CylinderGeometry(0.128, 0.128, 0.018, 32), stainlessMat);
+      frontFlange.rotation.z = Math.PI / 2;
+      frontFlange.position.set(0.112, 0, 0);
+      frontFlange.castShadow = true;
+      headGroup.add(frontFlange);
+
+      // 6 Pernos Allen con cabeza cilíndrica y hendidura hexagonal
+      for (let i = 0; i < 6; i++) {
+        const a = (i * Math.PI * 2) / 6;
+        const by = Math.sin(a) * 0.105;
+        const bz = Math.cos(a) * 0.105;
+
+        const boltHead = new T.Mesh(new T.CylinderGeometry(0.013, 0.013, 0.018, 14), boltMat);
+        boltHead.rotation.z = Math.PI / 2;
+        boltHead.position.set(0.125, by, bz);
+        headGroup.add(boltHead);
+
+        const boltHex = new T.Mesh(new T.CylinderGeometry(0.007, 0.007, 0.005, 6), chassisMat);
+        boltHex.rotation.z = Math.PI / 2;
+        boltHex.position.set(0.134, by, bz);
+        headGroup.add(boltHex);
+      }
+
+      // Disco central negro con distintivo "500" y triángulos de aviso
+      const badgeTex = createDosingPumpBadge(T);
+      const badgeMesh = new T.Mesh(
+        new T.CircleGeometry(0.092, 32),
+        new T.MeshStandardMaterial({ map: badgeTex, roughness: 0.35, metalness: 0.20 })
+      );
+      badgeMesh.rotation.y = Math.PI / 2;
+      badgeMesh.position.set(0.122, 0, 0);
+      headGroup.add(badgeMesh);
+
+      // Válvula de impulsión superior (Discharge valve) con tapón rojo
+      const topNeck = new T.Mesh(new T.CylinderGeometry(0.038, 0.038, 0.08, 20), headMat);
+      topNeck.position.set(0.03, 0.15, 0);
+      topNeck.castShadow = true;
+      headGroup.add(topNeck);
+
+      const topRedCap = new T.Mesh(new T.CylinderGeometry(0.048, 0.048, 0.065, 24), redCapMat);
+      topRedCap.position.set(0.03, 0.22, 0);
+      topRedCap.castShadow = true;
+      headGroup.add(topRedCap);
+
+      const topCapFlange = new T.Mesh(new T.CylinderGeometry(0.052, 0.052, 0.012, 24), redCapMat);
+      topCapFlange.position.set(0.03, 0.19, 0);
+      headGroup.add(topCapFlange);
+
+      // Válvula de aspiración inferior (Suction valve) con tapón rojo
+      const botNeck = new T.Mesh(new T.CylinderGeometry(0.038, 0.038, 0.08, 20), headMat);
+      botNeck.position.set(0.03, -0.15, 0);
+      botNeck.castShadow = true;
+      headGroup.add(botNeck);
+
+      const botRedCap = new T.Mesh(new T.CylinderGeometry(0.048, 0.048, 0.065, 24), redCapMat);
+      botRedCap.position.set(0.03, -0.22, 0);
+      botRedCap.castShadow = true;
+      headGroup.add(botRedCap);
+
+      const botCapFlange = new T.Mesh(new T.CylinderGeometry(0.052, 0.052, 0.012, 24), redCapMat);
+      botCapFlange.position.set(0.03, -0.19, 0);
+      headGroup.add(botCapFlange);
+
+      root.add(headGroup);
+
+      return root;
+    }
+
+    function buildLogoInseceProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Logo_Oficial_INSECE_3D_Master';
+
+      // =======================================================================
+      // PALETA DE MATERIALES PBR CORPORATIVOS OFICIALES INSECE
+      // =======================================================================
+      const navyInsece = new T.MeshStandardMaterial({
+        color: 0x003366,
+        metalness: 0.35,
+        roughness: 0.22
+      });
+      const navyDeep = new T.MeshStandardMaterial({
+        color: 0x002752,
+        metalness: 0.38,
+        roughness: 0.22
+      });
+      const blueMid = new T.MeshStandardMaterial({
+        color: 0x094d92,
+        metalness: 0.32,
+        roughness: 0.24
+      });
+      const cyanElectric = new T.MeshStandardMaterial({
+        color: 0x00a8e8,
+        metalness: 0.30,
+        roughness: 0.20
+      });
+      const cyanBright = new T.MeshStandardMaterial({
+        color: 0x22c1ff,
+        metalness: 0.28,
+        roughness: 0.18
+      });
+
+      // Materiales del pedestal y peana corporativa de exposición
+      const plinthBaseMat = new T.MeshStandardMaterial({ color: 0x12151b, roughness: 0.85 });
+      const plinthTopMat = new T.MeshStandardMaterial({ color: 0x1c222c, metalness: 0.75, roughness: 0.28 });
+      const ledGlowMat = new T.MeshStandardMaterial({ color: 0x00a8e8, emissive: 0x00a8e8, emissiveIntensity: 1.2 });
+      const chromePostMat = new T.MeshStandardMaterial({ color: 0xd8e2ec, metalness: 0.95, roughness: 0.15 });
+
+      // =======================================================================
+      // 1. PEANA / PEDESTAL CORPORATIVO DE EXPOSICIÓN
+      // =======================================================================
+      const plinth = new T.Group();
+      plinth.position.set(0, 0, 0);
+
+      const baseFloor = new T.Mesh(new T.BoxGeometry(15.2, 0.22, 4.6), plinthBaseMat);
+      baseFloor.position.y = 0.11;
+      baseFloor.receiveShadow = true;
+      plinth.add(baseFloor);
+
+      const upperDeck = new T.Mesh(new T.BoxGeometry(14.5, 0.14, 3.9), plinthTopMat);
+      upperDeck.position.y = 0.28;
+      upperDeck.receiveShadow = true;
+      plinth.add(upperDeck);
+
+      // Línea LED cyan empotrada en el frontal del pedestal
+      const frontLed = new T.Mesh(new T.BoxGeometry(14.3, 0.025, 0.04), ledGlowMat);
+      frontLed.position.set(0, 0.22, 1.96);
+      plinth.add(frontLed);
+
+      // Soportes cilíndricos cromados discretos traseros
+      for (let sx of [-3.8, 0, 3.8]) {
+        const pin = new T.Mesh(new T.CylinderGeometry(0.045, 0.045, 1.2, 16), chromePostMat);
+        pin.position.set(sx, 0.95, -0.15);
+        pin.castShadow = true;
+        plinth.add(pin);
+      }
+      root.add(plinth);
+
+      // Grupo del logotipo centrado
+      const logoGroup = new T.Group();
+      logoGroup.position.set(-2.15, 1.55, 0); // Compensación para centrado visual exacto
+
+      // =======================================================================
+      // 2. ISOTIPO OFICIAL 3D (10 ASPAS EN VÓRTICE CÓNCAVO - GEOMETRÍA REAL EXTRUIDA)
+      // =======================================================================
+      const symbolGroup = new T.Group();
+      symbolGroup.position.set(-3.75, 1.0, 0);
+
+      const innerHoleR = 0.50;
+      const bladeExtrude = {
+        depth: 0.32,
+        bevelEnabled: true,
+        bevelThickness: 0.032,
+        bevelSize: 0.022,
+        bevelSegments: 4
+      };
+
+      // Ángulos y radios exteriores de las 10 aspas según la imagen original
+      // Aspa 0: Gran ala horizontal derecha apuntando hacia 'INSECE'
+      const bladeConfigs = [
+        { angle: 0.22,  rTip: 2.22, mat: navyInsece },   // 0: Horizontal derecha (~12°)
+        { angle: 5.92,  rTip: 1.95, mat: navyInsece },   // 1: Inferior derecha (~339°)
+        { angle: 5.28,  rTip: 1.68, mat: navyInsece },   // 2: Inferior derecha-baja (~302°)
+        { angle: 4.65,  rTip: 1.45, mat: navyDeep },     // 3: Inferior (~266°)
+        { angle: 4.02,  rTip: 1.28, mat: blueMid },      // 4: Inferior izquierda (~230°)
+        { angle: 3.39,  rTip: 1.22, mat: cyanElectric }, // 5: Izquierda (~194°)
+        { angle: 2.76,  rTip: 1.34, mat: cyanElectric }, // 6: Izquierda-alta (~158°)
+        { angle: 2.13,  rTip: 1.52, mat: cyanElectric }, // 7: Superior izquierda (~122°)
+        { angle: 1.50,  rTip: 1.76, mat: cyanBright },   // 8: Superior (~86°)
+        { angle: 0.86,  rTip: 2.02, mat: cyanBright }    // 9: Superior derecha (~50°)
+      ];
+
+      bladeConfigs.forEach((cfg) => {
+        const a1 = cfg.angle;
+        const a2 = a1 - 0.44; // Amplitud angular del aspa
+        const aMid = (a1 + a2) / 2;
+
+        const rTip = cfg.rTip;
+        const rBase = rTip * 0.72;
+        const rConcave = rTip * 0.60; // Curvatura cóncava pronunciada
+
+        const shape = new T.Shape();
+        // 1. Orificio interior hueco (sin rellenar el centro)
+        shape.moveTo(Math.cos(a1) * innerHoleR, Math.sin(a1) * innerHoleR);
+        // 2. Borde recto radial exterior hacia la punta afilada
+        shape.lineTo(Math.cos(a1) * rTip, Math.sin(a1) * rTip);
+        // 3. Trazo cóncavo curvado hacia el interior
+        shape.quadraticCurveTo(
+          Math.cos(aMid) * rConcave,
+          Math.sin(aMid) * rConcave,
+          Math.cos(a2) * rBase,
+          Math.sin(a2) * rBase
+        );
+        // 4. Retorno radial recto hacia el orificio interior
+        shape.lineTo(Math.cos(a2) * innerHoleR, Math.sin(a2) * innerHoleR);
+        // 5. Cierre limpio sobre el contorno interior (deja el orificio central 100% hueco y abierto)
+        shape.lineTo(Math.cos(a1) * innerHoleR, Math.sin(a1) * innerHoleR);
+        shape.closePath();
+
+        const geo = new T.ExtrudeGeometry(shape, bladeExtrude);
+        const bladeMesh = new T.Mesh(geo, cfg.mat);
+        bladeMesh.castShadow = true;
+        bladeMesh.receiveShadow = true;
+        symbolGroup.add(bladeMesh);
+      });
+      logoGroup.add(symbolGroup);
+
+      // =======================================================================
+      // 3. LETRAS 3D EXTRUIDAS OFICIALES "INSECE" (CON INCLINACIÓN ITÁLICA REAL)
+      // =======================================================================
+      const lettersGroup = new T.Group();
+      lettersGroup.position.set(0, 0, 0);
+
+      const slant = 0.24; // Inclinación itálica (tan 13.7°)
+      const H = 2.02;     // Altura de las letras
+      const textExtrude = {
+        depth: 0.32,
+        bevelEnabled: true,
+        bevelThickness: 0.035,
+        bevelSize: 0.024,
+        bevelSegments: 4
+      };
+
+      function createSlantedMesh(polyPoints, ox, oy, mat = navyInsece) {
+        const shape = new T.Shape();
+        polyPoints.forEach(([x, y], idx) => {
+          const sx = ox + x + y * slant;
+          const sy = oy + y;
+          if (idx === 0) shape.moveTo(sx, sy);
+          else shape.lineTo(sx, sy);
+        });
+        shape.closePath();
+        const geo = new T.ExtrudeGeometry(shape, textExtrude);
+        const mesh = new T.Mesh(geo, mat);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        return mesh;
+      }
+
+      // --- LETRA 'I' ---
+      const wI = 0.48;
+      lettersGroup.add(createSlantedMesh([
+        [0, 0], [wI, 0], [wI, H], [0, H]
+      ], -0.55, 0));
+
+      // --- LETRA 'N' ---
+      const wN = 1.48, tN = 0.44;
+      lettersGroup.add(createSlantedMesh([
+        [0, 0],
+        [tN, 0],
+        [wN - tN, H - 0.76],
+        [wN - tN, 0],
+        [wN, 0],
+        [wN, H],
+        [wN - tN, H],
+        [tN, 0.76],
+        [tN, H],
+        [0, H]
+      ], 0.38, 0));
+
+      // --- LETRA 'S' (AUTÉNTICA FORMA CORPORATIVA OFICIAL - NO 'Z') ---
+      const wS = 1.38, tS = 0.44;
+      const sPoints = [
+        [0.10, H],             // Arriba izquierda
+        [wS, H],               // Arriba derecha
+        [wS, 1.12],            // Caída lateral superior derecha
+        [wS - tS, 1.12],       // Corte interior derecho
+        [wS - tS, H - tS],     // Esquina interior superior derecha
+        [tS, H - tS],          // Esquina interior superior izquierda
+        [tS, 1.40],            // Comienzo diagonal central arriba-izquierda
+        [wS - 0.06, 0.88],     // Diagonal central baja a abajo-derecha
+        [wS, 0.88],            // Arista exterior inferior derecha
+        [wS, 0],               // Esquina inferior derecha
+        [0, 0],                // Esquina inferior izquierda
+        [0, 0.90],             // Subida lateral inferior izquierda
+        [tS, 0.90],            // Corte interior izquierdo
+        [tS, tS],              // Esquina interior inferior izquierda
+        [wS - tS, tS],         // Esquina interior inferior derecha
+        [wS - tS, 0.62],       // Comienzo diagonal central retorno
+        [0.06, 1.14],          // Diagonal central sube a arriba-izquierda
+        [0, 1.14],             // Arista exterior superior izquierda
+        [0, H - 0.12]          // Subida a la esquina superior izquierda
+      ];
+      lettersGroup.add(createSlantedMesh(sPoints, 2.28, 0));
+
+      // --- LETRA 'E' (PRIMERA) ---
+      const wE = 1.28, tE = 0.44, bE = 0.42, mE = 0.38, wMidE = 1.05;
+      lettersGroup.add(createSlantedMesh([
+        [0, 0],
+        [wE, 0],
+        [wE, bE],
+        [tE, bE],
+        [tE, (H - mE) / 2],
+        [wMidE, (H - mE) / 2],
+        [wMidE, (H + mE) / 2],
+        [tE, (H + mE) / 2],
+        [tE, H - bE],
+        [wE, H - bE],
+        [wE, H],
+        [0, H]
+      ], 4.10, 0));
+
+      // --- LETRA 'C' ---
+      const wC = 1.34, tC = 0.44, bC = 0.44;
+      lettersGroup.add(createSlantedMesh([
+        [0, 0],
+        [wC, 0],
+        [wC, bC],
+        [tC, bC],
+        [tC, H - bC],
+        [wC, H - bC],
+        [wC, H],
+        [0, H]
+      ], 5.82, 0));
+
+      // --- LETRA 'E' (SEGUNDA) ---
+      lettersGroup.add(createSlantedMesh([
+        [0, 0],
+        [wE, 0],
+        [wE, bE],
+        [tE, bE],
+        [tE, (H - mE) / 2],
+        [wMidE, (H - mE) / 2],
+        [wMidE, (H + mE) / 2],
+        [tE, (H + mE) / 2],
+        [tE, H - bE],
+        [wE, H - bE],
+        [wE, H],
+        [0, H]
+      ], 7.56, 0));
+
+      logoGroup.add(lettersGroup);
+
+      // =======================================================================
+      // 4. SUBTÍTULO OFICIAL "ELECTRICIDAD E INNOVACION" (GRANDE Y DEL MISMO ANCHO QUE INSECE)
+      // =======================================================================
+      const subGroup = new T.Group();
+      // Centrado exacto desde el borde izquierdo de la 'I' (-0.55) hasta el final de la 'E' (8.90)
+      const subWidth = 9.48;
+      const subHeight = 0.72;
+      const subCenterX = (-0.55 + 8.90) / 2;
+      subGroup.position.set(subCenterX, -0.52, 0.16);
+
+      // Tipografía nítida en alta resolución, grande y abarcando todo el ancho de INSECE
+      const cvSub = document.createElement('canvas');
+      cvSub.width = 4096;
+      cvSub.height = 512;
+      const ctxS = cvSub.getContext('2d');
+      ctxS.clearRect(0, 0, 4096, 512);
+
+      ctxS.fillStyle = '#00a8e8';
+      ctxS.font = '900 290px "Segoe UI", Arial, sans-serif';
+      ctxS.letterSpacing = '18px';
+      ctxS.textBaseline = 'middle';
+      ctxS.textAlign = 'center';
+      ctxS.fillText('ELECTRICIDAD E INNOVACION', 2048, 256);
+
+      const subTex = new T.CanvasTexture(cvSub);
+      subTex.colorSpace = T.SRGBColorSpace;
+      subTex.needsUpdate = true;
+
+      // Cartel flotante en cyan limpio (sin caja oscura detrás, idéntico al logo original)
+      const subLabelGeo = new T.PlaneGeometry(subWidth, subHeight);
+      const subLabelMat = new T.MeshStandardMaterial({
+        map: subTex,
+        transparent: true,
+        alphaTest: 0.1,
+        roughness: 0.2,
+        metalness: 0.3,
+        emissive: 0x00a8e8,
+        emissiveIntensity: 0.45,
+        side: T.DoubleSide
+      });
+      const subLabel = new T.Mesh(subLabelGeo, subLabelMat);
+      subGroup.add(subLabel);
+
+      logoGroup.add(subGroup);
+      root.add(logoGroup);
+
+      return root;
+    }
+
+    function buildDachshundProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Perro_Salchicha_Teckel';
+
+      const blackCoat = new T.MeshStandardMaterial({ color: 0x121314, roughness: 0.35, metalness: 0.15 });
+      const tanCoat = new T.MeshStandardMaterial({ color: 0x9e5b2d, roughness: 0.5, metalness: 0.1 });
+      const noseMat = new T.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.2, metalness: 0.3 });
+      const eyeMat = new T.MeshStandardMaterial({ color: 0x050505, roughness: 0.1, metalness: 0.8 });
+      const collarMat = new T.MeshStandardMaterial({ color: 0xd32f2f, roughness: 0.4 });
+      const medalMat = new T.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.95, roughness: 0.2 });
+
+      const dog = new T.Group();
+      dog.position.set(0, 0, 0);
+
+      const body = new T.Mesh(new T.CylinderGeometry(0.16, 0.18, 0.82, 24), blackCoat);
+      body.rotation.x = Math.PI / 2;
+      body.position.set(0, 0.34, 0);
+      body.castShadow = true;
+      dog.add(body);
+
+      const chest = new T.Mesh(new T.SphereGeometry(0.18, 20, 20), tanCoat);
+      chest.position.set(0, 0.35, 0.41);
+      chest.scale.set(0.9, 1.05, 1.0);
+      chest.castShadow = true;
+      dog.add(chest);
+
+      const rump = new T.Mesh(new T.SphereGeometry(0.17, 18, 18), blackCoat);
+      rump.position.set(0, 0.34, -0.41);
+      rump.castShadow = true;
+      dog.add(rump);
+
+      const legPositions = [
+        [-0.14, 0.18, 0.36],
+        [0.14, 0.18, 0.36],
+        [-0.14, 0.18, -0.34],
+        [0.14, 0.18, -0.34]
+      ];
+      legPositions.forEach(([x, y, z]) => {
+        const thigh = new T.Mesh(new T.CylinderGeometry(0.055, 0.045, 0.22, 14), tanCoat);
+        thigh.position.set(x, y, z);
+        thigh.castShadow = true;
+        dog.add(thigh);
+
+        const paw = new T.Mesh(new T.BoxGeometry(0.07, 0.04, 0.1), tanCoat);
+        paw.position.set(x, 0.02, z + 0.02);
+        paw.castShadow = true;
+        dog.add(paw);
+      });
+
+      const neck = new T.Mesh(new T.CylinderGeometry(0.11, 0.13, 0.24, 16), blackCoat);
+      neck.position.set(0, 0.48, 0.46);
+      neck.rotation.x = -0.55;
+      dog.add(neck);
+
+      const collar = new T.Mesh(new T.TorusGeometry(0.12, 0.018, 12, 24), collarMat);
+      collar.position.set(0, 0.44, 0.45);
+      collar.rotation.x = 1.0;
+      dog.add(collar);
+
+      const medal = new T.Mesh(new T.CylinderGeometry(0.022, 0.022, 0.005, 16), medalMat);
+      medal.position.set(0, 0.38, 0.54);
+      dog.add(medal);
+
+      const head = new T.Mesh(new T.SphereGeometry(0.13, 20, 20), blackCoat);
+      head.position.set(0, 0.58, 0.58);
+      head.scale.set(0.9, 1.0, 1.1);
+      head.castShadow = true;
+      dog.add(head);
+
+      const snout = new T.Mesh(new T.ConeGeometry(0.08, 0.22, 16), tanCoat);
+      snout.rotation.x = Math.PI / 2 + 0.2;
+      snout.position.set(0, 0.55, 0.72);
+      dog.add(snout);
+
+      const nose = new T.Mesh(new T.SphereGeometry(0.03, 14, 14), noseMat);
+      nose.position.set(0, 0.575, 0.83);
+      dog.add(nose);
+
+      [-0.065, 0.065].forEach(ox => {
+        const eye = new T.Mesh(new T.SphereGeometry(0.022, 12, 12), eyeMat);
+        eye.position.set(ox, 0.61, 0.67);
+        dog.add(eye);
+      });
+
+      [-0.14, 0.14].forEach((ex, idx) => {
+        const ear = new T.Mesh(new T.BoxGeometry(0.035, 0.24, 0.11), blackCoat);
+        ear.position.set(ex, 0.50, 0.56);
+        ear.rotation.z = idx === 0 ? 0.25 : -0.25;
+        ear.rotation.y = idx === 0 ? 0.15 : -0.15;
+        ear.castShadow = true;
+        dog.add(ear);
+      });
+
+      const tail = new T.Mesh(new T.CylinderGeometry(0.015, 0.03, 0.32, 12), blackCoat);
+      tail.position.set(0, 0.44, -0.52);
+      tail.rotation.x = -1.1;
+      tail.castShadow = true;
+      dog.add(tail);
+
+      root.add(dog);
+      return root;
+    }
+
+    function buildNdviSurfaceProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Ndvi_Topography';
+
+      const width = 12, depth = 8, cols = 72, rows = 48;
+      const positions = [], colors = [], indices = [];
+
+      function ndviVal(x, z) {
+        const base = 0.68 + 0.11 * Math.sin(x * 0.58) + 0.07 * Math.cos(z * 0.72);
+        const anomaly = 0.58 * Math.exp(-((x - 2.1)**2 + (z + 0.4)**2) / 3.2);
+        const edge = 0.05 * Math.sin((x + z) * 1.7);
+        return Math.max(-1, Math.min(1, base - anomaly + edge));
+      }
+
+      function ndviCol(val) {
+        const c = new T.Color();
+        if (val < 0) c.lerpColors(new T.Color('#7b3d34'), new T.Color('#c8a742'), (val + 1) / 1);
+        else c.lerpColors(new T.Color('#c8a742'), new T.Color('#12613e'), val);
+        return c;
+      }
+
+      for (let r = 0; r <= rows; r++) {
+        for (let c = 0; c <= cols; c++) {
+          const x = (c / cols) * width - width / 2;
+          const z = (r / rows) * depth - depth / 2;
+          const v = ndviVal(x, z);
+          const y = 0.18 + (v + 1) * 0.45;
+          positions.push(x, y, z);
+          const col = ndviCol(v);
+          colors.push(col.r, col.g, col.b);
+        }
+      }
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const a = r * (cols + 1) + c, b = a + 1, cIdx = a + cols + 1, d = cIdx + 1;
+          indices.push(a, cIdx, b, b, cIdx, d);
+        }
+      }
+
+      const geo = new T.BufferGeometry();
+      geo.setAttribute('position', new T.BufferAttribute(new Float32Array(positions), 3));
+      geo.setAttribute('color', new T.BufferAttribute(new Float32Array(colors), 3));
+      geo.setIndex(indices);
+      geo.computeVertexNormals();
+
+      const mat = new T.MeshStandardMaterial({ vertexColors: true, side: T.DoubleSide, roughness: 0.75 });
+      const mesh = new T.Mesh(geo, mat);
+      mesh.castShadow = true; mesh.receiveShadow = true;
+      root.add(mesh);
+
+      // Wireframe overlay
+      const wire = new T.Mesh(geo, new T.MeshBasicMaterial({ color: 0xdbe8df, wireframe: true, transparent: true, opacity: 0.08 }));
+      wire.position.y += 0.015;
+      root.add(wire);
+
+      // Anomaly ring marker
+      const ring = new T.Mesh(new T.TorusGeometry(0.8, 0.035, 12, 64), new T.MeshBasicMaterial({ color: 0xf07b68, transparent: true, opacity: 0.9 }));
+      ring.position.set(2.1, 0.98, -0.4);
+      ring.rotation.x = Math.PI / 2;
+      root.add(ring);
+
+      return root;
+    }
+
+    function buildFieldSceneProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Field_Scene_Full';
+
+      const ground = new T.Mesh(new T.BoxGeometry(24, 0.2, 24), new T.MeshStandardMaterial({ color: 0x302b20, roughness: 1 }));
+      ground.position.y = -0.1;
+      ground.receiveShadow = true;
+      root.add(ground);
+
+      for (let z of [-6, -3, 0, 3, 6]) {
+        const cropRow = new T.Mesh(new T.BoxGeometry(20, 0.35, 0.8), new T.MeshStandardMaterial({ color: 0x405a2d, roughness: 0.9 }));
+        cropRow.position.set(0, 0.17, z);
+        cropRow.castShadow = true;
+        root.add(cropRow);
+      }
+      return root;
+    }
+
+    // =========================================================================
+    // CARGADOR Y ADAPTADOR DE ESCENA
+    // =========================================================================
+    function setupLoadedObject(object, meta) {
+      currentModel = object;
+
+      const box = new THREE.Box3().setFromObject(currentModel);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+
+      currentModel.position.x += -center.x;
+      currentModel.position.z += -center.z;
+      currentModel.position.y += -box.min.y;
+
+      currentModel.traverse(node => {
+        if (node.isMesh) {
+          node.castShadow = true;
+          node.receiveShadow = true;
+        }
+      });
+
+      scene.add(currentModel);
+
+      const maxDim = Math.max(size.x, size.y, size.z, 0.4);
+      const dist = Math.max(maxDim * 1.8, 1.2);
+
+      camera.position.set(dist * 0.75, dist * 0.45, dist * 0.75);
+      controls.target.set(0, size.y * 0.5, 0);
+      controls.maxDistance = Math.max(dist * 6, 25);
+      controls.update();
+
+      scene.fog = new THREE.FogExp2(0x0a0d14, 1 / (dist * 6));
+
+      loaderEl.style.opacity = '0';
+      loaderEl.style.pointerEvents = 'none';
+    }
+
+    function displayModel(item) {
+      loaderEl.style.opacity = '1';
+      loaderEl.style.pointerEvents = 'auto';
+      loaderText.innerText = 'Cargando ' + item.name + '...';
+
+      infoTitle.innerHTML = `${item.title} <span class="cat-tag">${item.category.toUpperCase()}</span>`;
+      infoDesc.innerText = item.desc;
+      infoTags.innerHTML = item.tags.map(t => `<span class="scada-tag">${t}</span>`).join('');
+      reactCompName.innerText = item.reactComp;
+
+      if (currentModel) {
+        scene.remove(currentModel);
+        currentModel.traverse(child => {
+          if (child.isMesh) {
+            child.geometry.dispose();
+            if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+            else child.material.dispose();
+          }
+        });
+        currentModel = null;
+      }
+
+      if (item.type === 'procedural' && typeof item.builder === 'function') {
+        const procObj = item.builder(THREE);
+        setupLoadedObject(procObj, item);
+        return;
+      }
+
+      if (!item.file && typeof item.builder === 'function') {
+        const procObj = item.builder(THREE);
+        setupLoadedObject(procObj, item);
+        return;
+      }
+
+      const filePath = item.file.startsWith('/') ? item.file : ('/models/' + item.file);
+      gltfLoader.load(filePath, (gltf) => {
+        setupLoadedObject(gltf.scene, item);
+      }, (xhr) => {
+        if (xhr.lengthComputable && xhr.total > 0) {
+          loaderText.innerText = `Cargando ${item.name} (${Math.round((xhr.loaded / xhr.total) * 100)}%)...`;
+        }
+      }, (err) => {
+        console.warn(`Aviso de carga para ${item.file}:`, err);
+        // Fallback procedural instantáneo si existe
+        if (typeof item.builder === 'function') {
+          console.info(`Renderizando modelo procedural de alta precisión para ${item.name}`);
+          const procObj = item.builder(THREE);
+          setupLoadedObject(procObj, item);
+          return;
+        }
+
+        // Si no existe builder, intentar ruta relativa
+        gltfLoader.load('./extracted-3d-lib/models/' + item.file, (gltf2) => {
+          setupLoadedObject(gltf2.scene, item);
+        }, undefined, (e2) => {
+          console.error('Error total:', e2);
+          loaderText.innerText = `Error al cargar ${item.name}`;
+        });
+      });
+    }
+
+    // =========================================================================
+    // RENDERIZADO DE BOTONES Y FILTROS
+    // =========================================================================
+    const modelsContainer = document.getElementById('models-container');
+
+    function renderModelButtons(category = 'all', searchQuery = '') {
+      modelsContainer.innerHTML = '';
+      const q = searchQuery.toLowerCase().trim();
+
+      const filtered = CATALOG.filter(m => {
+        const matchCat = (category === 'all' || m.category === category);
+        const matchQ = !q || m.name.toLowerCase().includes(q) || m.title.toLowerCase().includes(q) || m.tags.some(t => t.toLowerCase().includes(q));
+        return matchCat && matchQ;
+      });
+
+      filtered.forEach((item, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'tab-btn' + (index === 0 ? ' active' : '');
+        btn.setAttribute('data-id', item.id);
+        btn.innerHTML = `<span>${item.icon}</span> ${item.name}`;
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          displayModel(item);
+        });
+        modelsContainer.appendChild(btn);
+      });
+
+      if (filtered.length > 0) {
+        displayModel(filtered[0]);
+      }
+    }
+
+    // Filtros de categoría
+    document.querySelectorAll('.cat-btn').forEach(cBtn => {
+      cBtn.addEventListener('click', () => {
+        document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+        cBtn.classList.add('active');
+        const cat = cBtn.getAttribute('data-cat');
+        renderModelButtons(cat, document.getElementById('search-input').value);
+      });
+    });
+
+    // Búsqueda en vivo
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      const activeCatBtn = document.querySelector('.cat-btn.active');
+      const cat = activeCatBtn ? activeCatBtn.getAttribute('data-cat') : 'all';
+      renderModelButtons(cat, e.target.value);
+    });
+
+    // Copiar componente React al portapapeles
+    copyPill.addEventListener('click', () => {
+      const code = reactCompName.innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const originalText = copyPill.innerHTML;
+        copyPill.innerHTML = '✅ ¡Copiado al portapapeles!';
+        setTimeout(() => { copyPill.innerHTML = originalText; }, 1800);
+      });
+    });
+
+    // Controles de visualización
+    document.getElementById('auto-rotate').addEventListener('change', (e) => { controls.autoRotate = e.target.checked; });
+    document.getElementById('wireframe').addEventListener('change', (e) => {
+      if (currentModel) {
+        currentModel.traverse(node => { if (node.isMesh) node.material.wireframe = e.target.checked; });
+      }
+    });
+    document.getElementById('grid').addEventListener('change', (e) => { gridHelper.visible = e.target.checked; });
+    document.getElementById('shadows').addEventListener('change', (e) => { dirLight.castShadow = e.target.checked; });
+    document.getElementById('reset-cam').addEventListener('click', () => {
+      if (currentModel) {
+        const box = new THREE.Box3().setFromObject(currentModel);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z, 0.4);
+        const dist = Math.max(maxDim * 1.8, 1.2);
+        camera.position.set(dist * 0.75, dist * 0.45, dist * 0.75);
+        controls.target.set(0, size.y * 0.5, 0);
+        controls.update();
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    // Render loop
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Inicialización del catálogo
+    renderModelButtons('all', '');
+  </script>
+</body>
+</html>
