@@ -46,6 +46,24 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (pathname === '/api/save-model' && req.method === 'POST') {
+    const filename = url.searchParams.get('name') || 'model.glb';
+    const cleanName = path.basename(filename);
+    const modelsDir = path.join(__dirname, 'extracted-3d-lib', 'models');
+    if (!fs.existsSync(modelsDir)) fs.mkdirSync(modelsDir, { recursive: true });
+    const targetFile = path.join(modelsDir, cleanName.endsWith('.glb') ? cleanName : (cleanName + '.glb'));
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end', () => {
+      const buffer = Buffer.concat(chunks);
+      fs.writeFileSync(targetFile, buffer);
+      console.log(`[MODEL SAVED] Guardado ${targetFile} (${Math.round(buffer.length / 1024)} KB)`);
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+      res.end(JSON.stringify({ success: true, file: cleanName, bytes: buffer.length }));
+    });
+    return;
+  }
+
   // Serve models from extracted-3d-lib/models/
   if (pathname.startsWith('/models/')) {
     const filename = path.basename(pathname);

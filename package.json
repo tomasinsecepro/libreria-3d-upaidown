@@ -1,34 +1,23 @@
 {
-  "name": "up-eye-dawn-demo",
-  "private": true,
-  "version": "0.1.0",
+  "name": "libreria-3d-upaidown",
+  "version": "1.1.0",
+  "description": "Librería 3D interactiva y procedural con modelos agrícolas, fauna ibérica, fotovoltaica y riego para Three.js y React Three Fiber",
+  "main": "./extracted-3d-lib/index.ts",
+  "module": "./extracted-3d-lib/index.ts",
+  "types": "./extracted-3d-lib/index.ts",
+  "exports": {
+    ".": "./extracted-3d-lib/index.ts",
+    "./components/*": "./extracted-3d-lib/components/*",
+    "./models/*": "./extracted-3d-lib/models/*"
+  },
   "packageManager": "pnpm@10.30.1",
   "engines": {
-    "node": "24.18.0"
+    "node": ">=18.0.0"
   },
   "scripts": {
-    "runtime:check": "node scripts/require-node.mjs",
-    "truth:check": "node scripts/truth-check.mjs",
-    "financial:test": "node --test scripts/financial-model.test.mjs scripts/round-decision.test.mjs",
-    "dev": "node scripts/require-node.mjs && pnpm --parallel --filter @ued/api --filter @ued/web dev",
-    "build": "node scripts/require-node.mjs && pnpm -r build",
-    "test": "node scripts/require-node.mjs && pnpm -r test",
-    "portal:migrate": "docker compose exec -T api pnpm --filter @ued/api portal:migrate",
-    "portal:seed-dev": "docker compose exec -T api pnpm --filter @ued/api portal:seed-dev",
-    "portal:test": "pnpm --filter @ued/api test && node scripts/portal-security-check.mjs",
-    "portal:security-check": "node scripts/portal-security-check.mjs",
-    "demo:setup": "docker compose build",
-    "demo:up": "docker compose up -d --wait",
-    "demo:down": "docker compose down",
-    "demo:reset": "node scripts/reset-demo.mjs",
-    "demo:seed": "node scripts/seed-demo.mjs",
-    "demo:test": "node scripts/demo-test.mjs",
-    "demo:preflight": "node scripts/preflight.mjs",
-    "demo:logs": "docker compose logs -f --tail=200",
-    "demo:screenshot": "pnpm --filter @ued/web screenshot",
-    "assert:insece": "node scripts/assert-insece-untouched.mjs",
-    "gcp:smtp:test": "node --test scripts/gcp/configure-production-smtp.test.mjs",
-    "gcp:smtp:configure": "node scripts/gcp/configure-production-smtp.mjs"
+    "dev": "node viewer-server.mjs",
+    "viewer": "node viewer-server.mjs",
+    "build:models": "node extracted-3d-lib/scripts/build-models.mjs"
   },
   "devDependencies": {
     "@types/node": "24.10.0",

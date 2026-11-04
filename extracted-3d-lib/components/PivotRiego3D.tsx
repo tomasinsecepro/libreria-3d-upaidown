@@ -7,6 +7,7 @@ export interface PivotRiego3DProps {
   position?: [number, number, number];
   rotation?: [number, number, number];
   scale?: number;
+  towers?: 3 | 4 | 5 | 6 | 7; // Número de torres / tramos (3, 4, 5, 6 ó 7)
   // Control SCADA en vivo:
   angleDegrees?: number; // 0 a 360 grados (posición angular del pívot en la finca)
   autoRotate?: boolean;  // Si está activo el avance automático
@@ -52,16 +53,19 @@ export function PivotRiego3D({
   position = [0, 0, 0],
   rotation = [0, 0, 0],
   scale = 1,
+  towers = 7,
   angleDegrees,
   autoRotate = true,
   speed = 0.04,
-  modelUrl = '/models/pivot-riego-7t.glb',
+  modelUrl,
 }: PivotRiego3DProps) {
+  const resolvedUrl = modelUrl || `/models/pivot-riego-${towers}t.glb`;
+
   return (
     <group position={position} rotation={rotation} scale={scale}>
       <Suspense fallback={null}>
         <PivotModel
-          url={modelUrl}
+          url={resolvedUrl}
           angleDegrees={angleDegrees}
           autoRotate={autoRotate}
           speed={speed}

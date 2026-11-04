@@ -16,3 +16,10 @@ export * from './components/DachshundDog3D';
 export * from './components/SolarPanels3D';
 export * from './components/IngeteamInverter3D';
 export * from './components/Vineyard3D';
+export * from './components/DosificadorFertilizante3D';
+export * from './components/TorreCti3D';
+export * from './components/TorreMediaTension3D';
+export * from './components/Liebre3D';
+export * from './components/GalgoEspanol3D';
+
+

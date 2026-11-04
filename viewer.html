@@ -338,7 +338,7 @@
   <header>
     <div class="brand">
       <h1>Librería 3D Agrovoltaica & SCADA</h1>
-      <span>18 Activos 3D Listos</span>
+      <span>26 Activos 3D Listos</span>
     </div>
     <div class="search-box">
       <span>🔍</span>
@@ -348,8 +348,8 @@
 
   <!-- Filtro por categorías -->
   <div class="category-bar">
-    <button class="cat-btn active" data-cat="all">🌟 Todos (18)</button>
-    <button class="cat-btn" data-cat="solar">☀️ Fotovoltaica</button>
+    <button class="cat-btn active" data-cat="all">🌟 Todos (26)</button>
+    <button class="cat-btn" data-cat="solar">☀️ Fotovoltaica & MT</button>
     <button class="cat-btn" data-cat="crops">🌿 Cultivos</button>
     <button class="cat-btn" data-cat="hydro">💧 Hidráulica & Riego</button>
     <button class="cat-btn" data-cat="robotics">🚜 Maquinaria & Drones</button>
@@ -403,6 +403,12 @@
       <button id="reset-cam" style="background:#21262d; border:1px solid #30363d; color:#c9d1d9; padding:5px; border-radius:4px; cursor:pointer; font-size:10px; margin-top:2px;">
         Centrar Cámara
       </button>
+      <button id="download-glb-btn" style="background:#238636; border:1px solid #2ea043; color:#fff; padding:6px; border-radius:4px; cursor:pointer; font-size:10px; margin-top:4px; font-weight:600;">
+        📥 Exportar .GLB
+      </button>
+      <button id="export-all-glb-btn" style="background:#1f6feb; border:1px solid #388bfd; color:#fff; padding:6px; border-radius:4px; cursor:pointer; font-size:10px; margin-top:4px; font-weight:600;">
+        📦 Guardar Todos los .GLB
+      </button>
     </div>
 
     <div class="instructions">
@@ -421,6 +427,7 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
 
     // =========================================================================
     // BASE DE DATOS MODULAR DE MODELOS 3D (FACILMENTE AMPLIABLE)
@@ -437,6 +444,30 @@
         reactComp: '<IngeteamInverter3D position={[0,0,0]} scale={1} />',
         type: 'procedural',
         builder: buildIngeteamInverter
+      },
+      {
+        id: 'torre-cti-transformador',
+        name: 'Torre CTI (Con Transformador)',
+        category: 'solar',
+        icon: '⚡',
+        title: 'Torre CTI (Centro de Transformación Intemperie) con Trafo 20 kV',
+        desc: 'Apoyo de celosía metálica galvanizada con armario inferior de maniobra de baja tensión, señalización de peligro de riesgo eléctrico en puertas, plataforma en voladizo con transformador en baño de aceite, aletas refrigerantes, aisladores pasatapas de porcelana, fusibles XS basculantes y cruceta superior con aisladores de suspensión.',
+        tags: ['POWER_RATING: 160 kVA', 'VOLTAGE: 20 kV / 400 V', 'OIL_TYPE: MINERAL_ISO', 'FUSES: XS_24KV', 'SCADA_TEMP: 48.2°C', 'STATUS: IN_SERVICE'],
+        reactComp: '<TorreCti3D transformerKva={160} voltageKv={20} />',
+        type: 'procedural',
+        builder: (T) => buildCtiTowerProcedural(T, true)
+      },
+      {
+        id: 'torre-media-tension',
+        name: 'Torre MT (Sin Transformador)',
+        category: 'solar',
+        icon: '🗼',
+        title: 'Torre de Media Tensión de Celosía (Sin Transformador)',
+        desc: 'Torre de alta/media tensión idéntica al apoyo CTI pero limpia, con zócalo y armario inferior de baja tensión con señalización de peligro eléctrico, fuste de celosía cuadrangular con conducto central, cruceta de coronación y cadenas de aisladores de suspensión.',
+        tags: ['TOWER_HEIGHT: 11.2 m', 'VOLTAGE_CLASS: 20-30 kV', 'LATTICE: GALVANIZED_STEEL', 'CIRCUITS: 3-PHASE', 'STATUS: IN_SERVICE'],
+        reactComp: '<TorreMediaTension3D voltageKv={20} />',
+        type: 'procedural',
+        builder: (T) => buildCtiTowerProcedural(T, false)
       },
       {
         id: 'placas-solares-bifila',
@@ -531,15 +562,64 @@
         file: 'embalse-riego.glb'
       },
       {
+        id: 'pivot-riego-3t',
+        name: 'Pívot Central (3 Torres)',
+        category: 'hydro',
+        icon: '🔄',
+        title: 'Pívot Central de Riego Automatizado (3 Torres / Tramos)',
+        desc: 'Pívot de riego de 3 tramos para fincas medianas. Pirámide central de anclaje con cuadro SCADA, 3 torres móviles con ruedas agrícolas orientadas 90° para avance circular tangencial, voladizo y cañón final de alto alcance.',
+        tags: ['TOWERS: 3', 'LENGTH: ~17 m', 'COVERAGE: 9 ha', 'WHEEL_DIR: TANGENCIAL_90°', 'SECTORS: 1-3'],
+        reactComp: '<PivotRiego3D towers={3} angleDegrees={142} autoRotate={true} />',
+        type: 'procedural',
+        builder: (T) => buildPivotProcedural(T, 3)
+      },
+      {
+        id: 'pivot-riego-4t',
+        name: 'Pívot Central (4 Torres)',
+        category: 'hydro',
+        icon: '🔄',
+        title: 'Pívot Central de Riego Automatizado (4 Torres / Tramos)',
+        desc: 'Pívot de riego de 4 tramos con estructura de celosía galvanizada tipo bowstring, pirámide central con junta giratoria swivel, 4 torres autopropulsadas con ruedas a 90° y cañón final Nelson Big Gun.',
+        tags: ['TOWERS: 4', 'LENGTH: ~22 m', 'COVERAGE: 15 ha', 'WHEEL_DIR: TANGENCIAL_90°', 'SECTORS: 1-4'],
+        reactComp: '<PivotRiego3D towers={4} angleDegrees={142} autoRotate={true} />',
+        type: 'procedural',
+        builder: (T) => buildPivotProcedural(T, 4)
+      },
+      {
+        id: 'pivot-riego-5t',
+        name: 'Pívot Central (5 Torres)',
+        category: 'hydro',
+        icon: '🔄',
+        title: 'Pívot Central de Riego Automatizado (5 Torres / Tramos)',
+        desc: 'Pívot de riego de 5 tramos. Cabeza central de anclaje idéntica, 5 torres móviles con ruedas motrices orientadas 90° tangenciales al radio de giro, bajantes flexibles con difusores y voladizo con baliza roja.',
+        tags: ['TOWERS: 5', 'LENGTH: ~26 m', 'COVERAGE: 23 ha', 'WHEEL_DIR: TANGENCIAL_90°', 'SECTORS: 1-5'],
+        reactComp: '<PivotRiego3D towers={5} angleDegrees={142} autoRotate={true} />',
+        type: 'procedural',
+        builder: (T) => buildPivotProcedural(T, 5)
+      },
+      {
+        id: 'pivot-riego-6t',
+        name: 'Pívot Central (6 Torres)',
+        category: 'hydro',
+        icon: '🔄',
+        title: 'Pívot Central de Riego Automatizado (6 Torres / Tramos)',
+        desc: 'Pívot de riego de 6 tramos de gran capacidad. Pirámide central, 6 torres motorizadas con alineación automática, ruedas agrícolas con tacos en V giradas 90°, voladizo y cañón final.',
+        tags: ['TOWERS: 6', 'LENGTH: ~31 m', 'COVERAGE: 33 ha', 'WHEEL_DIR: TANGENCIAL_90°', 'SECTORS: 1-6'],
+        reactComp: '<PivotRiego3D towers={6} angleDegrees={142} autoRotate={true} />',
+        type: 'procedural',
+        builder: (T) => buildPivotProcedural(T, 6)
+      },
+      {
         id: 'pivot-riego-7t',
         name: 'Pívot Central (7 Torres)',
         category: 'hydro',
         icon: '🔄',
-        title: 'Pívot Central de Riego Automatizado (7 Tramos)',
-        desc: 'Sistema de riego pivotante de gran envergadura con pirámide central de anclaje, 7 tramos con torres de celosía galvanizada, ruedas motrices de tracción, tubería y aspersores sectoriales.',
-        tags: ['PIVOT_ANGLE: 142°', 'ROTATION_SPEED: 2.4 m/min', 'WATER_PRESSURE: 3.8 bar', 'APPLICATION_MM: 12'],
-        reactComp: '<PivotRiego3D angle={142} running={true} />',
-        file: 'pivot-riego-7t.glb'
+        title: 'Pívot Central de Riego Automatizado (7 Torres / Tramos)',
+        desc: 'Sistema de riego pivotante de máxima envergadura con pirámide central de anclaje, 7 tramos con torres de celosía galvanizada, ruedas motrices orientadas 90° en dirección de avance circular, voladizo y cañón final.',
+        tags: ['TOWERS: 7', 'LENGTH: ~36 m', 'COVERAGE: 45 ha', 'WHEEL_DIR: TANGENCIAL_90°', 'SECTORS: 1-7'],
+        reactComp: '<PivotRiego3D towers={7} angleDegrees={142} autoRotate={true} />',
+        type: 'procedural',
+        builder: (T) => buildPivotProcedural(T, 7)
       },
       {
         id: 'tractor-ebro-684',
@@ -633,6 +713,30 @@
         reactComp: '<DachshundDog3D />',
         file: 'perro-salchicha.glb',
         builder: buildDachshundProcedural
+      },
+      {
+        id: 'liebre-iberica',
+        name: 'Liebre Ibérica en Salto',
+        category: 'special',
+        icon: '🐇',
+        title: 'Liebre Ibérica en Plena Carrera / Salto a 70 km/h (Lepus granatensis)',
+        desc: 'Modelo 3D hiperrealista de liebre ibérica en pleno salto aerodinámico suspendida en el aire: manto pardo agutí jaspeado con vientre blanco níveo en contraste, patas delanteras en avance de zancada, patas traseras propulsoras hiperextendidas hacia atrás, ojo ardiente dorado-ámbar con anillo periocular claro, orejas largas aerodinámicas con puntas negras azabache y rabito horizontal blanco y negro.',
+        tags: ['ESPECIE: LEPUS_GRANATENSIS', 'ACCIÓN: SALTO_EN_CARRERA', 'VELOCIDAD: 70_KMH', 'MANTO: AGUTÍ_Y_BLANCO', 'FAUNA: CAMPO_IBÉRICO'],
+        reactComp: '<Liebre3D scale={1} />',
+        type: 'procedural',
+        builder: buildHareProcedural
+      },
+      {
+        id: 'perro-galgo-espanol',
+        name: 'Galgo Español Barcino',
+        category: 'special',
+        icon: '🐕',
+        title: 'Perro Galgo Español Barcino / Atigrado (Spanish Greyhound)',
+        desc: 'Modelo 3D hiperrealista de Galgo Español fiel a fotografía: capa atigrada/barcina con vetas oscuras sobre fondo leonado dorado, antepecho y garganta en blanco puro, patas delanteras blancas, calcetines posteriores, máscara facial oscura sombreada, collar tradicional de cuero granate con herraje metálico y cola en látigo con punta blanca.',
+        tags: ['RAZA: GALGO_ESPAÑOL', 'CAPA: BARCINO_ATIGRADO', 'PECHO_Y_PATAS: BLANCO_PURO', 'COLLAR: CUERO_GRANATE', 'COLA: PUNTA_BLANCA'],
+        reactComp: '<GalgoEspanol3D scale={1} />',
+        type: 'procedural',
+        builder: buildGreyhoundProcedural
       }
     ];
 
@@ -1953,6 +2057,217 @@
       return root;
     }
 
+    function buildPivotProcedural(T, numTowers = 7) {
+      const root = new T.Group();
+      root.name = `Center_Pivot_${numTowers}_Towers`;
+
+      // Paleta PBR para estructura industrial galvanizada
+      const galvaSteel = new T.MeshStandardMaterial({ color: 0xa8b2b8, metalness: 0.92, roughness: 0.2 });
+      const darkSteel = new T.MeshStandardMaterial({ color: 0x4a5054, metalness: 0.85, roughness: 0.35 });
+      const pipeSteel = new T.MeshStandardMaterial({ color: 0xb4bec4, metalness: 0.9, roughness: 0.18 });
+      const concreteBase = new T.MeshStandardMaterial({ color: 0x8c8a82, roughness: 0.95 });
+      const tireRubber = new T.MeshStandardMaterial({ color: 0x151718, roughness: 0.92 });
+      const motorYellow = new T.MeshStandardMaterial({ color: 0xd49b13, metalness: 0.4, roughness: 0.4 });
+      const controlBoxWhite = new T.MeshStandardMaterial({ color: 0xe4e7e8, roughness: 0.3 });
+      const nozzleGold = new T.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.7, roughness: 0.3 });
+      const dropTubeBlack = new T.MeshStandardMaterial({ color: 0x1d2124, roughness: 0.8 });
+      const endGunBrass = new T.MeshStandardMaterial({ color: 0xb87333, metalness: 0.8, roughness: 0.25 });
+      const signalLightRed = new T.MeshStandardMaterial({ color: 0xff2222, emissive: 0xff1111, emissiveIntensity: 0.9 });
+
+      function rod(parent, p1, p2, radius, material) {
+        const v1 = new T.Vector3(...p1);
+        const v2 = new T.Vector3(...p2);
+        const dist = v1.distanceTo(v2);
+        const dir = new T.Vector3().subVectors(v2, v1).normalize();
+        const mid = new T.Vector3().addVectors(v1, v2).multiplyScalar(0.5);
+
+        const geo = new T.CylinderGeometry(radius, radius, dist, 8);
+        const m = new T.Mesh(geo, material);
+        m.position.copy(mid);
+        m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir);
+        m.castShadow = true;
+        m.receiveShadow = true;
+        parent.add(m);
+        return m;
+      }
+
+      function mMesh(parent, geo, material, pos = [0, 0, 0], rot = [0, 0, 0]) {
+        const m = new T.Mesh(geo, material);
+        m.position.set(...pos);
+        m.rotation.set(...rot);
+        m.castShadow = true;
+        m.receiveShadow = true;
+        parent.add(m);
+        return m;
+      }
+
+      const spanLength = 4.8;
+      const pipeHeight = 3.2;
+
+      // ==========================================
+      // 1. PIRÁMIDE CENTRAL DE ANCLAJE (CABEZA PRINCIPAL - IGUAL EN TODOS)
+      // ==========================================
+      const centerPoint = new T.Group();
+      centerPoint.name = 'central_pivot_point';
+      root.add(centerPoint);
+
+      mMesh(centerPoint, new T.BoxGeometry(2.4, 0.35, 2.4), concreteBase, [0, 0.175, 0]);
+      mMesh(centerPoint, new T.CylinderGeometry(0.8, 1.0, 0.25, 24), concreteBase, [0, 0.42, 0]);
+
+      mMesh(centerPoint, new T.CylinderGeometry(0.22, 0.22, 3.1, 20), pipeSteel, [0, 1.6, 0]);
+      mMesh(centerPoint, new T.TorusGeometry(0.35, 0.18, 12, 24, Math.PI / 2), pipeSteel, [0.35, 3.1, 0], [0, 0, -Math.PI / 2]);
+
+      const legCoords = [
+        [-0.9, 0.35, -0.9],
+        [0.9, 0.35, -0.9],
+        [-0.9, 0.35, 0.9],
+        [0.9, 0.35, 0.9],
+      ];
+      for (const c of legCoords) {
+        rod(centerPoint, c, [0, 3.0, 0], 0.05, galvaSteel);
+        for (const h of [1.1, 2.0]) {
+          const scale = (3.0 - h) / (3.0 - 0.35);
+          const hc = [c[0] * scale, h, c[2] * scale];
+          mMesh(centerPoint, new T.SphereGeometry(0.06, 8, 6), darkSteel, hc);
+        }
+      }
+
+      const scadaBox = new T.Group();
+      scadaBox.position.set(0.75, 1.4, 0.4);
+      mMesh(scadaBox, new T.BoxGeometry(0.22, 0.75, 0.55), controlBoxWhite, [0, 0, 0]);
+      mMesh(scadaBox, new T.CylinderGeometry(0.015, 0.015, 0.6, 8), darkSteel, [0, 0.65, 0]);
+      mMesh(scadaBox, new T.BoxGeometry(0.02, 0.15, 0.22), darkSteel, [0.12, 0.1, 0]);
+      centerPoint.add(scadaBox);
+
+      mMesh(centerPoint, new T.CylinderGeometry(0.28, 0.28, 0.55, 16), motorYellow, [0, 3.45, 0]);
+
+      // ==========================================
+      // 2. CONSTRUCCIÓN DE LOS VANO Y LAS TORRES (1 a numTowers)
+      // ==========================================
+      for (let t = 1; t <= numTowers; t++) {
+        const prevX = (t - 1) * spanLength;
+        const currX = t * spanLength;
+
+        const spanGroup = new T.Group();
+        spanGroup.name = `span_${t}`;
+        root.add(spanGroup);
+
+        rod(spanGroup, [prevX, pipeHeight, 0], [currX, pipeHeight, 0], 0.11, pipeSteel);
+
+        const numPanels = 6;
+        const trussSag = 0.65;
+
+        for (let p = 0; p <= numPanels; p++) {
+          const px = prevX + (p / numPanels) * spanLength;
+          const parabola = Math.sin((p / numPanels) * Math.PI) * trussSag;
+          const py = pipeHeight - parabola;
+
+          rod(spanGroup, [px, pipeHeight, 0], [px, py, 0], 0.025, galvaSteel);
+
+          for (const zSide of [-0.35, 0.35]) {
+            rod(spanGroup, [px, pipeHeight, 0], [px, py + 0.1, zSide * (1 - Math.abs(p - numPanels / 2) / (numPanels / 2))], 0.018, galvaSteel);
+          }
+
+          if (p < numPanels) {
+            const nextPx = prevX + ((p + 1) / numPanels) * spanLength;
+            const nextPy = pipeHeight - Math.sin(((p + 1) / numPanels) * Math.PI) * trussSag;
+            rod(spanGroup, [px, py, 0], [nextPx, nextPy, 0], 0.03, galvaSteel);
+          }
+        }
+
+        const numNozzles = 7;
+        for (let n = 1; n <= numNozzles; n++) {
+          const nx = prevX + (n / (numNozzles + 1)) * spanLength;
+          mMesh(spanGroup, new T.TorusGeometry(0.08, 0.018, 6, 12, Math.PI), pipeSteel, [nx, pipeHeight + 0.08, 0], [Math.PI / 2, 0, 0]);
+          rod(spanGroup, [nx, pipeHeight + 0.08, 0.08], [nx, 1.1, 0.08], 0.016, dropTubeBlack);
+          mMesh(spanGroup, new T.CylinderGeometry(0.035, 0.045, 0.12, 10), nozzleGold, [nx, 1.04, 0.08]);
+          mMesh(spanGroup, new T.ConeGeometry(0.045, 0.03, 10), darkSteel, [nx, 0.98, 0.08], [Math.PI, 0, 0]);
+        }
+
+        const towerGroup = new T.Group();
+        towerGroup.name = `tower_${t}`;
+        towerGroup.position.set(currX, 0, 0);
+        root.add(towerGroup);
+
+        const legSpreadZ = 1.6;
+        for (const zSide of [-1, 1]) {
+          const zBase = zSide * legSpreadZ;
+          rod(towerGroup, [0, pipeHeight, 0], [0, 0.8, zBase], 0.045, galvaSteel);
+          rod(towerGroup, [0, 1.2, 0], [0, 2.2, zBase * 0.7], 0.025, galvaSteel);
+          rod(towerGroup, [0, 2.2, 0], [0, 1.2, zBase * 0.7], 0.025, galvaSteel);
+        }
+
+        rod(towerGroup, [0, 0.75, -legSpreadZ], [0, 0.75, legSpreadZ], 0.06, darkSteel);
+
+        mMesh(towerGroup, new T.CylinderGeometry(0.14, 0.14, 0.45, 14), motorYellow, [0, 0.95, 0], [0, 0, Math.PI / 2]);
+        rod(towerGroup, [0, 0.82, -0.2], [0, 0.75, -legSpreadZ + 0.2], 0.03, darkSteel);
+        rod(towerGroup, [0, 0.82, 0.2], [0, 0.75, legSpreadZ - 0.2], 0.03, darkSteel);
+
+        mMesh(towerGroup, new T.BoxGeometry(0.18, 0.26, 0.22), controlBoxWhite, [0.15, 1.6, 0]);
+
+        // ----------------------------------------
+        // D. RUEDAS MOTRICES: ORIENTACIÓN CAMBIADA 90º (AVANCE CIRCULAR TANGENCIAL)
+        // ----------------------------------------
+        for (const zSide of [-1, 1]) {
+          const wheelGroup = new T.Group();
+          wheelGroup.name = `wheel_${zSide > 0 ? 'right' : 'left'}`;
+          // Misma posición exacta sin desplazar:
+          wheelGroup.position.set(0, 0.75, zSide * legSpreadZ);
+          // Orientación cambiada 90° sobre el eje Y (tangencial):
+          wheelGroup.rotation.y = Math.PI / 2;
+          towerGroup.add(wheelGroup);
+
+          const tireRadius = 0.72;
+          const tireWidth = 0.38;
+          mMesh(wheelGroup, new T.CylinderGeometry(tireRadius, tireRadius, tireWidth, 24), tireRubber, [0, 0, 0], [Math.PI / 2, 0, 0]);
+
+          const numLugs = 18;
+          for (let l = 0; l < numLugs; l++) {
+            const la = (l / numLugs) * Math.PI * 2;
+            const lug = new T.Group();
+            lug.rotation.z = la;
+            mMesh(lug, new T.BoxGeometry(0.08, 0.06, tireWidth * 0.85), tireRubber, [0, tireRadius + 0.025, 0]);
+            wheelGroup.add(lug);
+          }
+
+          mMesh(wheelGroup, new T.CylinderGeometry(0.42, 0.42, tireWidth * 0.95, 20), galvaSteel, [0, 0, 0], [Math.PI / 2, 0, 0]);
+          mMesh(wheelGroup, new T.CylinderGeometry(0.16, 0.16, tireWidth * 1.15, 12), darkSteel, [0, 0, 0], [Math.PI / 2, 0, 0]);
+        }
+      }
+
+      // ==========================================
+      // 3. VOLADIZO FINAL (OVERHANG) TRAS LA ÚLTIMA TORRE (IGUAL EN TODOS)
+      // ==========================================
+      const overhangStartX = numTowers * spanLength;
+      const overhangLength = 2.4;
+      const overhangEndX = overhangStartX + overhangLength;
+
+      rod(root, [overhangStartX, pipeHeight, 0], [overhangEndX, pipeHeight, 0], 0.08, pipeSteel);
+      rod(root, [overhangStartX, pipeHeight + 0.9, 0], [overhangEndX, pipeHeight, 0], 0.02, galvaSteel);
+      rod(root, [overhangStartX, pipeHeight, 0], [overhangStartX, pipeHeight + 0.9, 0], 0.035, galvaSteel);
+
+      for (let n = 1; n <= 3; n++) {
+        const nx = overhangStartX + (n / 4) * overhangLength;
+        rod(root, [nx, pipeHeight, 0], [nx, 1.2, 0], 0.016, dropTubeBlack);
+        mMesh(root, new T.CylinderGeometry(0.03, 0.04, 0.1, 8), nozzleGold, [nx, 1.15, 0]);
+      }
+
+      // ==========================================
+      // 4. CAÑÓN FINAL DE ALTO ALCANCE (END GUN - IGUAL EN TODOS)
+      // ==========================================
+      const endGunGroup = new T.Group();
+      endGunGroup.name = 'end_gun_assembly';
+      endGunGroup.position.set(overhangEndX, pipeHeight, 0);
+
+      mMesh(endGunGroup, new T.CylinderGeometry(0.055, 0.055, 0.4, 12), pipeSteel, [0.15, 0.12, 0], [0, 0, -0.42]);
+      mMesh(endGunGroup, new T.CylinderGeometry(0.04, 0.02, 0.55, 12), endGunBrass, [0.38, 0.32, 0], [0, 0, -0.42]);
+      mMesh(endGunGroup, new T.CylinderGeometry(0.06, 0.06, 0.15, 12), signalLightRed, [0, 0.25, 0]);
+
+      root.add(endGunGroup);
+
+      return root;
+    }
+
     function buildLogoInseceProcedural(T) {
       const root = new T.Group();
       root.name = 'Logo_Oficial_INSECE_3D_Master';
@@ -2369,6 +2684,828 @@
       return root;
     }
 
+    // -------------------------------------------------------------------------
+    // BUMP MAP PROCEDURAL DE PELO PARA ANIMALES
+    // -------------------------------------------------------------------------
+    function createGalgoFurBump(T) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#808080';
+      ctx.fillRect(0, 0, 256, 256);
+      for (let i = 0; i < 2500; i++) {
+        const x = Math.random() * 256;
+        const y = Math.random() * 256;
+        const val = Math.floor(Math.random() * 70 + 100);
+        ctx.fillStyle = `rgb(${val},${val},${val})`;
+        ctx.fillRect(x, y, 1, 3);
+      }
+      const tex = new T.CanvasTexture(canvas);
+      tex.wrapS = T.RepeatWrapping;
+      tex.wrapT = T.RepeatWrapping;
+      tex.repeat.set(4, 4);
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    // -------------------------------------------------------------------------
+    // GENERADOR DE MALLA ORGÁNICA CONTINUA (LOFTING MATEMÁTICO SIN PRIMITIVAS)
+    // -------------------------------------------------------------------------
+    function createLoftedMesh(T, rings, numRad = 28, closeEnds = true) {
+      const positions = [];
+      const uvs = [];
+      const indices = [];
+
+      const numRings = rings.length;
+
+      for (let i = 0; i < numRings; i++) {
+        const ring = rings[i];
+        const v = i / (numRings - 1);
+        const rx = ring.rx;
+        const ry = ring.ry;
+        const cx = ring.x || 0;
+        const cy = ring.y || 0;
+        const cz = ring.z || 0;
+
+        for (let j = 0; j <= numRad; j++) {
+          const u = j / numRad;
+          const phi = u * Math.PI * 2;
+
+          const px = cx + rx * Math.sin(phi);
+          const py = cy + ry * Math.cos(phi);
+          const pz = cz;
+
+          positions.push(px, py, pz);
+          uvs.push(u, v);
+        }
+      }
+
+      for (let i = 0; i < numRings - 1; i++) {
+        for (let j = 0; j < numRad; j++) {
+          const a = i * (numRad + 1) + j;
+          const b = (i + 1) * (numRad + 1) + j;
+          const c = (i + 1) * (numRad + 1) + (j + 1);
+          const d = i * (numRad + 1) + (j + 1);
+
+          indices.push(a, b, c);
+          indices.push(a, c, d);
+        }
+      }
+
+      if (closeEnds) {
+        // Cierre frontal estanco
+        const frontCenterIdx = Math.floor(positions.length / 3);
+        const firstRing = rings[0];
+        positions.push(firstRing.x || 0, firstRing.y || 0, firstRing.z || 0);
+        uvs.push(0.5, 0);
+
+        for (let j = 0; j < numRad; j++) {
+          indices.push(frontCenterIdx, j + 1, j);
+        }
+
+        // Cierre trasero estanco
+        const backCenterIdx = Math.floor(positions.length / 3);
+        const lastRing = rings[numRings - 1];
+        positions.push(lastRing.x || 0, lastRing.y || 0, lastRing.z || 0);
+        uvs.push(0.5, 1);
+
+        const lastRingStart = (numRings - 1) * (numRad + 1);
+        for (let j = 0; j < numRad; j++) {
+          indices.push(backCenterIdx, lastRingStart + j, lastRingStart + j + 1);
+        }
+      }
+
+      const geo = new T.BufferGeometry();
+      geo.setAttribute('position', new T.BufferAttribute(new Float32Array(positions), 3));
+      geo.setAttribute('uv', new T.BufferAttribute(new Float32Array(uvs), 2));
+      geo.setIndex(indices);
+      geo.computeVertexNormals();
+      return geo;
+    }
+
+    // -------------------------------------------------------------------------
+    // TEXTURA FOTOREALISTA DE OREJA DE LIEBRE IBÉRICA (CON PUNTA NEGRA AZABACHE)
+    // -------------------------------------------------------------------------
+    function createHareEarTexture(T) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      // 1. Fondo base: cara interna carne/crema en el centro, dorso agutí en los lados
+      const baseGrad = ctx.createLinearGradient(0, 0, 512, 0);
+      baseGrad.addColorStop(0, '#a26e3c');      // Dorso agutí externo
+      baseGrad.addColorStop(0.22, '#d6ab7e');   // Borde
+      baseGrad.addColorStop(0.35, '#edd5c2');   // Concha interna crema/rosada
+      baseGrad.addColorStop(0.65, '#edd5c2');   // Concha interna crema/rosada
+      baseGrad.addColorStop(0.78, '#d6ab7e');   // Borde
+      baseGrad.addColorStop(1, '#a26e3c');      // Dorso agutí externo
+      ctx.fillStyle = baseGrad;
+      ctx.fillRect(0, 0, 512, 512);
+
+      // 2. Micro-pelos interiores y veteado suave
+      for (let i = 0; i < 3500; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255, 248, 238, 0.25)' : 'rgba(180, 130, 90, 0.15)';
+        ctx.fillRect(x, y, 1, 3);
+      }
+
+      // 3. Fina orla blanca en el borde anterior (u entre 0.20 y 0.28)
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+      ctx.fillRect(110, 0, 16, 512);
+
+      // 4. PUNTA NEGRA AZABACHE TRIANGULAR DISTINTIVA (v > 0.74, ápice y dorso exterior)
+      // Característica taxonómica crucial de Lepus granatensis: ápice negro puro
+      const tipGrad = ctx.createLinearGradient(0, 360, 0, 512);
+      tipGrad.addColorStop(0, 'rgba(14, 12, 10, 0)');
+      tipGrad.addColorStop(0.2, 'rgba(14, 12, 10, 0.95)');
+      tipGrad.addColorStop(1, '#080706');
+      ctx.fillStyle = tipGrad;
+      ctx.fillRect(0, 360, 512, 152);
+
+      // Mancha negra sólida posterior y en la punta
+      ctx.fillStyle = '#080706';
+      ctx.beginPath();
+      ctx.moveTo(0, 410);
+      ctx.lineTo(512, 410);
+      ctx.lineTo(512, 512);
+      ctx.lineTo(0, 512);
+      ctx.closePath();
+      ctx.fill();
+
+      const texture = new T.CanvasTexture(canvas);
+      texture.wrapS = T.ClampToEdgeWrapping;
+      texture.wrapT = T.ClampToEdgeWrapping;
+      texture.needsUpdate = true;
+      return texture;
+    }
+
+    // -------------------------------------------------------------------------
+    // TEXTURA FOTOREALISTA DE LIEBRE IBÉRICA (AGUTÍ CON VIENTRE BLANCO)
+    // -------------------------------------------------------------------------
+    function createHarePhotorealisticTexture(T) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 1024;
+      const ctx = canvas.getContext('2d');
+
+      // 1. Fondo leonado ocre cálido con gradiente natural
+      const grad = ctx.createLinearGradient(0, 0, 1024, 1024);
+      grad.addColorStop(0, '#c7925c');
+      grad.addColorStop(0.35, '#b47e45');
+      grad.addColorStop(0.75, '#9a6732');
+      grad.addColorStop(1, '#825225');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1024, 1024);
+
+      // 2. Manto agutí jaspeado hiperrealista (pelos individuales en capas: negro, crema, ocre y canela)
+      for (let i = 0; i < 20000; i++) {
+        const x = Math.random() * 1024;
+        const y = Math.random() * 1024;
+        const r = Math.random();
+        if (r < 0.38) {
+          ctx.fillStyle = 'rgba(250, 235, 205, 0.32)';
+        } else if (r < 0.72) {
+          ctx.fillStyle = 'rgba(26, 17, 10, 0.35)';
+        } else if (r < 0.90) {
+          ctx.fillStyle = 'rgba(180, 105, 45, 0.28)';
+        } else {
+          ctx.fillStyle = 'rgba(220, 160, 95, 0.25)';
+        }
+        ctx.fillRect(x, y, 2, 4);
+      }
+
+      // 3. Franja canela-rojiza cálida a lo largo de los flancos (transición entre lomo y vientre)
+      // Flanco izquierdo (u ~ 0.30) y flanco derecho (u ~ 0.70)
+      const cinnamonGrad = ctx.createLinearGradient(0, 0, 1024, 0);
+      cinnamonGrad.addColorStop(0, 'rgba(185, 105, 40, 0)');
+      cinnamonGrad.addColorStop(0.24, 'rgba(195, 115, 45, 0.45)');
+      cinnamonGrad.addColorStop(0.34, 'rgba(215, 130, 55, 0.7)');
+      cinnamonGrad.addColorStop(0.40, 'rgba(215, 130, 55, 0)');
+      cinnamonGrad.addColorStop(0.60, 'rgba(215, 130, 55, 0)');
+      cinnamonGrad.addColorStop(0.66, 'rgba(215, 130, 55, 0.7)');
+      cinnamonGrad.addColorStop(0.76, 'rgba(195, 115, 45, 0.45)');
+      cinnamonGrad.addColorStop(1, 'rgba(185, 105, 40, 0)');
+      ctx.fillStyle = cinnamonGrad;
+      ctx.fillRect(0, 140, 1024, 760);
+
+      // 4. VIENTRE BLANCO NÍVEO EN CONTRASTE NÍTIDO (u de 0.38 a 0.62, v de 0.14 a 0.82)
+      // Rasgo fundamental de Lepus granatensis: vientre blanco puro perfectamente delimitado
+      const whiteBellyGrad = ctx.createLinearGradient(350, 0, 674, 0);
+      whiteBellyGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
+      whiteBellyGrad.addColorStop(0.12, 'rgba(255, 255, 255, 0.92)');
+      whiteBellyGrad.addColorStop(0.5, '#ffffff');
+      whiteBellyGrad.addColorStop(0.88, 'rgba(255, 255, 255, 0.92)');
+      whiteBellyGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+      ctx.fillStyle = whiteBellyGrad;
+      ctx.beginPath();
+      ctx.ellipse(512, 490, 145, 340, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 5. Garganta y barbilla en blanco suave (v entre 0.08 y 0.20)
+      const throatWhite = ctx.createRadialGradient(512, 140, 10, 512, 140, 110);
+      throatWhite.addColorStop(0, '#ffffff');
+      throatWhite.addColorStop(0.7, '#faf6ee');
+      throatWhite.addColorStop(1, 'rgba(250, 246, 238, 0)');
+      ctx.fillStyle = throatWhite;
+      ctx.beginPath();
+      ctx.ellipse(512, 140, 95, 75, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 6. Almohadillas del hocico y labio leporino (v < 0.08)
+      const muzzleWhite = ctx.createRadialGradient(512, 35, 5, 512, 35, 45);
+      muzzleWhite.addColorStop(0, '#ffffff');
+      muzzleWhite.addColorStop(0.8, '#f4ece0');
+      muzzleWhite.addColorStop(1, 'rgba(244, 236, 224, 0)');
+      ctx.fillStyle = muzzleWhite;
+      ctx.beginPath();
+      ctx.ellipse(512, 35, 42, 28, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 7. Rabito bicolor en v > 0.88:
+      // Superficie superior negra azabache, lados y parte inferior blanco níveo
+      const tailDark = ctx.createLinearGradient(0, 900, 0, 1024);
+      tailDark.addColorStop(0, 'rgba(16, 14, 12, 0)');
+      tailDark.addColorStop(0.3, '#141210');
+      tailDark.addColorStop(1, '#0e0c0b');
+      ctx.fillStyle = tailDark;
+      ctx.fillRect(0, 900, 360, 124);
+      ctx.fillRect(664, 900, 360, 124);
+
+      const tailWhite = ctx.createLinearGradient(0, 900, 0, 1024);
+      tailWhite.addColorStop(0, 'rgba(255, 255, 255, 0)');
+      tailWhite.addColorStop(0.25, '#ffffff');
+      tailWhite.addColorStop(1, '#ffffff');
+      ctx.fillStyle = tailWhite;
+      ctx.fillRect(360, 900, 304, 124);
+
+      const texture = new T.CanvasTexture(canvas);
+      texture.wrapS = T.ClampToEdgeWrapping;
+      texture.wrapT = T.ClampToEdgeWrapping;
+      texture.needsUpdate = true;
+      return texture;
+    }
+
+    // -------------------------------------------------------------------------
+    // GENERADOR PROCEDURAL: LIEBRE IBÉRICA ESCULPIDA CONTINUA EN SALTO A 70 KM/H
+    // -------------------------------------------------------------------------
+    function buildHareProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Liebre_Iberica_Esculpida';
+
+      const hareTex = createHarePhotorealisticTexture(T);
+      const earTex = createHareEarTexture(T);
+      const bumpTex = createGalgoFurBump(T);
+
+      // Material orgánico PBR con manto agutí y bump de pelo micro-fino
+      const hareMat = new T.MeshStandardMaterial({
+        map: hareTex,
+        bumpMap: bumpTex,
+        bumpScale: 0.007,
+        roughness: 0.60,
+        metalness: 0.03
+      });
+
+      // Material PBR para las orejas esculpidas en cuchara
+      const earMat = new T.MeshStandardMaterial({
+        map: earTex,
+        bumpMap: bumpTex,
+        bumpScale: 0.004,
+        roughness: 0.65,
+        metalness: 0.02
+      });
+
+      const whiteFurMat = new T.MeshStandardMaterial({
+        color: 0xfdfcf9,
+        bumpMap: bumpTex,
+        bumpScale: 0.003,
+        roughness: 0.72
+      });
+
+      const eyeAmberMat = new T.MeshStandardMaterial({
+        color: 0xd97e14,
+        roughness: 0.06,
+        metalness: 0.60
+      });
+
+      const hare = new T.Group();
+
+      // =======================================================================
+      // 1. CUERPO CONTINUO ESCULPIDO (HOCICO -> CRÁNEO -> CUELLO -> TÓRAX -> LOMO -> GRUPA -> COLA)
+      // Anatomía exacta según la fotografía: cuerpo horizontal extendido, lomo arqueado y quilla
+      // =======================================================================
+      const bodyRings = [
+        // Trufa y punta del hocico (v=0.0)
+        { z: 0.44, y: 0.58, rx: 0.014, ry: 0.013 },
+        // Narinas y labio leporino hendido
+        { z: 0.40, y: 0.59, rx: 0.024, ry: 0.022 },
+        // Caña nasal suavemente arqueada (perfil acarnerado característico)
+        { z: 0.34, y: 0.61, rx: 0.035, ry: 0.032 },
+        // Región infraorbitaria y cuencas de los ojos
+        { z: 0.28, y: 0.625, rx: 0.052, ry: 0.046 },
+        // Frente y bóveda craneal
+        { z: 0.22, y: 0.635, rx: 0.056, ry: 0.052 },
+        // Nuca y base de las orejas
+        { z: 0.16, y: 0.615, rx: 0.054, ry: 0.062 },
+        // Cuello muscular extendido en penetración aerodinámica
+        { z: 0.10, y: 0.585, rx: 0.056, ry: 0.076 },
+        // Cruz (withers) y entrada torácica
+        { z: 0.04, y: 0.565, rx: 0.066, ry: 0.098 },
+        // Tórax anterior profundo (baja en quilla)
+        { z: -0.02, y: 0.555, rx: 0.078, ry: 0.122 },
+        // Pecho medio y costillar elástico
+        { z: -0.09, y: 0.560, rx: 0.084, ry: 0.128 },
+        // Transición costillar a región lumbar
+        { z: -0.16, y: 0.575, rx: 0.082, ry: 0.122 },
+        // Arco lumbar elástico máximo (la espalda se curva hacia arriba en el salto)
+        { z: -0.23, y: 0.595, rx: 0.078, ry: 0.114 },
+        // Pelvis e inserción de los muslos
+        { z: -0.30, y: 0.585, rx: 0.084, ry: 0.112 },
+        // Pendiente de la grupa
+        { z: -0.38, y: 0.555, rx: 0.076, ry: 0.095 },
+        // Base de la cola
+        { z: -0.45, y: 0.515, rx: 0.042, ry: 0.048 },
+        // Cuerpo de la cola
+        { z: -0.50, y: 0.490, rx: 0.022, ry: 0.024 },
+        // Punta de la cola horizontal
+        { z: -0.54, y: 0.475, rx: 0.008, ry: 0.009 }
+      ];
+
+      const bodyGeo = createLoftedMesh(T, bodyRings, 36, true);
+      const bodyMesh = new T.Mesh(bodyGeo, hareMat);
+      bodyMesh.castShadow = true;
+      bodyMesh.receiveShadow = true;
+      hare.add(bodyMesh);
+
+      // =======================================================================
+      // 2. PATAS DELANTERAS ESCULPIDAS CONTINUAS (ZANCADA AERODINÁMICA BAJO EL PECHO)
+      // En la foto ambas manos se proyectan hacia adelante debajo de la mandíbula
+      // =======================================================================
+      // Pata delantera derecha (adelantada en zancada)
+      const fLegRightRings = [
+        { z: 0.06, y: 0.52, rx: 0.036, ry: 0.046 }, // Escápula / hombro
+        { z: 0.12, y: 0.44, rx: 0.026, ry: 0.034 }, // Brazo
+        { z: 0.18, y: 0.37, rx: 0.020, ry: 0.025 }, // Codo
+        { z: 0.25, y: 0.31, rx: 0.016, ry: 0.020 }, // Antebrazo
+        { z: 0.32, y: 0.25, rx: 0.014, ry: 0.017 }, // Carpo / muñeca
+        { z: 0.39, y: 0.20, rx: 0.015, ry: 0.018 }, // Metacarpo
+        { z: 0.45, y: 0.16, rx: 0.018, ry: 0.028 }  // Mano y dedos alargados
+      ];
+
+      // Pata delantera izquierda (ligeramente replegada en compás)
+      const fLegLeftRings = [
+        { z: 0.06, y: 0.50, rx: 0.036, ry: 0.046 },
+        { z: 0.10, y: 0.42, rx: 0.025, ry: 0.032 },
+        { z: 0.15, y: 0.35, rx: 0.019, ry: 0.024 },
+        { z: 0.21, y: 0.29, rx: 0.015, ry: 0.019 },
+        { z: 0.27, y: 0.24, rx: 0.014, ry: 0.017 },
+        { z: 0.33, y: 0.20, rx: 0.015, ry: 0.018 },
+        { z: 0.38, y: 0.17, rx: 0.018, ry: 0.026 }
+      ];
+
+      const fGeoR = createLoftedMesh(T, fLegRightRings, 22, true);
+      const fMeshR = new T.Mesh(fGeoR, hareMat);
+      fMeshR.position.x = 0.062;
+      fMeshR.castShadow = true;
+      hare.add(fMeshR);
+
+      const fGeoL = createLoftedMesh(T, fLegLeftRings, 22, true);
+      const fMeshL = new T.Mesh(fGeoL, hareMat);
+      fMeshL.position.x = -0.062;
+      fMeshL.castShadow = true;
+      hare.add(fMeshL);
+
+      // Puntas de manos delanteras en pelaje blanquecino
+      const fPawTipR = new T.Mesh(new T.SphereGeometry(0.016, 12, 12), whiteFurMat);
+      fPawTipR.position.set(0.062, 0.155, 0.45);
+      fPawTipR.scale.set(0.85, 0.55, 1.25);
+      hare.add(fPawTipR);
+
+      const fPawTipL = new T.Mesh(new T.SphereGeometry(0.016, 12, 12), whiteFurMat);
+      fPawTipL.position.set(-0.062, 0.165, 0.38);
+      fPawTipL.scale.set(0.85, 0.55, 1.25);
+      hare.add(fPawTipL);
+
+      // =======================================================================
+      // 3. PATAS TRASERAS HIPEREXTENDIDAS EN PLENA PROPULSIÓN (BIOMECÁNICA REAL EN "Z")
+      // Fieles a la foto: fémur hacia adelante-abajo, tibia larga hacia atrás-arriba,
+      // corvejón seco muy marcado, y largo pie de liebre estirado hacia atrás
+      // =======================================================================
+      const createHindLegRings = (zOffset = 0, yOffset = 0) => [
+        // Masa muscular de la cadera
+        { z: -0.20 + zOffset, y: 0.57 + yOffset, rx: 0.072, ry: 0.092 },
+        // Vientre del muslo (fémur potente)
+        { z: -0.16 + zOffset, y: 0.50 + yOffset, rx: 0.066, ry: 0.084 },
+        // Rótula / Rodilla proyectada hacia ADELANTE
+        { z: -0.14 + zOffset, y: 0.42 + yOffset, rx: 0.046, ry: 0.052 },
+        // Pantorrilla y gemelos proyectados hacia ATRÁS
+        { z: -0.24 + zOffset, y: 0.44 + yOffset, rx: 0.038, ry: 0.044 },
+        // Segunda pierna / tibia esbelta y tendinosa
+        { z: -0.36 + zOffset, y: 0.46 + yOffset, rx: 0.028, ry: 0.034 },
+        // Tendón de Aquiles seco
+        { z: -0.46 + zOffset, y: 0.48 + yOffset, rx: 0.022, ry: 0.026 },
+        // CORVEJÓN prominente (articulación angular visible en la foto)
+        { z: -0.54 + zOffset, y: 0.49 + yOffset, rx: 0.019, ry: 0.022 },
+        // Metatarso superior alargado
+        { z: -0.63 + zOffset, y: 0.42 + yOffset, rx: 0.017, ry: 0.019 },
+        // Caña del pie de liebre
+        { z: -0.72 + zOffset, y: 0.34 + yOffset, rx: 0.016, ry: 0.018 },
+        // Tarso y falanges
+        { z: -0.80 + zOffset, y: 0.27 + yOffset, rx: 0.016, ry: 0.022 },
+        // Dedos traseros estirados en el flujo de aire
+        { z: -0.87 + zOffset, y: 0.21 + yOffset, rx: 0.014, ry: 0.018 },
+        // Puntas de las uñas
+        { z: -0.92 + zOffset, y: 0.17 + yOffset, rx: 0.007, ry: 0.008 }
+      ];
+
+      // Pata trasera derecha (más estirada en suspensión)
+      const hGeoR = createLoftedMesh(T, createHindLegRings(0, 0), 28, true);
+      const hMeshR = new T.Mesh(hGeoR, hareMat);
+      hMeshR.position.x = 0.092;
+      hMeshR.castShadow = true;
+      hare.add(hMeshR);
+
+      // Pata trasera izquierda (ligeramente más alta en cadencia de salto)
+      const hGeoL = createLoftedMesh(T, createHindLegRings(-0.04, 0.03), 28, true);
+      const hMeshL = new T.Mesh(hGeoL, hareMat);
+      hMeshL.position.x = -0.092;
+      hMeshL.castShadow = true;
+      hare.add(hMeshL);
+
+      // =======================================================================
+      // 4. OREJAS ESCULPIDAS CONTINUAS EN CUCHARA CON PUNTAS NEGRAS AZABACHE
+      // Sin cilindros ni conos: auténtica concha cóncava aplanada en cuchara
+      // =======================================================================
+      const earRings = [
+        // Base de inserción craneal
+        { z: 0.00, y: 0.00, rx: 0.016, ry: 0.014 },
+        // Cuello de la oreja
+        { z: 0.01, y: 0.03, rx: 0.022, ry: 0.011 },
+        // Inicio del ensanchamiento en cuchara
+        { z: 0.02, y: 0.07, rx: 0.032, ry: 0.009 },
+        // Anchura máxima en forma de pala / cuchara (fiel a la foto)
+        { z: 0.03, y: 0.12, rx: 0.038, ry: 0.007 },
+        // Parte media-superior
+        { z: 0.03, y: 0.16, rx: 0.034, ry: 0.006 },
+        // Inicio de la punta negra azabache
+        { z: 0.02, y: 0.20, rx: 0.024, ry: 0.005 },
+        // Ápice afilado
+        { z: 0.01, y: 0.23, rx: 0.010, ry: 0.004 },
+        // Remate final
+        { z: 0.00, y: 0.25, rx: 0.003, ry: 0.003 }
+      ];
+
+      const earGeo = createLoftedMesh(T, earRings, 24, true);
+
+      // Oreja izquierda y derecha erguidas con inclinación aerodinámica posterior
+      [-0.034, 0.034].forEach(ox => {
+        const earG = new T.Group();
+        earG.position.set(ox, 0.65, 0.20);
+        // Ángulo de las orejas en la foto: erguidas pero peinadas hacia atrás unos 28° y 12° hacia afuera
+        earG.rotation.set(-0.48, ox > 0 ? -0.18 : 0.18, ox > 0 ? 0.15 : -0.15);
+
+        const earMesh = new T.Mesh(earGeo, earMat);
+        earMesh.castShadow = true;
+        earG.add(earMesh);
+
+        hare.add(earG);
+      });
+
+      // =======================================================================
+      // 5. OJOS LATERALES DORADOS-ÁMBAR CON ANILLO PERIOCULAR BLANCO Y BRILLO
+      // Fieles a la foto: gran ojo lateral que permite visión periférica de 360°
+      // =======================================================================
+      [-0.052, 0.052].forEach(ex => {
+        const eyeG = new T.Group();
+        eyeG.position.set(ex, 0.628, 0.275);
+
+        // Anillo periocular blanco/crema muy característico de la liebre
+        const eyeRing = new T.Mesh(new T.SphereGeometry(0.024, 18, 18), whiteFurMat);
+        eyeRing.scale.set(0.36, 1.15, 1.30);
+        eyeG.add(eyeRing);
+
+        // Iris dorado-ámbar brillante
+        const iris = new T.Mesh(new T.SphereGeometry(0.019, 20, 20), eyeAmberMat);
+        iris.position.x = ex > 0 ? 0.005 : -0.005;
+        eyeG.add(iris);
+
+        // Pupila horizontal oscura
+        const pupil = new T.Mesh(new T.SphereGeometry(0.012, 16, 16), new T.MeshBasicMaterial({ color: 0x060606 }));
+        pupil.position.x = ex > 0 ? 0.012 : -0.012;
+        pupil.scale.set(0.40, 0.70, 1.20);
+        eyeG.add(pupil);
+
+        // Reflejo especular córneo vítreo
+        const glint = new T.Mesh(new T.SphereGeometry(0.004, 8, 8), new T.MeshBasicMaterial({ color: 0xffffff }));
+        glint.position.set(ex > 0 ? 0.016 : -0.016, 0.006, 0.006);
+        eyeG.add(glint);
+
+        hare.add(eyeG);
+      });
+
+      // =======================================================================
+      // 6. VIBRISAS / BIGOTES TÁCTILES SINTIENDO EL VIENTO
+      // =======================================================================
+      [-1, 1].forEach(side => {
+        [-0.012, -0.004, 0.004, 0.012].forEach((wy, idx) => {
+          const whiskerGeo = new T.CylinderGeometry(0.0008, 0.0004, 0.12, 5);
+          const whisker = new T.Mesh(whiskerGeo, new T.MeshBasicMaterial({ color: idx % 2 === 0 ? 0xffffff : 0x222222 }));
+          whisker.position.set(side * 0.032, 0.585 + wy, 0.38);
+          whisker.rotation.set(wy * 6, side * (0.85 + idx * 0.08), -0.18);
+          hare.add(whisker);
+        });
+      });
+
+      root.add(hare);
+      return root;
+    }
+
+    // -------------------------------------------------------------------------
+    // TEXTURA FOTOREALISTA DE CAPA BARCINA CON MANTO BLANCO (FOTOGRAFÍA REAL)
+    // -------------------------------------------------------------------------
+    function createGalgoPhotorealisticTexture(T) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 1024;
+      const ctx = canvas.getContext('2d');
+
+      // 1. Fondo base leonado dorado cálido
+      const grad = ctx.createLinearGradient(0, 0, 1024, 1024);
+      grad.addColorStop(0, '#caa26e');
+      grad.addColorStop(0.3, '#bc8f59');
+      grad.addColorStop(0.7, '#ab7c48');
+      grad.addColorStop(1, '#986a38');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1024, 1024);
+
+      // 2. Micro-pelo fino satinado
+      for (let i = 0; i < 9000; i++) {
+        const x = Math.random() * 1024;
+        const y = Math.random() * 1024;
+        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(238, 220, 185, 0.22)' : 'rgba(70, 42, 22, 0.18)';
+        ctx.fillRect(x, y, 2, 4);
+      }
+
+      // 3. Veteado atigrado diagonal en los costillares y lomo (flancos)
+      ctx.strokeStyle = '#271c14';
+      // Flanco izquierdo
+      for (let x = 80; x < 420; x += 22) {
+        ctx.beginPath();
+        ctx.lineWidth = 4 + Math.random() * 5;
+        ctx.globalAlpha = 0.65 + Math.random() * 0.25;
+        let cx = x;
+        ctx.moveTo(cx, 260);
+        for (let y = 260; y <= 850; y += 30) {
+          cx += 6 + (Math.random() - 0.5) * 12;
+          ctx.lineTo(cx, y);
+        }
+        ctx.stroke();
+      }
+
+      // Flanco derecho simétrico
+      for (let x = 600; x < 940; x += 22) {
+        ctx.beginPath();
+        ctx.lineWidth = 4 + Math.random() * 5;
+        ctx.globalAlpha = 0.65 + Math.random() * 0.25;
+        let cx = x;
+        ctx.moveTo(cx, 260);
+        for (let y = 260; y <= 850; y += 30) {
+          cx += -6 + (Math.random() - 0.5) * 12;
+          ctx.lineTo(cx, y);
+        }
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1.0;
+
+      // 4. Antepecho y garganta en blanco puro (u=0.5, v entre 0.15 y 0.58)
+      const whiteGrad = ctx.createRadialGradient(512, 380, 20, 512, 380, 180);
+      whiteGrad.addColorStop(0, '#ffffff');
+      whiteGrad.addColorStop(0.75, '#fbfaf7');
+      whiteGrad.addColorStop(1, 'rgba(251,250,247,0)');
+      ctx.fillStyle = whiteGrad;
+      ctx.beginPath();
+      ctx.ellipse(512, 380, 130, 210, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 5. Máscara facial oscura en el hocico (v < 0.12)
+      const maskGrad = ctx.createLinearGradient(0, 0, 0, 130);
+      maskGrad.addColorStop(0, '#0a0806');
+      maskGrad.addColorStop(0.35, '#221812');
+      maskGrad.addColorStop(0.85, '#3e2e22');
+      maskGrad.addColorStop(1, 'rgba(62,46,34,0)');
+      ctx.fillStyle = maskGrad;
+      ctx.fillRect(0, 0, 1024, 130);
+
+      // 6. Punta de la cola blanca (v > 0.92)
+      const tailWhiteGrad = ctx.createLinearGradient(0, 920, 0, 1024);
+      tailWhiteGrad.addColorStop(0, 'rgba(255,255,255,0)');
+      tailWhiteGrad.addColorStop(0.3, '#ffffff');
+      tailWhiteGrad.addColorStop(1, '#ffffff');
+      ctx.fillStyle = tailWhiteGrad;
+      ctx.fillRect(0, 920, 1024, 104);
+
+      const texture = new T.CanvasTexture(canvas);
+      texture.wrapS = T.ClampToEdgeWrapping;
+      texture.wrapT = T.ClampToEdgeWrapping;
+      texture.needsUpdate = true;
+      return texture;
+    }
+
+    // -------------------------------------------------------------------------
+    // GENERADOR PROCEDURAL: GALGO ESPAÑOL ESCULPIDO CONTINUO (MÁXIMO REALISMO)
+    // -------------------------------------------------------------------------
+    function buildGreyhoundProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Galgo_Espanol_Esculpido';
+
+      const bodyTexture = createGalgoPhotorealisticTexture(T);
+      const bumpTexture = createGalgoFurBump(T);
+
+      const bodyMat = new T.MeshStandardMaterial({
+        map: bodyTexture,
+        bumpMap: bumpTexture,
+        bumpScale: 0.006,
+        roughness: 0.42,
+        metalness: 0.06
+      });
+
+      const whiteLegMat = new T.MeshStandardMaterial({
+        color: 0xfdfcf9,
+        bumpMap: bumpTexture,
+        bumpScale: 0.004,
+        roughness: 0.6
+      });
+
+      const collarMat = new T.MeshStandardMaterial({
+        color: 0x3d1714,
+        roughness: 0.35,
+        metalness: 0.08
+      });
+
+      const silverMat = new T.MeshStandardMaterial({
+        color: 0xd8dde3,
+        metalness: 0.95,
+        roughness: 0.15
+      });
+
+      const dog = new T.Group();
+
+      // =========================================================
+      // 1. CUERPO CONTINUO ESCULPIDO (HOCICO -> CUELLO -> TRONCO -> COLA)
+      // =========================================================
+      const bodyRings = [
+        // Trufa negra
+        { z: 0.76, y: 0.90, rx: 0.015, ry: 0.015 },
+        // Belfos
+        { z: 0.70, y: 0.91, rx: 0.024, ry: 0.022 },
+        // Caña nasal recta
+        { z: 0.60, y: 0.92, rx: 0.034, ry: 0.032 },
+        // Stop y cuencas orbitales
+        { z: 0.50, y: 0.94, rx: 0.048, ry: 0.045 },
+        // Cráneo dolicocéfalo / occipucio
+        { z: 0.42, y: 0.95, rx: 0.054, ry: 0.052 },
+        // Garganta y nuca
+        { z: 0.35, y: 0.91, rx: 0.052, ry: 0.065 },
+        // Cuello medio arqueado
+        { z: 0.28, y: 0.84, rx: 0.055, ry: 0.082 },
+        // Base del cuello
+        { z: 0.22, y: 0.76, rx: 0.062, ry: 0.105 },
+        // Cruz (withers) y antepecho
+        { z: 0.16, y: 0.68, rx: 0.078, ry: 0.138 },
+        // Tórax profundo en quilla (baja al nivel del codo)
+        { z: 0.08, y: 0.60, rx: 0.092, ry: 0.162 },
+        // Costillar medio
+        { z: -0.04, y: 0.62, rx: 0.088, ry: 0.145 },
+        // Vientre muy recogido (tuck-up aerodinámico)
+        { z: -0.14, y: 0.66, rx: 0.072, ry: 0.108 },
+        // Arco lumbar elástico (lomo sobre riñones)
+        { z: -0.22, y: 0.69, rx: 0.068, ry: 0.095 },
+        // Pelvis y cadera
+        { z: -0.30, y: 0.68, rx: 0.082, ry: 0.105 },
+        // Pendiente de la grupa
+        { z: -0.38, y: 0.63, rx: 0.072, ry: 0.088 },
+        // Raíz de la cola
+        { z: -0.44, y: 0.58, rx: 0.032, ry: 0.032 },
+        // Cola descendente entre los corvejones
+        { z: -0.47, y: 0.42, rx: 0.016, ry: 0.016 },
+        { z: -0.48, y: 0.26, rx: 0.011, ry: 0.011 },
+        // Curva en gancho ascendente final
+        { z: -0.45, y: 0.18, rx: 0.007, ry: 0.007 },
+        { z: -0.42, y: 0.22, rx: 0.004, ry: 0.004 }
+      ];
+
+      const bodyGeo = createLoftedMesh(T, bodyRings, 32, true);
+      const bodyMesh = new T.Mesh(bodyGeo, bodyMat);
+      bodyMesh.castShadow = true;
+      bodyMesh.receiveShadow = true;
+      dog.add(bodyMesh);
+
+      // =========================================================
+      // 2. PATAS DELANTERAS BLANCAS ESCULPIDAS CONTINUAS
+      // =========================================================
+      const frontLegRings = [
+        { z: 0.16, y: 0.65, rx: 0.048, ry: 0.065 }, // Hombro
+        { z: 0.17, y: 0.52, rx: 0.036, ry: 0.042 }, // Articulación escápulo-humeral
+        { z: 0.16, y: 0.42, rx: 0.028, ry: 0.032 }, // Brazo
+        { z: 0.15, y: 0.33, rx: 0.022, ry: 0.026 }, // Codo
+        { z: 0.15, y: 0.22, rx: 0.017, ry: 0.020 }, // Antebrazo
+        { z: 0.15, y: 0.10, rx: 0.015, ry: 0.017 }, // Carpo / muñeca
+        { z: 0.16, y: 0.04, rx: 0.015, ry: 0.018 }, // Metacarpo
+        { z: 0.19, y: 0.012, rx: 0.022, ry: 0.038 }  // Pie de liebre alargado
+      ];
+
+      [-0.082, 0.082].forEach(lx => {
+        const fGeo = createLoftedMesh(T, frontLegRings, 20, true);
+        const fMesh = new T.Mesh(fGeo, whiteLegMat);
+        fMesh.position.x = lx;
+        fMesh.castShadow = true;
+        dog.add(fMesh);
+      });
+
+      // =========================================================
+      // 3. PATAS TRASERAS ATIGRADAS CON CALCETÍN BLANCO
+      // =========================================================
+      const hindLegRings = (zOff = 0) => [
+        { z: -0.28 + zOff, y: 0.65, rx: 0.065, ry: 0.088 }, // Cadera
+        { z: -0.26 + zOff, y: 0.53, rx: 0.058, ry: 0.080 }, // Muslo alto
+        { z: -0.22 + zOff, y: 0.40, rx: 0.042, ry: 0.052 }, // Rodilla
+        { z: -0.30 + zOff, y: 0.28, rx: 0.030, ry: 0.042 }, // Segunda pierna
+        { z: -0.36 + zOff, y: 0.15, rx: 0.022, ry: 0.034 }, // Corvejón seco
+        { z: -0.35 + zOff, y: 0.08, rx: 0.017, ry: 0.020 }, // Metatarso
+        { z: -0.33 + zOff, y: 0.012, rx: 0.022, ry: 0.040 }  // Pie posterior
+      ];
+
+      // Pata trasera izquierda retrasada (como en la foto)
+      const hGeoLeft = createLoftedMesh(T, hindLegRings(-0.05), 24, true);
+      const hMeshLeft = new T.Mesh(hGeoLeft, bodyMat);
+      hMeshLeft.position.x = -0.105;
+      hMeshLeft.castShadow = true;
+      dog.add(hMeshLeft);
+
+      // Pata trasera derecha
+      const hGeoRight = createLoftedMesh(T, hindLegRings(0), 24, true);
+      const hMeshRight = new T.Mesh(hGeoRight, bodyMat);
+      hMeshRight.position.x = 0.105;
+      hMeshRight.castShadow = true;
+      dog.add(hMeshRight);
+
+      // Calcetines blancos en pies traseros
+      [-0.105, 0.105].forEach((hx, idx) => {
+        const zOff = idx === 0 ? -0.05 : 0;
+        const sock = new T.Mesh(new T.CylinderGeometry(0.019, 0.022, 0.08, 14), whiteLegMat);
+        sock.position.set(hx, 0.04, -0.34 + zOff);
+        dog.add(sock);
+      });
+
+      // =========================================================
+      // 4. DETALLES REALISTAS: OJOS, OREJAS EN ROSA Y COLLAR
+      // =========================================================
+      // Ojos rasgados oscuros con reflejo vítreo
+      [-0.045, 0.045].forEach(ex => {
+        const eyeG = new T.Group();
+        eyeG.position.set(ex, 0.94, 0.50);
+
+        const eyeball = new T.Mesh(new T.SphereGeometry(0.017, 16, 16), new T.MeshStandardMaterial({ color: 0x140c08, roughness: 0.08, metalness: 0.8 }));
+        eyeball.scale.set(0.38, 0.85, 1.2);
+        eyeG.add(eyeball);
+
+        const glint = new T.Mesh(new T.SphereGeometry(0.0035, 8, 8), new T.MeshBasicMaterial({ color: 0xffffff }));
+        glint.position.set(ex > 0 ? 0.007 : -0.007, 0.003, 0.004);
+        eyeG.add(glint);
+        dog.add(eyeG);
+      });
+
+      // Orejas en rosa plegadas hacia atrás
+      [-0.048, 0.048].forEach(ox => {
+        const ear = new T.Group();
+        ear.position.set(ox, 0.94, 0.40);
+        ear.rotation.set(0.38, ox > 0 ? -0.45 : 0.45, ox > 0 ? 0.4 : -0.4);
+
+        const earFlap = new T.Mesh(new T.SphereGeometry(0.034, 14, 14), new T.MeshStandardMaterial({ color: 0x32261e, roughness: 0.55 }));
+        earFlap.position.set(0, -0.04, -0.035);
+        earFlap.rotation.x = -0.28;
+        earFlap.scale.set(0.9, 1.25, 0.32);
+        ear.add(earFlap);
+        dog.add(ear);
+      });
+
+      // Collar tradicional de cuero granate con hebilla plateada
+      const collar = new T.Mesh(new T.TorusGeometry(0.076, 0.016, 16, 32), collarMat);
+      collar.position.set(0, 0.85, 0.33);
+      collar.rotation.x = 0.95;
+      collar.scale.set(1, 1, 1.3);
+      dog.add(collar);
+
+      const ringBuckle = new T.Mesh(new T.BoxGeometry(0.032, 0.035, 0.014), silverMat);
+      ringBuckle.position.set(0, 0.79, 0.41);
+      dog.add(ringBuckle);
+
+      root.add(dog);
+      return root;
+    }
+
     function buildNdviSurfaceProcedural(T) {
       const root = new T.Group();
       root.name = 'Ndvi_Topography';
@@ -2452,6 +3589,403 @@
       return root;
     }
 
+    // -------------------------------------------------------------------------
+    // GENERADOR PROCEDURAL: TORRE CTI Y TORRE DE MEDIA TENSIÓN
+    // -------------------------------------------------------------------------
+    function createHazardSignTexture(T) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+
+      // Fondo del cartel
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 256, 256);
+
+      // Triángulo amarillo de advertencia de riesgo eléctrico
+      ctx.fillStyle = '#f5c518';
+      ctx.beginPath();
+      ctx.moveTo(128, 18);
+      ctx.lineTo(242, 218);
+      ctx.lineTo(14, 218);
+      ctx.closePath();
+      ctx.fill();
+
+      // Borde negro exterior
+      ctx.lineWidth = 14;
+      ctx.strokeStyle = '#1a1a1a';
+      ctx.stroke();
+
+      // Borde interior fino
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#1a1a1a';
+      ctx.beginPath();
+      ctx.moveTo(128, 38);
+      ctx.lineTo(228, 208);
+      ctx.lineTo(28, 208);
+      ctx.closePath();
+      ctx.stroke();
+
+      // Símbolo de rayo negro
+      ctx.fillStyle = '#111111';
+      ctx.beginPath();
+      ctx.moveTo(134, 55);
+      ctx.lineTo(94, 128);
+      ctx.lineTo(130, 128);
+      ctx.lineTo(112, 198);
+      ctx.lineTo(166, 116);
+      ctx.lineTo(130, 116);
+      ctx.closePath();
+      ctx.fill();
+
+      // Franja inferior con texto PELIGRO
+      ctx.fillStyle = '#111111';
+      ctx.font = 'bold 18px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('PELIGRO', 128, 244);
+
+      const tex = new T.CanvasTexture(canvas);
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    function buildCtiTowerProcedural(T, hasTransformer = true) {
+      const root = new T.Group();
+      root.name = hasTransformer ? 'Torre_CTI_Transformador' : 'Torre_Media_Tension';
+
+      // Materiales PBR
+      const concreteMat = new T.MeshStandardMaterial({ color: 0x828485, roughness: 0.95 });
+      const cabinetMat = new T.MeshStandardMaterial({ color: 0x5a6068, metalness: 0.78, roughness: 0.32 });
+      const cabinetRoofMat = new T.MeshStandardMaterial({ color: 0x484e56, metalness: 0.82, roughness: 0.28 });
+      const steelLatticeMat = new T.MeshStandardMaterial({ color: 0x8e97a0, metalness: 0.88, roughness: 0.22 });
+      const darkSteelMat = new T.MeshStandardMaterial({ color: 0x363b42, metalness: 0.85, roughness: 0.35 });
+      const conduitMat = new T.MeshStandardMaterial({ color: 0x22252a, roughness: 0.7, metalness: 0.3 });
+      const trafoTankMat = new T.MeshStandardMaterial({ color: 0x262c33, metalness: 0.5, roughness: 0.45 });
+      const trafoFinMat = new T.MeshStandardMaterial({ color: 0x2f363f, metalness: 0.6, roughness: 0.38 });
+      const porcelainMat = new T.MeshStandardMaterial({ color: 0x7c2f23, roughness: 0.2, metalness: 0.1 });
+      const brassMat = new T.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.92, roughness: 0.18 });
+      const conductorCableMat = new T.MeshStandardMaterial({ color: 0xb0bac2, metalness: 0.92, roughness: 0.2 });
+      const hvCableRedMat = new T.MeshStandardMaterial({ color: 0x9b1b1b, roughness: 0.45 });
+
+      const towerH = 11.2;
+      const baseH = 2.0;
+
+      // 1. Zócalo de hormigón
+      const plinth = new T.Mesh(new T.BoxGeometry(1.42, 0.25, 1.42), concreteMat);
+      plinth.position.y = 0.125;
+      plinth.castShadow = true;
+      plinth.receiveShadow = true;
+      root.add(plinth);
+
+      // 2. Armario de Baja Tensión en la base
+      const cabGroup = new T.Group();
+      cabGroup.position.y = 0.25;
+
+      const cabBox = new T.Mesh(new T.BoxGeometry(1.22, baseH, 1.22), cabinetMat);
+      cabBox.position.y = baseH / 2;
+      cabBox.castShadow = true;
+      cabBox.receiveShadow = true;
+      cabGroup.add(cabBox);
+
+      // Tejadillo piramidal a 4 aguas
+      const cabRoof = new T.Mesh(new T.CylinderGeometry(0.86, 1.26, 0.22, 4), cabinetRoofMat);
+      cabRoof.position.y = baseH + 0.11;
+      cabRoof.rotation.y = Math.PI / 4;
+      cabRoof.castShadow = true;
+      cabGroup.add(cabRoof);
+
+      // Señales de peligro / riesgo eléctrico en puertas delantera y trasera
+      const hazardTex = createHazardSignTexture(T);
+      const signMat = new T.MeshBasicMaterial({ map: hazardTex, transparent: true });
+
+      const signFront = new T.Mesh(new T.PlaneGeometry(0.34, 0.34), signMat);
+      signFront.position.set(0, baseH * 0.62, 0.615);
+      cabGroup.add(signFront);
+
+      const signBack = signFront.clone();
+      signBack.rotation.y = Math.PI;
+      signBack.position.set(0, baseH * 0.62, -0.615);
+      cabGroup.add(signBack);
+
+      // Junta divisoria de doble puerta
+      const seamGeom = new T.BoxGeometry(0.015, baseH * 0.85, 0.01);
+      const seamMat = new T.MeshBasicMaterial({ color: 0x22262a });
+      const seamFront = new T.Mesh(seamGeom, seamMat);
+      seamFront.position.set(0, baseH * 0.48, 0.612);
+      cabGroup.add(seamFront);
+
+      // Manetas de las puertas
+      [-0.04, 0.04].forEach(hx => {
+        const handle = new T.Mesh(new T.BoxGeometry(0.02, 0.09, 0.035), darkSteelMat);
+        handle.position.set(hx, baseH * 0.5, 0.625);
+        cabGroup.add(handle);
+      });
+
+      root.add(cabGroup);
+
+      // 3. Fuste de celosía metálica galvanizada
+      const latticeGroup = new T.Group();
+      const mastStart = 0.25 + baseH; // 2.25m
+      const mastHeight = towerH - mastStart; // ~8.95m
+
+      // 4 Montantes principales en las esquinas
+      const botW = 0.82 / 2;
+      const topW = 0.62 / 2;
+      const corners = [
+        [-1, -1], [1, -1], [1, 1], [-1, 1]
+      ];
+
+      corners.forEach(([cx, cz]) => {
+        const legGeom = new T.CylinderGeometry(0.042, 0.052, mastHeight, 8);
+        const leg = new T.Mesh(legGeom, steelLatticeMat);
+        leg.position.set((botW + topW) / 2 * cx, mastStart + mastHeight / 2, (botW + topW) / 2 * cz);
+        leg.castShadow = true;
+        latticeGroup.add(leg);
+      });
+
+      // Diagonales y travesaños de celosía (X-bracing en 8 módulos verticales)
+      const numTiers = 8;
+      const tierH = mastHeight / numTiers;
+      for (let t = 0; t < numTiers; t++) {
+        const y0 = mastStart + t * tierH;
+        const y1 = y0 + tierH;
+        const midY = (y0 + y1) / 2;
+
+        const factor0 = t / numTiers;
+        const factor1 = (t + 1) / numTiers;
+        const w0 = botW * (1 - factor0) + topW * factor0;
+        const w1 = botW * (1 - factor1) + topW * factor1;
+        const avgW = (w0 + w1);
+
+        // Travesaños horizontales en cada piso
+        const hTieGeomX = new T.BoxGeometry(avgW, 0.038, 0.038);
+        const hTieGeomZ = new T.BoxGeometry(0.038, 0.038, avgW);
+
+        const tieN = new T.Mesh(hTieGeomX, steelLatticeMat);
+        tieN.position.set(0, y1, (w0 + w1) / 2);
+        latticeGroup.add(tieN);
+
+        const tieS = new T.Mesh(hTieGeomX, steelLatticeMat);
+        tieS.position.set(0, y1, -(w0 + w1) / 2);
+        latticeGroup.add(tieS);
+
+        const tieE = new T.Mesh(hTieGeomZ, steelLatticeMat);
+        tieE.position.set((w0 + w1) / 2, y1, 0);
+        latticeGroup.add(tieE);
+
+        const tieW = new T.Mesh(hTieGeomZ, steelLatticeMat);
+        tieW.position.set(-(w0 + w1) / 2, y1, 0);
+        latticeGroup.add(tieW);
+
+        // Cruces diagonales X en las 4 caras
+        const diagLen = Math.sqrt(avgW * avgW + tierH * tierH);
+        const diagAngle = Math.atan2(avgW, tierH);
+
+        // Cara Norte y Sur
+        [-1, 1].forEach(sideZ => {
+          const zPos = ((w0 + w1) / 2) * sideZ;
+          const diag1 = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, diagLen, 6), steelLatticeMat);
+          diag1.position.set(0, midY, zPos);
+          diag1.rotation.z = diagAngle;
+          latticeGroup.add(diag1);
+
+          const diag2 = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, diagLen, 6), steelLatticeMat);
+          diag2.position.set(0, midY, zPos);
+          diag2.rotation.z = -diagAngle;
+          latticeGroup.add(diag2);
+        });
+
+        // Cara Este y Oeste
+        [-1, 1].forEach(sideX => {
+          const xPos = ((w0 + w1) / 2) * sideX;
+          const diag1 = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, diagLen, 6), steelLatticeMat);
+          diag1.position.set(xPos, midY, 0);
+          diag1.rotation.x = diagAngle;
+          latticeGroup.add(diag1);
+
+          const diag2 = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, diagLen, 6), steelLatticeMat);
+          diag2.position.set(xPos, midY, 0);
+          diag2.rotation.x = -diagAngle;
+          latticeGroup.add(diag2);
+        });
+      }
+
+      // Tubo bajante vertical central
+      const centralConduit = new T.Mesh(new T.CylinderGeometry(0.055, 0.055, mastHeight + 0.2, 12), conduitMat);
+      centralConduit.position.set(0, mastStart + mastHeight / 2, 0);
+      latticeGroup.add(centralConduit);
+
+      root.add(latticeGroup);
+
+      // 4. Transformador y Plataforma CTI (Si aplica)
+      if (hasTransformer) {
+        const ctiGroup = new T.Group();
+        const platY = 7.75;
+        ctiGroup.position.set(-0.82, platY, 0);
+
+        // Bancada / plataforma en voladizo
+        const platBed = new T.Mesh(new T.BoxGeometry(1.15, 0.09, 0.95), darkSteelMat);
+        platBed.castShadow = true;
+        ctiGroup.add(platBed);
+
+        // Barandilla de seguridad
+        const railTop = new T.Mesh(new T.BoxGeometry(1.15, 0.03, 0.03), steelLatticeMat);
+        railTop.position.set(0, 0.45, 0.46);
+        ctiGroup.add(railTop);
+        const railBack = new T.Mesh(new T.BoxGeometry(1.15, 0.03, 0.03), steelLatticeMat);
+        railBack.position.set(0, 0.45, -0.46);
+        ctiGroup.add(railBack);
+
+        // Tirantes / jabalcones de apoyo diagonal inferior
+        [-0.32, 0.32].forEach(tz => {
+          const strut = new T.Mesh(new T.CylinderGeometry(0.03, 0.03, 1.25, 8), darkSteelMat);
+          strut.position.set(0.48, -0.45, tz);
+          strut.rotation.z = 0.65;
+          ctiGroup.add(strut);
+        });
+
+        // Cuba principal del transformador con aletas
+        const trafoTank = new T.Mesh(new T.BoxGeometry(0.72, 0.92, 0.65), trafoTankMat);
+        trafoTank.position.set(0, 0.51, 0);
+        trafoTank.castShadow = true;
+        ctiGroup.add(trafoTank);
+
+        // Aletas corrugadas de disipación térmica (8 en cada lateral)
+        for (let f = 0; f < 8; f++) {
+          const finZ = -0.28 + f * 0.08;
+          const finFront = new T.Mesh(new T.BoxGeometry(0.015, 0.82, 0.07), trafoFinMat);
+          finFront.position.set(-0.37, 0.51, finZ);
+          ctiGroup.add(finFront);
+
+          const finBack = new T.Mesh(new T.BoxGeometry(0.015, 0.82, 0.07), trafoFinMat);
+          finBack.position.set(0.37, 0.51, finZ);
+          ctiGroup.add(finBack);
+        }
+
+        // Depósito de expansión / conservador de aceite
+        const conservator = new T.Mesh(new T.CylinderGeometry(0.12, 0.12, 0.55, 16), trafoFinMat);
+        conservator.position.set(0, 1.05, -0.15);
+        conservator.rotation.x = Math.PI / 2;
+        ctiGroup.add(conservator);
+
+        // Relé Buchholz
+        const buchholz = new T.Mesh(new T.CylinderGeometry(0.035, 0.035, 0.12, 10), brassMat);
+        buchholz.position.set(0, 0.98, 0.15);
+        ctiGroup.add(buchholz);
+
+        // 3 Pasatapas cerámicos de Media Tensión
+        [-0.2, 0, 0.2].forEach((bx) => {
+          const bGroup = new T.Group();
+          bGroup.position.set(bx - 0.05, 1.12, 0.14);
+
+          const bCone = new T.Mesh(new T.CylinderGeometry(0.035, 0.055, 0.28, 14), porcelainMat);
+          bGroup.add(bCone);
+
+          [0.02, 0.09, 0.16].forEach(cy => {
+            const bell = new T.Mesh(new T.CylinderGeometry(0.065, 0.035, 0.03, 14), porcelainMat);
+            bell.position.y = cy - 0.08;
+            bGroup.add(bell);
+          });
+
+          const bTerm = new T.Mesh(new T.CylinderGeometry(0.015, 0.015, 0.08, 8), brassMat);
+          bTerm.position.y = 0.18;
+          bGroup.add(bTerm);
+
+          ctiGroup.add(bGroup);
+        });
+
+        // 3 Cortacircuitos fusibles tipo XS basculantes
+        [-0.2, 0, 0.2].forEach((bx) => {
+          const fuseGroup = new T.Group();
+          fuseGroup.position.set(bx - 0.28, 1.48, 0.14);
+
+          const baseIns = new T.Mesh(new T.CylinderGeometry(0.028, 0.035, 0.22, 10), porcelainMat);
+          fuseGroup.add(baseIns);
+
+          const fuseTube = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, 0.44, 10), porcelainMat);
+          fuseTube.position.set(-0.06, 0.08, 0);
+          fuseTube.rotation.z = 0.42;
+          fuseGroup.add(fuseTube);
+
+          const ring = new T.Mesh(new T.TorusGeometry(0.025, 0.006, 8, 16), brassMat);
+          ring.position.set(-0.16, 0.25, 0);
+          fuseGroup.add(ring);
+
+          const jumper = new T.Mesh(new T.CylinderGeometry(0.01, 0.01, 0.35, 8), hvCableRedMat);
+          jumper.position.set(0.12, -0.16, 0);
+          jumper.rotation.z = -0.7;
+          fuseGroup.add(jumper);
+
+          ctiGroup.add(fuseGroup);
+        });
+
+        root.add(ctiGroup);
+      }
+
+      // 5. Cruceta superior de coronación y cadenas de aisladores
+      const topGroup = new T.Group();
+      topGroup.position.y = towerH;
+
+      // Viga horizontal principal
+      const crossBeam = new T.Mesh(new T.BoxGeometry(2.9, 0.14, 0.26), steelLatticeMat);
+      crossBeam.position.set(-0.25, 0, 0);
+      crossBeam.castShadow = true;
+      topGroup.add(crossBeam);
+
+      // Tirantes de refuerzo angular
+      [-0.9, 0.4].forEach(bx => {
+        const brace = new T.Mesh(new T.BoxGeometry(0.05, 0.55, 0.05), steelLatticeMat);
+        brace.position.set(bx, 0.24, 0);
+        brace.rotation.z = bx < 0 ? -0.45 : 0.45;
+        topGroup.add(brace);
+      });
+
+      // 3 Cadenas de aisladores de suspensión
+      const phasePositions = [-1.45, -0.25, 0.95];
+      phasePositions.forEach((px, idx) => {
+        const insChain = new T.Group();
+        insChain.position.set(px, 0.15, 0);
+
+        const stem = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, 0.45, 10), steelLatticeMat);
+        insChain.add(stem);
+
+        [0.06, 0.15, 0.24, 0.33].forEach(cy => {
+          const bell = new T.Mesh(new T.CylinderGeometry(0.095, 0.045, 0.04, 16), porcelainMat);
+          bell.position.y = cy - 0.2;
+          insChain.add(bell);
+        });
+
+        const clamp = new T.Mesh(new T.BoxGeometry(0.07, 0.05, 0.07), darkSteelMat);
+        clamp.position.y = -0.22;
+        insChain.add(clamp);
+
+        // Conductor aéreo trifásico suspendido
+        const cable = new T.Mesh(new T.CylinderGeometry(0.015, 0.015, 1.8, 8), conductorCableMat);
+        cable.rotation.z = Math.PI / 2;
+        cable.position.y = -0.25;
+        insChain.add(cable);
+
+        // Bajante de alta tensión hacia el transformador
+        if (hasTransformer) {
+          const dropCable = new T.Mesh(new T.CylinderGeometry(0.009, 0.009, 1.9, 8), hvCableRedMat);
+          dropCable.position.set(0.12 * (idx - 1), -1.15, 0.08);
+          insChain.add(dropCable);
+        }
+
+        topGroup.add(insChain);
+      });
+
+      // Puntera superior de tierra / pararrayos
+      const lightningRod = new T.Mesh(new T.CylinderGeometry(0.012, 0.02, 0.75, 8), steelLatticeMat);
+      lightningRod.position.set(0, 0.52, 0);
+      topGroup.add(lightningRod);
+
+      root.add(topGroup);
+
+      return root;
+    }
+
+
     // =========================================================================
     // CARGADOR Y ADAPTADOR DE ESCENA
     // =========================================================================
@@ -2489,7 +4023,10 @@
       loaderEl.style.pointerEvents = 'none';
     }
 
+    let currentItemId = 'modelo-3d';
+
     function displayModel(item) {
+      currentItemId = item.id;
       loaderEl.style.opacity = '1';
       loaderEl.style.pointerEvents = 'auto';
       loaderText.innerText = 'Cargando ' + item.name + '...';
@@ -2512,14 +4049,24 @@
       }
 
       if (item.type === 'procedural' && typeof item.builder === 'function') {
-        const procObj = item.builder(THREE);
-        setupLoadedObject(procObj, item);
+        try {
+          const procObj = item.builder(THREE);
+          setupLoadedObject(procObj, item);
+        } catch (err) {
+          console.error(`Error generando ${item.name}:`, err);
+          loaderText.innerText = `Error al generar ${item.name}: ` + err.message;
+        }
         return;
       }
 
       if (!item.file && typeof item.builder === 'function') {
-        const procObj = item.builder(THREE);
-        setupLoadedObject(procObj, item);
+        try {
+          const procObj = item.builder(THREE);
+          setupLoadedObject(procObj, item);
+        } catch (err) {
+          console.error(`Error generando ${item.name}:`, err);
+          loaderText.innerText = `Error al generar ${item.name}: ` + err.message;
+        }
         return;
       }
 
@@ -2629,6 +4176,88 @@
         controls.target.set(0, size.y * 0.5, 0);
         controls.update();
       }
+    });
+
+    async function saveGlbToServer(filename, blob) {
+      try {
+        await fetch(`/api/save-model?name=${encodeURIComponent(filename)}`, {
+          method: 'POST',
+          body: blob
+        });
+        console.log(`[OK] Guardado en servidor: /models/${filename}`);
+      } catch (err) {
+        console.warn(`No se pudo guardar ${filename} en servidor:`, err);
+      }
+    }
+
+    document.getElementById('download-glb-btn').addEventListener('click', () => {
+      if (!currentModel) return;
+      const exporter = new GLTFExporter();
+      loaderEl.style.opacity = '1';
+      loaderEl.style.pointerEvents = 'auto';
+      loaderText.innerText = 'Exportando ' + currentItemId + '.glb ...';
+
+      exporter.parse(
+        currentModel,
+        async (glb) => {
+          loaderEl.style.opacity = '0';
+          loaderEl.style.pointerEvents = 'none';
+          const blob = new Blob([glb], { type: 'model/gltf-binary' });
+          
+          // 1. Guardar copia local en la carpeta extracted-3d-lib/models/
+          await saveGlbToServer(`${currentItemId}.glb`, blob);
+
+          // 2. Disparar descarga en el navegador
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = `${currentItemId}.glb`;
+          link.click();
+        },
+        (error) => {
+          loaderEl.style.opacity = '0';
+          loaderEl.style.pointerEvents = 'none';
+          console.error('Error exportando GLB:', error);
+          alert('Error al exportar el archivo GLB');
+        },
+        { binary: true }
+      );
+    });
+
+    // Botón para generar y guardar todos los modelos .glb en la carpeta /models
+    document.getElementById('export-all-glb-btn').addEventListener('click', async () => {
+      const proceduralItems = CATALOG.filter(item => typeof item.builder === 'function');
+      if (proceduralItems.length === 0) return;
+
+      const exporter = new GLTFExporter();
+      loaderEl.style.opacity = '1';
+      loaderEl.style.pointerEvents = 'auto';
+
+      let count = 0;
+      for (const item of proceduralItems) {
+        count++;
+        loaderText.innerText = `[${count}/${proceduralItems.length}] Guardando ${item.name} en /models ...`;
+        try {
+          const obj = item.builder(THREE);
+          await new Promise((resolve, reject) => {
+            exporter.parse(
+              obj,
+              async (glb) => {
+                const blob = new Blob([glb], { type: 'model/gltf-binary' });
+                await saveGlbToServer(`${item.id}.glb`, blob);
+                resolve();
+              },
+              reject,
+              { binary: true }
+            );
+          });
+        } catch (e) {
+          console.error(`Error procesando ${item.id}:`, e);
+        }
+      }
+
+      loaderEl.style.opacity = '0';
+      loaderEl.style.pointerEvents = 'none';
+      alert(`✅ ¡Completado! Se han guardado ${count} modelos .glb en extracted-3d-lib/models/ listos para GitHub.`);
     });
 
     window.addEventListener('resize', () => {

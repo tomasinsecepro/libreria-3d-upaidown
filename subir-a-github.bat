@@ -1,29 +1,31 @@
 @echo off
-setlocal
-cd /d "%~dp0"
-
+chcp 65001 > nul
 echo ========================================================
-echo   SUBIENDO LIBRERIA 3D A GITHUB: tomasinsecepro
+echo  SUBIENDO LIBRERÍA 3D A GITHUB (tomasinsecepro)
 echo ========================================================
 echo.
 
-git config user.name "tomasinsecepro"
-git config user.email "tomasinsecepro@users.noreply.github.com"
+echo 1. Estado actual del repositorio:
+git status -s
+echo.
 
-echo [1/3] Anadiendo archivos...
+echo 2. Añadiendo archivos modificados y nuevos...
 git add -A
 
-echo.
-echo [2/3] Registrando commit con todas las mejoras 3D...
-git commit -m "feat: libreria 3D interactiva completa para tomasinsecepro"
+echo 3. Creando commit con las novedades...
+git commit -m "feat: modelos hiperrealistas liebre, galgo espanol, torres CTI y pivots de riego"
+
+echo 4. Subiendo a GitHub (https://github.com/tomasinsecepro/libreria-3d-upaidown)...
+git push origin main
 
 echo.
-echo [3/3] Enviando a https://github.com/tomasinsecepro/libreria-3d-upaidown ...
-git push -u origin main --force
-
-echo.
-echo ========================================================
-echo   PROCESO COMPLETADO
-echo ========================================================
+if %ERRORLEVEL% EQU 0 (
+    echo ========================================================
+    echo  [EXITO] Todo el proyecto esta actualizado en GitHub!
+    echo  Repositorio: https://github.com/tomasinsecepro/libreria-3d-upaidown
+    echo ========================================================
+) else (
+    echo [ERROR / AVISO] Revisa si se requiere iniciar sesion en GitHub.
+)
 echo.
 pause
