@@ -9,6 +9,7 @@ export interface EmbalseRiego3DProps {
   scale?: number;
   waterLevelPercent?: number; // 0% a 100% de llenado del embalse
   modelUrl?: string;
+  pumpRunning?: boolean;
 }
 
 function ReservoirModel({
@@ -27,7 +28,7 @@ function ReservoirModel({
       if (waterMesh) {
         // Ondulación sutil en la lámina de agua
         const baseHeight = (waterLevelPercent / 100) * 3.8;
-        waterMesh.position.y = (baseHeight / 2) + 0.15 + Math.sin(clock.elapsedTime * 1.6) * 0.015;
+        waterMesh.position.y = baseHeight / 2 + 0.15 + Math.sin(clock.elapsedTime * 1.6) * 0.015;
       }
     }
   });
@@ -49,10 +50,7 @@ export function EmbalseRiego3D({
   return (
     <group position={position} rotation={rotation} scale={scale}>
       <Suspense fallback={null}>
-        <ReservoirModel
-          url={modelUrl}
-          waterLevelPercent={waterLevelPercent}
-        />
+        <ReservoirModel url={modelUrl} waterLevelPercent={waterLevelPercent} />
       </Suspense>
     </group>
   );

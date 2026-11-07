@@ -562,6 +562,18 @@
         file: 'embalse-riego.glb'
       },
       {
+        id: 'tanque-chapa-2000m3',
+        name: 'Tanque Australiano 2000 m³',
+        category: 'hydro',
+        icon: '🛢️',
+        title: 'Depósito Circular de Chapa Ondulada Galvanizada con Liner Azul (2.000 m³)',
+        desc: 'Tanque australiano cilíndrico de 25m de diámetro y 4.2m de altura para almacenamiento de 2.000.000 L de agua de riego. Estructura exterior en virolas de chapa de acero galvanizado corrugado unidas por pernos de alta resistencia, membrana interior (liner) de PVC/PEAD azul con remate de coronación perimetral plegado y lámina de agua.',
+        tags: ['CAPACIDAD: 2.000 m³', 'DIÁMETRO: 25.2 m', 'ALTURA: 4.2 m', 'CHAPA: GALVANIZADA_ONDULADA', 'LINER: MEMBRANA_AZUL_PEAD', 'VÁLVULA: MARIPOSA_DN250'],
+        reactComp: '<TanqueAustraliano3D waterLevelPercent={85} radius={4.2} height={1.85} />',
+        type: 'procedural',
+        builder: buildCorrugatedTankProcedural
+      },
+      {
         id: 'pivot-riego-3t',
         name: 'Pívot Central (3 Torres)',
         category: 'hydro',
@@ -2053,6 +2065,205 @@
       headGroup.add(botCapFlange);
 
       root.add(headGroup);
+
+      return root;
+    }
+
+    // -------------------------------------------------------------------------
+    // GENERADOR PROCEDURAL: TANQUE AUSTRALIANO DE CHAPA ONDULADA (2.000 m³)
+    // -------------------------------------------------------------------------
+    function buildCorrugatedTankProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Tanque_Australiano_Chapa_2000m3';
+
+      const radius = 4.2;
+      const height = 1.85;
+      const radialSegs = 120;
+      const heightSegs = 160;
+      const waves = 18;
+      const waveAmp = 0.038;
+
+      // Materiales PBR
+      const galvaMat = new T.MeshStandardMaterial({
+        color: 0xa6b0b8,
+        metalness: 0.92,
+        roughness: 0.32,
+        side: T.DoubleSide
+      });
+      const seamSteelMat = new T.MeshStandardMaterial({
+        color: 0x7f8990,
+        metalness: 0.88,
+        roughness: 0.35
+      });
+      const boltMat = new T.MeshStandardMaterial({
+        color: 0xdde4e8,
+        metalness: 0.95,
+        roughness: 0.18
+      });
+      const blueLinerMat = new T.MeshStandardMaterial({
+        color: 0x0d6efd,
+        roughness: 0.42,
+        metalness: 0.08,
+        side: T.DoubleSide
+      });
+      const darkBlueLinerMat = new T.MeshStandardMaterial({
+        color: 0x0854c7,
+        roughness: 0.5,
+        metalness: 0.05
+      });
+      const waterMat = new T.MeshStandardMaterial({
+        color: 0x0077b6,
+        roughness: 0.08,
+        metalness: 0.25,
+        transparent: true,
+        opacity: 0.88
+      });
+      const concreteMat = new T.MeshStandardMaterial({
+        color: 0x88857f,
+        roughness: 0.92,
+        metalness: 0.05
+      });
+      const valveMat = new T.MeshStandardMaterial({
+        color: 0x455a64,
+        metalness: 0.85,
+        roughness: 0.3
+      });
+      const redWheelMat = new T.MeshStandardMaterial({
+        color: 0xd32f2f,
+        roughness: 0.35
+      });
+
+      // 1. Solera circular de hormigón
+      const baseMesh = new T.Mesh(new T.CylinderGeometry(radius + 0.22, radius + 0.22, 0.12, 64), concreteMat);
+      baseMesh.position.y = -0.06;
+      baseMesh.receiveShadow = true;
+      root.add(baseMesh);
+
+      // 2. Chapa ondulada perimetral física
+      const pos = [];
+      const norm = [];
+      const uvs = [];
+      const idx = [];
+
+      for (let i = 0; i <= heightSegs; i++) {
+        const v = i / heightSegs;
+        const y = v * height;
+        const wave = Math.sin(v * waves * Math.PI * 2);
+        const r = radius + wave * waveAmp;
+        const dr_dy = (waveAmp * (waves * Math.PI * 2) * Math.cos(v * waves * Math.PI * 2)) / height;
+
+        for (let j = 0; j <= radialSegs; j++) {
+          const u = j / radialSegs;
+          const phi = u * Math.PI * 2;
+          const cosP = Math.cos(phi);
+          const sinP = Math.sin(phi);
+
+          pos.push(cosP * r, y, sinP * r);
+
+          const nx = cosP;
+          const ny = -dr_dy;
+          const nz = sinP;
+          const len = Math.hypot(nx, ny, nz) || 1;
+          norm.push(nx / len, ny / len, nz / len);
+
+          uvs.push(u * 8, v * waves);
+        }
+      }
+
+      for (let i = 0; i < heightSegs; i++) {
+        for (let j = 0; j < radialSegs; j++) {
+          const a = i * (radialSegs + 1) + j;
+          const b = (i + 1) * (radialSegs + 1) + j;
+          const c = (i + 1) * (radialSegs + 1) + (j + 1);
+          const d = i * (radialSegs + 1) + (j + 1);
+          idx.push(a, b, d);
+          idx.push(b, c, d);
+        }
+      }
+
+      const cGeo = new T.BufferGeometry();
+      cGeo.setAttribute('position', new T.Float32BufferAttribute(pos, 3));
+      cGeo.setAttribute('normal', new T.Float32BufferAttribute(norm, 3));
+      cGeo.setAttribute('uv', new T.Float32BufferAttribute(uvs, 2));
+      cGeo.setIndex(idx);
+
+      const wallMesh = new T.Mesh(cGeo, galvaMat);
+      wallMesh.castShadow = true;
+      wallMesh.receiveShadow = true;
+      root.add(wallMesh);
+
+      // 3. Costuras verticales de unión de virolas
+      const numPanels = 8;
+      for (let p = 0; p < numPanels; p++) {
+        const angle = (p * Math.PI * 2) / numPanels;
+        const x = Math.cos(angle) * (radius + 0.04);
+        const z = Math.sin(angle) * (radius + 0.04);
+
+        const seamG = new T.Group();
+        seamG.position.set(x, height / 2, z);
+        seamG.rotation.y = -angle;
+
+        const plate = new T.Mesh(new T.BoxGeometry(0.06, height, 0.015), seamSteelMat);
+        plate.castShadow = true;
+        seamG.add(plate);
+
+        for (let b = 0; b < 11; b++) {
+          const bolt = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, 0.015, 6), boltMat);
+          bolt.position.set(0, -height / 2 + 0.1 + b * (height / 10.5), 0.012);
+          bolt.rotation.x = Math.PI / 2;
+          seamG.add(bolt);
+        }
+        root.add(seamG);
+      }
+
+      // 4. Liner interior cilíndrico azul (estrictamente interior)
+      const linerInner = new T.Mesh(
+        new T.CylinderGeometry(radius - 0.04, radius - 0.04, height, 96, 1, true),
+        blueLinerMat
+      );
+      linerInner.position.y = height / 2;
+      root.add(linerInner);
+
+      // 5. Fondo interior azul
+      const linerBottom = new T.Mesh(new T.CircleGeometry(radius - 0.04, 64), darkBlueLinerMat);
+      linerBottom.rotation.x = -Math.PI / 2;
+      linerBottom.position.y = 0.01;
+      root.add(linerBottom);
+
+      // 6. Remate / Perfil perimetral superior de chapa galvanizada
+      const torusRim = new T.Mesh(new T.TorusGeometry(radius, 0.035, 12, 96), galvaMat);
+      torusRim.rotation.x = Math.PI / 2;
+      torusRim.position.y = height + 0.008;
+      torusRim.castShadow = true;
+      root.add(torusRim);
+
+      // 7. Espejo de agua interior
+      const waterLevel = height * 0.85;
+      const waterDisc = new T.Mesh(new T.CircleGeometry(radius - 0.06, 64), waterMat);
+      waterDisc.rotation.x = -Math.PI / 2;
+      waterDisc.position.y = waterLevel;
+      root.add(waterDisc);
+
+      // 8. Tubería de vaciado/succión lateral con válvula de mariposa
+      const pipeGroup = new T.Group();
+      pipeGroup.position.set(radius + 0.12, 0.35, 0);
+
+      const pipe = new T.Mesh(new T.CylinderGeometry(0.09, 0.09, 0.28, 20), valveMat);
+      pipe.rotation.z = Math.PI / 2;
+      pipe.castShadow = true;
+      pipeGroup.add(pipe);
+
+      const flange = new T.Mesh(new T.CylinderGeometry(0.15, 0.15, 0.04, 20), valveMat);
+      flange.position.x = 0.15;
+      flange.rotation.z = Math.PI / 2;
+      pipeGroup.add(flange);
+
+      const handWheel = new T.Mesh(new T.TorusGeometry(0.08, 0.015, 8, 20), redWheelMat);
+      handWheel.position.set(0.06, 0.16, 0);
+      handWheel.rotation.x = Math.PI / 2;
+      pipeGroup.add(handWheel);
+
+      root.add(pipeGroup);
 
       return root;
     }

@@ -7,20 +7,25 @@ export interface AlmondTree3DProps {
   position?: [number, number, number];
   rotation?: [number, number, number];
   scale?: number;
-  windBreeze?: boolean; // Suave balanceo del ramaje por el viento
   modelUrl?: string;
+  windBreeze?: boolean;
 }
 
-function TreeModel({ url, windBreeze = true }: { url: string; windBreeze?: boolean }) {
+function AlmondTreeModel({
+  url,
+  windBreeze = true,
+}: {
+  url: string;
+  windBreeze?: boolean;
+}) {
   const { scene } = useGLTF(url);
   const ref = useRef<Group>(null);
 
   useFrame(({ clock }) => {
     if (ref.current && windBreeze) {
       const t = clock.elapsedTime;
-      // Balanceo orgánico diferenciado
-      ref.current.rotation.z = Math.sin(t * 1.05) * 0.01;
-      ref.current.rotation.x = Math.cos(t * 0.85) * 0.007;
+      ref.current.rotation.z = Math.sin(t * 1.05) * 0.008;
+      ref.current.rotation.x = Math.cos(t * 0.75) * 0.005;
     }
   });
 
@@ -41,8 +46,10 @@ export function AlmondTree3D({
   return (
     <group position={position} rotation={rotation} scale={scale}>
       <Suspense fallback={null}>
-        <TreeModel url={modelUrl} windBreeze={windBreeze} />
+        <AlmondTreeModel url={modelUrl} windBreeze={windBreeze} />
       </Suspense>
     </group>
   );
 }
+
+useGLTF.preload('/models/arbol-almendro.glb');

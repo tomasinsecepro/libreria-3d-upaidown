@@ -7,20 +7,25 @@ export interface PistachioTree3DProps {
   position?: [number, number, number];
   rotation?: [number, number, number];
   scale?: number;
-  windBreeze?: boolean; // Leve oscilación de la copa por el viento del campo
   modelUrl?: string;
+  windBreeze?: boolean;
 }
 
-function TreeModel({ url, windBreeze = true }: { url: string; windBreeze?: boolean }) {
+function PistachioTreeModel({
+  url,
+  windBreeze = true,
+}: {
+  url: string;
+  windBreeze?: boolean;
+}) {
   const { scene } = useGLTF(url);
   const ref = useRef<Group>(null);
 
   useFrame(({ clock }) => {
     if (ref.current && windBreeze) {
-      // Brisa suave en el follaje
       const t = clock.elapsedTime;
-      ref.current.rotation.z = Math.sin(t * 1.2) * 0.012;
-      ref.current.rotation.x = Math.cos(t * 0.9) * 0.008;
+      ref.current.rotation.z = Math.sin(t * 0.95) * 0.007;
+      ref.current.rotation.x = Math.cos(t * 0.85) * 0.005;
     }
   });
 
@@ -41,8 +46,10 @@ export function PistachioTree3D({
   return (
     <group position={position} rotation={rotation} scale={scale}>
       <Suspense fallback={null}>
-        <TreeModel url={modelUrl} windBreeze={windBreeze} />
+        <PistachioTreeModel url={modelUrl} windBreeze={windBreeze} />
       </Suspense>
     </group>
   );
 }
+
+useGLTF.preload('/models/arbol-pistacho.glb');
