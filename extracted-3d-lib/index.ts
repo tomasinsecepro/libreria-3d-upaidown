@@ -28,6 +28,7 @@ export * from './components/Filtromatic3D';
 export * from './components/BombaPresionVertical3D';
 export * from './components/CenadorMadera3D';
 export * from './components/CuadroInsece3D';
+export * from './components/EstacionRemotaSolar3D';
 
 
 

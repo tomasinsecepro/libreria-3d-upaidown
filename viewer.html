@@ -348,7 +348,7 @@
 
   <!-- Filtro por categorías -->
   <div class="category-bar">
-    <button class="cat-btn active" data-cat="all">🌟 Todos (34)</button>
+    <button class="cat-btn active" data-cat="all">🌟 Todos (35)</button>
     <button class="cat-btn" data-cat="solar">☀️ Fotovoltaica & MT</button>
     <button class="cat-btn" data-cat="crops">🌿 Cultivos</button>
     <button class="cat-btn" data-cat="hydro">💧 Hidráulica & Riego</button>
@@ -473,6 +473,19 @@
         type: 'procedural',
         file: 'cuadro-insece-hmi-60x80.glb',
         builder: (T) => buildInseceCabinetProcedural(T, true)
+      },
+      {
+        id: 'remota-solar-hormigon',
+        name: 'Remota Solar en Hormigón',
+        category: 'solar',
+        icon: '📡',
+        title: 'Estación Remota Solar Fotovoltaica sobre Bloque de Hormigón con Cuadro INSECE',
+        desc: 'Estación remota autónoma autosuficiente para telemetría, bombeo o sectorización de riego sin fondo. Bloque de contrapeso de hormigón prefabricado tipo lego con 8 tetones piramidales superiores de encaje, mástil tubular de acero galvanizado en caliente de 2.1m con placa base y cartabones, cuadro de control INSECE 60×80cm fijado con abarcones al mástil y panel solar fotovoltaico de 160W inclinado a 35° con estructura de cruceta y perfiles de aluminio.',
+        tags: ['BASE: BLOQUE_HORMIGÓN_LEGO', 'MÁSTIL: TUBULAR_GALVANIZADO_76mm', 'PLACA: FOTOVOLTAICA_160W_35°', 'CUADRO: INSECE_60x80_ESTÁNDAR', 'FONDO: AISLADO_3D', 'TELEMETRÍA: REMOTA_AGRO'],
+        reactComp: '<EstacionRemotaSolar3D tiltAngleDeg={35} mastHeight={2.10} />',
+        type: 'procedural',
+        file: 'remota-solar-hormigon.glb',
+        builder: buildSolarRemoteStationProcedural
       },
       {
         id: 'torre-cti-transformador',
@@ -1423,6 +1436,441 @@
       }
 
       root.add(doorG);
+
+      return root;
+    }
+
+    // =========================================================================
+    // ESTACIÓN REMOTA SOLAR SOBRE BLOQUE DE HORMIGÓN CON CUADRO INSECE
+    // =========================================================================
+    function buildSolarRemoteStationProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Estacion_Remota_Solar_Hormigon';
+
+      const blockL = 1.20;
+      const blockW = 0.52;
+      const blockH = 0.45;
+      const mastRadius = 0.038;
+      const mastHeight = 2.10;
+      const mastBaseY = blockH;
+      const mastTopY = mastBaseY + mastHeight;
+      const panelW = 1.20;
+      const panelH = 0.80;
+      const panelThick = 0.035;
+      const tiltRad = (35 * Math.PI) / 180;
+
+      // 1. Textura hormigón
+      const cvC = document.createElement('canvas');
+      cvC.width = 512;
+      cvC.height = 512;
+      const ctxC = cvC.getContext('2d');
+      if (ctxC) {
+        ctxC.fillStyle = '#8f9397';
+        ctxC.fillRect(0, 0, 512, 512);
+        for (let i = 0; i < 9000; i++) {
+          const x = Math.random() * 512;
+          const y = Math.random() * 512;
+          const v = Math.random() * 40 - 20;
+          ctxC.fillStyle = `rgba(${135 + v}, ${138 + v}, ${141 + v}, ${0.15 + Math.random() * 0.25})`;
+          ctxC.fillRect(x, y, 1 + Math.random() * 3, 1 + Math.random() * 3);
+        }
+      }
+      const concreteTex = new T.CanvasTexture(cvC);
+      concreteTex.wrapS = T.RepeatWrapping;
+      concreteTex.wrapT = T.RepeatWrapping;
+      concreteTex.repeat.set(2, 2);
+
+      const concreteMat = new T.MeshStandardMaterial({
+        color: 0x9fa4a9,
+        map: concreteTex,
+        roughness: 0.94,
+        metalness: 0.05,
+      });
+
+      // 2. Acero galvanizado
+      const cvG = document.createElement('canvas');
+      cvG.width = 256;
+      cvG.height = 256;
+      const ctxG = cvG.getContext('2d');
+      if (ctxG) {
+        ctxG.fillStyle = '#b0b8c0';
+        ctxG.fillRect(0, 0, 256, 256);
+        for (let i = 0; i < 1500; i++) {
+          const x = Math.random() * 256;
+          const y = Math.random() * 256;
+          const v = Math.random() * 30 - 15;
+          ctxG.fillStyle = `rgba(${185 + v}, ${192 + v}, ${198 + v}, 0.22)`;
+          ctxG.beginPath();
+          ctxG.arc(x, y, 2 + Math.random() * 5, 0, Math.PI * 2);
+          ctxG.fill();
+        }
+      }
+      const galvaTex = new T.CanvasTexture(cvG);
+      galvaTex.wrapS = T.RepeatWrapping;
+      galvaTex.wrapT = T.RepeatWrapping;
+
+      const galvaMat = new T.MeshStandardMaterial({
+        color: 0xb5bec6,
+        map: galvaTex,
+        roughness: 0.32,
+        metalness: 0.88,
+      });
+
+      const aluMat = new T.MeshStandardMaterial({
+        color: 0xd2d8de,
+        roughness: 0.25,
+        metalness: 0.92,
+      });
+
+      // 3. Placa solar fotovoltaica
+      const cvS = document.createElement('canvas');
+      cvS.width = 512;
+      cvS.height = 340;
+      const ctxS = cvS.getContext('2d');
+      if (ctxS) {
+        ctxS.fillStyle = '#101d36';
+        ctxS.fillRect(0, 0, 512, 340);
+        ctxS.strokeStyle = '#2b4778';
+        ctxS.lineWidth = 2;
+        for (let r = 0; r <= 4; r++) {
+          const y = (r / 4) * 340;
+          ctxS.beginPath();
+          ctxS.moveTo(0, y);
+          ctxS.lineTo(512, y);
+          ctxS.stroke();
+        }
+        for (let c = 0; c <= 9; c++) {
+          const x = (c / 9) * 512;
+          ctxS.beginPath();
+          ctxS.moveTo(x, 0);
+          ctxS.lineTo(x, 340);
+          ctxS.stroke();
+        }
+        ctxS.strokeStyle = '#e9ecef';
+        ctxS.lineWidth = 1;
+        for (let r = 0; r < 4; r++) {
+          const yMid = (r + 0.5) * (340 / 4);
+          ctxS.beginPath();
+          ctxS.moveTo(0, yMid - 15);
+          ctxS.lineTo(512, yMid - 15);
+          ctxS.moveTo(0, yMid + 15);
+          ctxS.lineTo(512, yMid + 15);
+          ctxS.stroke();
+        }
+      }
+      const solarCellMat = new T.MeshStandardMaterial({
+        map: new T.CanvasTexture(cvS),
+        color: 0x14213d,
+        roughness: 0.18,
+        metalness: 0.85,
+      });
+
+      const solarBackMat = new T.MeshStandardMaterial({
+        color: 0xe9ecef,
+        roughness: 0.5,
+      });
+
+      // 4. Materiales cuadro y vinilo
+      const ral7035Mat = new T.MeshStandardMaterial({
+        color: 0xc8ced4,
+        roughness: 0.42,
+        metalness: 0.18,
+      });
+
+      const lockMat = new T.MeshStandardMaterial({
+        color: 0x24282c,
+        roughness: 0.35,
+        metalness: 0.8,
+      });
+
+      const switchBlackMat = new T.MeshStandardMaterial({
+        color: 0x111315,
+        roughness: 0.3,
+        metalness: 0.1,
+      });
+
+      const boltMat = new T.MeshStandardMaterial({
+        color: 0xd8dde2,
+        metalness: 0.92,
+        roughness: 0.2,
+      });
+
+      const corrugatedMat = new T.MeshStandardMaterial({
+        color: 0x15171a,
+        roughness: 0.8,
+      });
+
+      // Vinilo serigrafiado INSECE
+      const cvV = document.createElement('canvas');
+      cvV.width = 512;
+      cvV.height = 680;
+      const ctxV = cvV.getContext('2d');
+      if (ctxV) {
+        const skyGrad = ctxV.createLinearGradient(0, 0, 0, 480);
+        skyGrad.addColorStop(0, '#1c7ed6');
+        skyGrad.addColorStop(0.35, '#4dabf7');
+        skyGrad.addColorStop(0.7, '#a5d8ff');
+        skyGrad.addColorStop(1, '#e7f5ff');
+        ctxV.fillStyle = skyGrad;
+        ctxV.fillRect(0, 0, 512, 680);
+
+        const sunGrad = ctxV.createRadialGradient(256, 260, 5, 256, 260, 120);
+        sunGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+        sunGrad.addColorStop(0.3, 'rgba(255, 243, 191, 0.65)');
+        sunGrad.addColorStop(0.7, 'rgba(255, 230, 120, 0.25)');
+        sunGrad.addColorStop(1, 'transparent');
+        ctxV.fillStyle = sunGrad;
+        ctxV.beginPath();
+        ctxV.arc(256, 260, 120, 0, Math.PI * 2);
+        ctxV.fill();
+
+        ctxV.fillStyle = '#0f2b5c';
+        ctxV.beginPath();
+        ctxV.moveTo(330, 310);
+        ctxV.lineTo(512, 280);
+        ctxV.lineTo(512, 530);
+        ctxV.lineTo(310, 480);
+        ctxV.closePath();
+        ctxV.fill();
+
+        ctxV.fillStyle = '#adb5bd';
+        ctxV.fillRect(70, 310, 18, 170);
+
+        ctxV.fillStyle = '#5c940d';
+        ctxV.fillRect(0, 460, 512, 100);
+
+        ctxV.fillStyle = '#ffffff';
+        ctxV.fillRect(0, 520, 512, 160);
+
+        const centerX = 165;
+        const centerY = 565;
+        for (let b = 0; b < 10; b++) {
+          const angle = (b / 10) * Math.PI * 2;
+          ctxV.fillStyle = b % 2 === 0 ? '#00c3ff' : '#00488f';
+          ctxV.beginPath();
+          ctxV.moveTo(centerX, centerY);
+          ctxV.arc(centerX, centerY, 22, angle, angle + 0.35);
+          ctxV.closePath();
+          ctxV.fill();
+        }
+        ctxV.fillStyle = '#ffffff';
+        ctxV.beginPath();
+        ctxV.arc(centerX, centerY, 8, 0, Math.PI * 2);
+        ctxV.fill();
+
+        ctxV.fillStyle = '#0a3678';
+        ctxV.font = '900 42px Arial, sans-serif';
+        ctxV.fillText('INSECE', 198, 580);
+        ctxV.fillStyle = '#495057';
+        ctxV.font = 'bold 11px Arial, sans-serif';
+        ctxV.fillText('ELECTRICIDAD E INNOVACIÓN', 198, 596);
+
+        ctxV.fillStyle = 'rgba(255, 255, 255, 0.92)';
+        ctxV.strokeStyle = '#ced4da';
+        ctxV.lineWidth = 1;
+        ctxV.beginPath();
+        ctxV.roundRect(140, 240, 232, 54, 6);
+        ctxV.fill();
+        ctxV.stroke();
+        ctxV.fillStyle = '#0a3678';
+        ctxV.font = 'bold 12px Arial, sans-serif';
+        ctxV.textAlign = 'center';
+        ctxV.fillText('www.insece.es · ASISTENCIA TÉCNICA 24H', 256, 260);
+        ctxV.font = 'bold 15px monospace';
+        ctxV.fillStyle = '#1c7ed6';
+        ctxV.fillText('967 110 500 · 665 10 22 75', 256, 282);
+        ctxV.textAlign = 'left';
+
+        ctxV.fillStyle = '#181b1e';
+        ctxV.fillRect(0, 630, 512, 50);
+        ctxV.fillStyle = '#fab005';
+        ctxV.beginPath();
+        ctxV.moveTo(40, 665);
+        ctxV.lineTo(55, 638);
+        ctxV.lineTo(70, 665);
+        ctxV.closePath();
+        ctxV.fill();
+        ctxV.fillStyle = '#000';
+        ctxV.font = 'bold 16px Arial';
+        ctxV.fillText('⚡', 47, 661);
+        ctxV.fillStyle = '#e9ecef';
+        ctxV.font = 'bold 11px Arial';
+        ctxV.fillText('ATENCIÓN: RIESGO ELÉCTRICO 400V - USO EXCLUSIVO PERSONAL AUTORIZADO', 85, 655);
+        ctxV.strokeStyle = '#181b1e';
+        ctxV.lineWidth = 6;
+        ctxV.strokeRect(3, 3, 506, 674);
+      }
+      const vinylMat = new T.MeshStandardMaterial({
+        map: new T.CanvasTexture(cvV),
+        roughness: 0.28,
+        metalness: 0.08,
+      });
+
+      // 1. Bloque de hormigón con tetones
+      const blockG = new T.Group();
+      blockG.position.set(0, blockH / 2, 0);
+
+      const blockMesh = new T.Mesh(new T.BoxGeometry(blockL, blockH, blockW), concreteMat);
+      blockMesh.castShadow = true;
+      blockMesh.receiveShadow = true;
+      blockG.add(blockMesh);
+
+      [-0.42, -0.14, 0.14, 0.42].forEach((tx) => {
+        [-0.14, 0.14].forEach((tz) => {
+          const stud = new T.Mesh(new T.CylinderGeometry(0.045, 0.065, 0.05, 4), concreteMat);
+          stud.position.set(tx, blockH / 2 + 0.025, tz);
+          stud.rotation.y = Math.PI / 4;
+          stud.castShadow = true;
+          blockG.add(stud);
+        });
+      });
+      root.add(blockG);
+
+      // 2. Placa base y mástil tubular galvanizado
+      const mastG = new T.Group();
+      mastG.position.set(0.15, 0, 0);
+
+      const basePlate = new T.Mesh(new T.BoxGeometry(0.20, 0.016, 0.20), galvaMat);
+      basePlate.position.set(0, mastBaseY + 0.008, 0);
+      basePlate.castShadow = true;
+      mastG.add(basePlate);
+
+      [-0.075, 0.075].forEach((bx) => {
+        [-0.075, 0.075].forEach((bz) => {
+          const bolt = new T.Mesh(new T.CylinderGeometry(0.010, 0.010, 0.035, 12), boltMat);
+          bolt.position.set(bx, mastBaseY + 0.026, bz);
+          bolt.castShadow = true;
+          mastG.add(bolt);
+        });
+      });
+
+      [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2].forEach((ang) => {
+        const gusset = new T.Mesh(new T.BoxGeometry(0.04, 0.07, 0.008), galvaMat);
+        gusset.position.set(Math.cos(ang) * 0.05, mastBaseY + 0.048, Math.sin(ang) * 0.05);
+        gusset.rotation.y = ang;
+        mastG.add(gusset);
+      });
+
+      const mastPole = new T.Mesh(new T.CylinderGeometry(mastRadius, mastRadius, mastHeight, 24), galvaMat);
+      mastPole.position.set(0, mastBaseY + mastHeight / 2, 0);
+      mastPole.castShadow = true;
+      mastPole.receiveShadow = true;
+      mastG.add(mastPole);
+
+      // 3. Cuadro INSECE fijado al mástil
+      const cabG = new T.Group();
+      cabG.position.set(0, 1.35, 0);
+
+      [-0.24, 0.24].forEach((uy) => {
+        const uboltG = new T.Group();
+        uboltG.position.set(0, uy, 0);
+
+        const ring = new T.Mesh(new T.TorusGeometry(mastRadius + 0.005, 0.006, 8, 20, Math.PI), boltMat);
+        ring.rotation.x = Math.PI / 2;
+        uboltG.add(ring);
+
+        const plate = new T.Mesh(new T.BoxGeometry(0.42, 0.04, 0.008), galvaMat);
+        plate.position.set(0, 0, mastRadius + 0.012);
+        uboltG.add(plate);
+
+        cabG.add(uboltG);
+      });
+
+      const cabBodyG = new T.Group();
+      cabBodyG.position.set(0, 0, mastRadius + 0.02 + 0.125);
+
+      const cabBox = new T.Mesh(new T.BoxGeometry(0.60, 0.80, 0.25), ral7035Mat);
+      cabBox.castShadow = true;
+      cabBox.receiveShadow = true;
+      cabBodyG.add(cabBox);
+
+      const doorG = new T.Group();
+      doorG.position.set(0, 0, 0.125 + 0.011);
+
+      const doorPlate = new T.Mesh(new T.BoxGeometry(0.60, 0.80, 0.022), ral7035Mat);
+      doorPlate.castShadow = true;
+      doorG.add(doorPlate);
+
+      [-0.20, 0.20].forEach((ly) => {
+        const lk = new T.Mesh(new T.CylinderGeometry(0.015, 0.015, 0.006, 24), lockMat);
+        lk.position.set(-0.26, ly, 0.013);
+        lk.rotation.x = Math.PI / 2;
+        doorG.add(lk);
+      });
+
+      const vin = new T.Mesh(new T.PlaneGeometry(0.60 * 0.76, 0.80 * 0.78), vinylMat);
+      vin.position.set(0.015, -0.01, 0.012);
+      doorG.add(vin);
+
+      const sw = new T.Mesh(new T.CylinderGeometry(0.026, 0.026, 0.006, 24), switchBlackMat);
+      sw.position.set(0.015, -0.08, 0.015);
+      sw.rotation.x = Math.PI / 2;
+      doorG.add(sw);
+
+      const swHandle = new T.Mesh(new T.BoxGeometry(0.014, 0.042, 0.022), switchBlackMat);
+      swHandle.position.set(0.015, -0.08, 0.029);
+      doorG.add(swHandle);
+
+      cabBodyG.add(doorG);
+
+      const corrTube = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, 0.08, 12), corrugatedMat);
+      corrTube.position.set(0, -0.42, 0);
+      cabBodyG.add(corrTube);
+
+      cabG.add(cabBodyG);
+      mastG.add(cabG);
+
+      // 4. Soporte y placa solar en cabeza
+      const headG = new T.Group();
+      headG.position.set(0, mastTopY, 0);
+
+      const crossbar = new T.Mesh(new T.CylinderGeometry(0.032, 0.032, 0.86, 18), galvaMat);
+      crossbar.rotation.z = Math.PI / 2;
+      crossbar.castShadow = true;
+      headG.add(crossbar);
+
+      const tClamp = new T.Mesh(new T.BoxGeometry(0.10, 0.08, 0.10), galvaMat);
+      tClamp.position.set(0, -0.02, 0);
+      headG.add(tClamp);
+
+      const tiltedG = new T.Group();
+      tiltedG.rotation.x = tiltRad;
+
+      [-0.34, 0.34].forEach((rx) => {
+        const rail = new T.Mesh(new T.BoxGeometry(0.04, panelH + 0.16, 0.04), aluMat);
+        rail.position.set(rx, 0, 0.04);
+        rail.castShadow = true;
+        tiltedG.add(rail);
+      });
+
+      const pGroup = new T.Group();
+      pGroup.position.set(0, 0, 0.075);
+
+      const pFrame = new T.Mesh(new T.BoxGeometry(panelW, panelH, panelThick), aluMat);
+      pFrame.castShadow = true;
+      pFrame.receiveShadow = true;
+      pGroup.add(pFrame);
+
+      const pFront = new T.Mesh(new T.PlaneGeometry(panelW - 0.04, panelH - 0.04), solarCellMat);
+      pFront.position.set(0, 0, panelThick / 2 + 0.001);
+      pFront.castShadow = true;
+      pGroup.add(pFront);
+
+      const pBack = new T.Mesh(new T.PlaneGeometry(panelW - 0.04, panelH - 0.04), solarBackMat);
+      pBack.position.set(0, 0, -panelThick / 2 - 0.001);
+      pBack.rotation.y = Math.PI;
+      pGroup.add(pBack);
+
+      const jBox = new T.Mesh(new T.BoxGeometry(0.11, 0.09, 0.025), switchBlackMat);
+      jBox.position.set(panelW * 0.28, panelH * 0.24, -panelThick / 2 - 0.015);
+      jBox.castShadow = true;
+      pGroup.add(jBox);
+
+      tiltedG.add(pGroup);
+      headG.add(tiltedG);
+      mastG.add(headG);
+
+      root.add(mastG);
 
       return root;
     }
