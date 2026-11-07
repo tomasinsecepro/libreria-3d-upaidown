@@ -24,5 +24,10 @@ export * from './components/GalgoEspanol3D';
 export * from './components/TanqueAustraliano3D';
 export * from './components/GrupoElectrogeno3D';
 export * from './components/NaveHormigon3D';
+export * from './components/Filtromatic3D';
+export * from './components/BombaPresionVertical3D';
+export * from './components/CenadorMadera3D';
+
+
 
 

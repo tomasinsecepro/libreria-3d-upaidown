@@ -348,7 +348,7 @@
 
   <!-- Filtro por categorías -->
   <div class="category-bar">
-    <button class="cat-btn active" data-cat="all">🌟 Todos (26)</button>
+    <button class="cat-btn active" data-cat="all">🌟 Todos (32)</button>
     <button class="cat-btn" data-cat="solar">☀️ Fotovoltaica & MT</button>
     <button class="cat-btn" data-cat="crops">🌿 Cultivos</button>
     <button class="cat-btn" data-cat="hydro">💧 Hidráulica & Riego</button>
@@ -589,6 +589,31 @@
         builder: buildCorrugatedTankProcedural
       },
       {
+        id: 'filtro-automatico-filtromatic',
+        name: 'Filtro Filtromatic DN150',
+        category: 'hydro',
+        icon: '🌀',
+        title: 'Filtro Automático de Malla con Pistón Hidráulico FILTROMATIC (DN150 / 6")',
+        desc: 'Filtro industrial de malla autolimpiante con escáner de succión accionado por pistón hidráulico vertical de alta precisión. Cuerpo cilíndrico en acero al carbono con recubrimiento epoxi azul brillante, brida de entrada inferior vertical con flecha de flujo, brida de salida lateral derecha DN150 PN10/16, válvula de lavado a contracorriente con actuador de diafragma en cúpula, 3 manómetros de glicerina de presión diferencial (P1, P2, P3), caja de control programadora IP65 con electroválvula de pilotaje y circuito de microtubing hidráulico de mando.',
+        tags: ['CAUDAL: 180 m³/h', 'PRESIÓN_MAX: 10 bar', 'FILTRADO: MALLA_130_MICRAS', 'AUTOLIMPIANTE: PISTÓN_HIDRÁULICO', 'LAVADO: VÁLVULA_CONTRACORRIENTE_2"', 'MARCA: FILTROMATIC'],
+        reactComp: '<Filtromatic3D inletPressureBar={4.2} differentialPressureBar={0.4} flushing={false} />',
+        type: 'procedural',
+        builder: buildFiltromaticFilterProcedural
+      },
+      {
+        id: 'bomba-presion-vertical',
+        name: 'Bomba Presión Vertical',
+        category: 'hydro',
+        icon: '⚡',
+        title: 'Bomba Centrífuga Multietapa Vertical In-Line de Alta Presión',
+        desc: 'Bomba vertical in-line multietapa para grupos de presión agrícolas, fertirriego y ósmosis. Motor eléctrico trifásico de alta eficiencia B5 en azul industrial con aletas de refrigeración y caja de bornes lateral, linterna de acoplamiento de fundición con rejilla protectora ranurada, camisa exterior cilíndrica de acero inoxidable AISI 304 con 4 tirantes tensores verticales pasantes, rodetes impulsores multietapa y bocas de aspiración e impulsión en línea a 180° con bridas normalizadas PN16/25.',
+        tags: ['TIPO: MULTIETAPA_VERTICAL', 'POTENCIA: 18.5 kW (25 CV)', 'CAUDAL: 45 m³/h', 'PRESIÓN: 16 bar', 'BOCAS: IN-LINE_DN65', 'MATERIAL: INOX_AISI_304'],
+        reactComp: '<BombaPresionVertical3D powerKw={18.5} stages={14} running={true} />',
+        type: 'procedural',
+        file: 'bomba-presion-vertical.glb',
+        builder: buildVerticalPressurePumpProcedural
+      },
+      {
         id: 'pivot-riego-3t',
         name: 'Pívot Central (3 Torres)',
         category: 'hydro',
@@ -728,6 +753,19 @@
         reactComp: '<NaveHormigon3D width={25} length={40} gateOpen={true} />',
         type: 'procedural',
         builder: buildConcreteWarehouseProcedural
+      },
+      {
+        id: 'cenador-madera-6m',
+        name: 'Cenador de Madera Ø6m',
+        category: 'terrain',
+        icon: '🛖',
+        title: 'Cenador Rústico Octogonal de Madera Tratada con Cubierta de Brezo (Ø 6 metros)',
+        desc: 'Cenador / pérgola rústica octogonal de 6 metros de diámetro sin fondo ni suelo de terreno para inserción limpia e hiperrealista. Estructura de 8 columnas de troncos rollizos de pino tratado con tornapuntas de refuerzo a 45°, solera perimetral, empalizada inferior de rollizos calibrados con entrada despejada, banco perimetral corrido interior y cubierta octogonal con manto hiperrealista de brezo natural oscuro y ramitas secas sobre limatesas de madera.',
+        tags: ['DIÁMETRO: 6.0 m', 'FORMA: OCTOGONAL (8 LADOS)', 'ALTURA_ALERO: 2.35 m', 'ALTURA_CUMBRERA: 3.75 m', 'MADERA: PINO_TRATADO_AUTOCLAVE', 'CUBIERTA: BREZO_RÚSTICO', 'FONDO: AISLADO_TRANSPARENTE'],
+        reactComp: '<CenadorMadera3D diameter={6.0} height={3.75} bench={true} />',
+        type: 'procedural',
+        file: 'cenador-madera-6m.glb',
+        builder: buildWoodenGazeboProcedural
       },
       {
         id: 'logo-insece-3d',
@@ -3083,6 +3121,380 @@
     }
 
     // -------------------------------------------------------------------------
+    // GENERADOR PROCEDURAL: CENADOR RÚSTICO DE MADERA TRATADA Ø6M (SIN FONDO)
+    // -------------------------------------------------------------------------
+    function buildWoodenGazeboProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Cenador_Madera_Rustico_6m';
+
+      const diameter = 6.0;
+      const height = 3.75;
+      const radius = diameter / 2; // 3.0 m
+      const eavesHeight = 2.35;
+      const roofHeight = height - eavesHeight; // 1.4 m
+      const roofOverhang = 0.38;
+      const roofRadius = radius + roofOverhang; // 3.38 m
+      const railHeight = 1.08;
+      const numSides = 8;
+
+      // 1. Textura de madera rústica tratada (Postes, vigas y jabalcones)
+      const cvTimber = document.createElement('canvas');
+      cvTimber.width = 512;
+      cvTimber.height = 512;
+      const ctxT = cvTimber.getContext('2d');
+      if (ctxT) {
+        ctxT.fillStyle = '#3e2d1f';
+        ctxT.fillRect(0, 0, 512, 512);
+        for (let y = 0; y < 512; y += 2) {
+          const v = Math.sin(y * 0.08) * 15;
+          ctxT.fillStyle = `rgba(${50 + v}, ${35 + v * 0.7}, ${22 + v * 0.5}, ${0.15 + Math.random() * 0.25})`;
+          ctxT.fillRect(0, y, 512, 1 + Math.random() * 2);
+        }
+        for (let k = 0; k < 6; k++) {
+          const kx = Math.random() * 512;
+          const ky = Math.random() * 512;
+          const grad = ctxT.createRadialGradient(kx, ky, 2, kx, ky, 25);
+          grad.addColorStop(0, '#1c130c');
+          grad.addColorStop(0.5, '#2e1f13');
+          grad.addColorStop(1, 'transparent');
+          ctxT.fillStyle = grad;
+          ctxT.beginPath();
+          ctxT.arc(kx, ky, 25, 0, Math.PI * 2);
+          ctxT.fill();
+        }
+      }
+      const timberTex = new T.CanvasTexture(cvTimber);
+      timberTex.wrapS = T.RepeatWrapping;
+      timberTex.wrapT = T.RepeatWrapping;
+      timberTex.repeat.set(2, 4);
+
+      const timberMat = new T.MeshStandardMaterial({
+        map: timberTex,
+        color: 0x4a3625,
+        roughness: 0.88,
+        metalness: 0.04,
+      });
+
+      const palisadeMat = new T.MeshStandardMaterial({
+        map: timberTex,
+        color: 0x423020,
+        roughness: 0.92,
+        metalness: 0.03,
+      });
+
+      // 2. Textura hiperrealista de cubierta de brezo rústico oscuro (Heather Thatch)
+      const cvRoof = document.createElement('canvas');
+      cvRoof.width = 512;
+      cvRoof.height = 512;
+      const ctxR = cvRoof.getContext('2d');
+      if (ctxR) {
+        ctxR.fillStyle = '#221c17';
+        ctxR.fillRect(0, 0, 512, 512);
+        for (let i = 0; i < 3500; i++) {
+          const x = Math.random() * 512;
+          const y = Math.random() * 512;
+          const len = 15 + Math.random() * 45;
+          const angle = Math.PI / 2 + (Math.random() - 0.5) * 0.45;
+          const colVal = Math.floor(45 + Math.random() * 65);
+          ctxR.strokeStyle = `rgba(${colVal + 15}, ${colVal + 5}, ${colVal - 10}, ${0.4 + Math.random() * 0.5})`;
+          ctxR.lineWidth = 1 + Math.random() * 2;
+          ctxR.beginPath();
+          ctxR.moveTo(x, y);
+          ctxR.lineTo(x + Math.cos(angle) * len, y + Math.sin(angle) * len);
+          ctxR.stroke();
+        }
+        for (let j = 0; j < 650; j++) {
+          const x = Math.random() * 512;
+          const y = Math.random() * 512;
+          const len = 10 + Math.random() * 30;
+          const angle = Math.PI / 2 + (Math.random() - 0.5) * 0.7;
+          ctxR.strokeStyle = `rgba(${135 + Math.random() * 45}, ${115 + Math.random() * 35}, ${75 + Math.random() * 25}, 0.75)`;
+          ctxR.lineWidth = 1.2;
+          ctxR.beginPath();
+          ctxR.moveTo(x, y);
+          ctxR.lineTo(x + Math.cos(angle) * len, y + Math.sin(angle) * len);
+          ctxR.stroke();
+        }
+      }
+      const roofTex = new T.CanvasTexture(cvRoof);
+      roofTex.wrapS = T.RepeatWrapping;
+      roofTex.wrapT = T.RepeatWrapping;
+      roofTex.repeat.set(4, 3);
+
+      const heatherRoofMat = new T.MeshStandardMaterial({
+        map: roofTex,
+        color: 0x322a22,
+        roughness: 0.96,
+        metalness: 0.02,
+      });
+
+      const roofUndersideMat = new T.MeshStandardMaterial({
+        map: timberTex,
+        color: 0x3d2b1c,
+        roughness: 0.85,
+      });
+
+      const metalBoltMat = new T.MeshStandardMaterial({
+        color: 0x1d1e20,
+        metalness: 0.85,
+        roughness: 0.4,
+      });
+
+      const benchMat = new T.MeshStandardMaterial({
+        map: timberTex,
+        color: 0x5a412c,
+        roughness: 0.75,
+        metalness: 0.05,
+      });
+
+      // Vértices del octógono
+      const vertices = [];
+      for (let i = 0; i < numSides; i++) {
+        const angle = (i / numSides) * Math.PI * 2;
+        vertices.push([Math.cos(angle) * radius, Math.sin(angle) * radius]);
+      }
+
+      const roofEavesVertices = [];
+      for (let i = 0; i < numSides; i++) {
+        const angle = (i / numSides) * Math.PI * 2;
+        roofEavesVertices.push([Math.cos(angle) * roofRadius, Math.sin(angle) * roofRadius]);
+      }
+
+      // 1. Pilares / Columnas de madera
+      vertices.forEach(([px, pz], i) => {
+        const postGroup = new T.Group();
+        postGroup.position.set(px, eavesHeight / 2, pz);
+
+        const postMesh = new T.Mesh(new T.CylinderGeometry(0.085, 0.09, eavesHeight, 20), timberMat);
+        postMesh.castShadow = true;
+        postMesh.receiveShadow = true;
+        postGroup.add(postMesh);
+
+        const shoe = new T.Mesh(new T.CylinderGeometry(0.095, 0.10, 0.06, 16), metalBoltMat);
+        shoe.position.y = -eavesHeight / 2 + 0.03;
+        postGroup.add(shoe);
+
+        // Tornapuntas / Jabalcones a 45°
+        [-1, 1].forEach((dir) => {
+          const nextIdx = (i + dir + numSides) % numSides;
+          const [nx, nz] = vertices[nextIdx];
+          const dx = nx - px;
+          const dz = nz - pz;
+          const midAngle = Math.atan2(dz, dx);
+
+          const braceGroup = new T.Group();
+          braceGroup.position.set(0, eavesHeight / 2 - 0.35, 0);
+          braceGroup.rotation.y = -midAngle;
+
+          const brace = new T.Mesh(new T.BoxGeometry(0.52, 0.085, 0.08), timberMat);
+          brace.position.set(0.32, 0.18, 0);
+          brace.rotation.z = -Math.PI / 4;
+          brace.castShadow = true;
+          braceGroup.add(brace);
+
+          const pin = new T.Mesh(new T.CylinderGeometry(0.012, 0.012, 0.10, 8), metalBoltMat);
+          pin.position.set(0.12, 0.03, 0);
+          braceGroup.add(pin);
+
+          postGroup.add(braceGroup);
+        });
+
+        root.add(postGroup);
+      });
+
+      // 2. Vigas soleras perimetrales
+      vertices.forEach(([x1, z1], i) => {
+        const next = (i + 1) % numSides;
+        const [x2, z2] = vertices[next];
+        const mx = (x1 + x2) / 2;
+        const mz = (z1 + z2) / 2;
+        const length = Math.hypot(x2 - x1, z2 - z1);
+        const angle = Math.atan2(z2 - z1, x2 - x1);
+
+        const beamGroup = new T.Group();
+        beamGroup.position.set(mx, eavesHeight, mz);
+        beamGroup.rotation.y = -angle;
+
+        const beam = new T.Mesh(new T.CylinderGeometry(0.075, 0.075, length, 16), timberMat);
+        beam.rotation.z = Math.PI / 2;
+        beam.castShadow = true;
+        beam.receiveShadow = true;
+        beamGroup.add(beam);
+
+        root.add(beamGroup);
+      });
+
+      // 3. Vallado perimetral de rollizos (con entrada en tramo 0)
+      vertices.forEach(([x1, z1], i) => {
+        if (i === 0) return; // Entrada despejada para entrar al cenador
+
+        const next = (i + 1) % numSides;
+        const [x2, z2] = vertices[next];
+        const dx = x2 - x1;
+        const dz = z2 - z1;
+        const segmentLength = Math.hypot(dx, dz);
+        const segmentAngle = Math.atan2(dz, dx);
+        const numPickets = 22;
+
+        const palGroup = new T.Group();
+        palGroup.position.set(x1, 0, z1);
+        palGroup.rotation.y = -segmentAngle;
+
+        // Travesaños horizontales
+        const r1 = new T.Mesh(new T.BoxGeometry(segmentLength - 0.12, 0.05, 0.04), timberMat);
+        r1.position.set(segmentLength / 2, 0.28, -0.06);
+        r1.castShadow = true;
+        palGroup.add(r1);
+
+        const r2 = new T.Mesh(new T.BoxGeometry(segmentLength - 0.12, 0.05, 0.04), timberMat);
+        r2.position.set(segmentLength / 2, 0.88, -0.06);
+        r2.castShadow = true;
+        palGroup.add(r2);
+
+        // Rollizos verticales
+        for (let pIdx = 0; pIdx < numPickets; pIdx++) {
+          const u = (pIdx + 0.5) / numPickets;
+          const px = u * segmentLength;
+          const hVar = Math.sin(pIdx * 1.7 + i) * 0.025;
+          const curH = railHeight + hVar;
+          const tilt = Math.cos(pIdx * 2.3) * 0.008;
+
+          const picketGroup = new T.Group();
+          picketGroup.position.set(px, curH / 2, 0);
+          picketGroup.rotation.z = tilt;
+
+          const picket = new T.Mesh(new T.CylinderGeometry(0.048, 0.05, curH, 14), palisadeMat);
+          picket.castShadow = true;
+          picket.receiveShadow = true;
+          picketGroup.add(picket);
+
+          const cap = new T.Mesh(new T.SphereGeometry(0.048, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), palisadeMat);
+          cap.position.y = curH / 2;
+          picketGroup.add(cap);
+
+          palGroup.add(picketGroup);
+        }
+
+        // Banco corrido interior
+        const benchMesh = new T.Mesh(new T.BoxGeometry(segmentLength - 0.15, 0.04, 0.32), benchMat);
+        benchMesh.position.set(segmentLength / 2, 0.46, -0.22);
+        benchMesh.castShadow = true;
+        benchMesh.receiveShadow = true;
+        palGroup.add(benchMesh);
+
+        [-segmentLength * 0.3, segmentLength * 0.3].forEach((sx) => {
+          const leg = new T.Mesh(new T.BoxGeometry(0.06, 0.38, 0.28), timberMat);
+          leg.position.set(sx, 0.26, -0.22);
+          palGroup.add(leg);
+        });
+
+        root.add(palGroup);
+      });
+
+      // 4. Estructura de cubierta: Pendolón central
+      const kingPost = new T.Mesh(new T.CylinderGeometry(0.11, 0.12, roofHeight * 0.8, 8), timberMat);
+      kingPost.position.set(0, height - roofHeight * 0.45, 0);
+      kingPost.castShadow = true;
+      root.add(kingPost);
+
+      // 8 Limatesas
+      roofEavesVertices.forEach(([ex, ez]) => {
+        const yTop = height - 0.08;
+        const yBot = eavesHeight - 0.12;
+        const midX = ex / 2;
+        const midY = (yTop + yBot) / 2;
+        const midZ = ez / 2;
+        const len = Math.hypot(ex, yTop - yBot, ez);
+        const pitchAngle = Math.atan2(yTop - yBot, roofRadius);
+        const yawAngle = Math.atan2(ez, ex);
+
+        const rafterGroup = new T.Group();
+        rafterGroup.position.set(midX, midY, midZ);
+        rafterGroup.rotation.y = -yawAngle;
+
+        const rafter = new T.Mesh(new T.BoxGeometry(len, 0.10, 0.09), timberMat);
+        rafter.rotation.z = pitchAngle;
+        rafter.castShadow = true;
+        rafterGroup.add(rafter);
+
+        root.add(rafterGroup);
+      });
+
+      // Geometría del faldón de cubierta octogonal
+      const roofGeom = new T.BufferGeometry();
+      const pos = [];
+      const norm = [];
+      const uv = [];
+      const apex = [0, height, 0];
+
+      for (let i = 0; i < numSides; i++) {
+        const next = (i + 1) % numSides;
+        const [x1, z1] = roofEavesVertices[i];
+        const [x2, z2] = roofEavesVertices[next];
+        const yEaves = eavesHeight - 0.12;
+
+        pos.push(apex[0], apex[1], apex[2]);
+        pos.push(x1, yEaves, z1);
+        pos.push(x2, yEaves, z2);
+
+        const vA = new T.Vector3(x1 - apex[0], yEaves - apex[1], z1 - apex[2]);
+        const vB = new T.Vector3(x2 - apex[0], yEaves - apex[1], z2 - apex[2]);
+        const n = new T.Vector3().crossVectors(vA, vB).normalize();
+
+        norm.push(n.x, n.y, n.z);
+        norm.push(n.x, n.y, n.z);
+        norm.push(n.x, n.y, n.z);
+
+        uv.push(0.5, 1.0);
+        uv.push(0.0, 0.0);
+        uv.push(1.0, 0.0);
+      }
+
+      roofGeom.setAttribute('position', new T.Float32BufferAttribute(pos, 3));
+      roofGeom.setAttribute('normal', new T.Float32BufferAttribute(norm, 3));
+      roofGeom.setAttribute('uv', new T.Float32BufferAttribute(uv, 2));
+
+      const roofOuter = new T.Mesh(roofGeom, heatherRoofMat);
+      roofOuter.castShadow = true;
+      roofOuter.receiveShadow = true;
+      root.add(roofOuter);
+
+      const roofInner = new T.Mesh(roofGeom, roofUndersideMat);
+      root.add(roofInner);
+
+      // Caballetes de limatesa protectores
+      roofEavesVertices.forEach(([ex, ez]) => {
+        const yTop = height;
+        const yBot = eavesHeight - 0.10;
+        const midX = ex / 2;
+        const midY = (yTop + yBot) / 2;
+        const midZ = ez / 2;
+        const len = Math.hypot(ex, yTop - yBot, ez);
+        const pitchAngle = Math.atan2(yTop - yBot, roofRadius);
+        const yawAngle = Math.atan2(ez, ex);
+
+        const ridgeGroup = new T.Group();
+        ridgeGroup.position.set(midX, midY + 0.02, midZ);
+        ridgeGroup.rotation.y = -yawAngle;
+
+        const ridge = new T.Mesh(new T.CylinderGeometry(0.038, 0.045, len, 8), heatherRoofMat);
+        ridge.rotation.z = pitchAngle;
+        ridge.castShadow = true;
+        ridgeGroup.add(ridge);
+
+        root.add(ridgeGroup);
+      });
+
+      // Caperuza cónica de cumbrera superior
+      const topCone = new T.Mesh(new T.ConeGeometry(0.32, 0.22, 16), heatherRoofMat);
+      topCone.position.set(0, height + 0.06, 0);
+      topCone.castShadow = true;
+      root.add(topCone);
+
+      return root;
+    }
+
+    // -------------------------------------------------------------------------
     // GENERADOR PROCEDURAL: TANQUE AUSTRALIANO DE CHAPA ONDULADA (2.000 m³)
     // -------------------------------------------------------------------------
     function buildCorrugatedTankProcedural(T) {
@@ -3277,6 +3689,871 @@
       pipeGroup.add(handWheel);
 
       root.add(pipeGroup);
+
+      return root;
+    }
+
+    // -------------------------------------------------------------------------
+    // GENERADOR PROCEDURAL: FILTRO AUTOMÁTICO DE MALLA CON PISTÓN FILTROMATIC
+    // -------------------------------------------------------------------------
+    function buildFiltromaticFilterProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Filtro_Automatico_Filtromatic_DN150';
+
+      // Materiales PBR
+      const blueEpoxyMat = new T.MeshStandardMaterial({
+        color: 0x146ec7,
+        roughness: 0.28,
+        metalness: 0.16
+      });
+      const chromePistonMat = new T.MeshStandardMaterial({
+        color: 0xf4f7fa,
+        metalness: 0.98,
+        roughness: 0.10
+      });
+      const stainlessMat = new T.MeshStandardMaterial({
+        color: 0xd6dde4,
+        metalness: 0.92,
+        roughness: 0.22
+      });
+      const boltMat = new T.MeshStandardMaterial({
+        color: 0xdde3ea,
+        metalness: 0.95,
+        roughness: 0.20
+      });
+      const blackPlasticMat = new T.MeshStandardMaterial({
+        color: 0x181a1d,
+        roughness: 0.42,
+        metalness: 0.08
+      });
+      const brassMat = new T.MeshStandardMaterial({
+        color: 0xd8a23d,
+        metalness: 0.88,
+        roughness: 0.28
+      });
+      const hoseMat = new T.MeshStandardMaterial({
+        color: 0x121416,
+        roughness: 0.65,
+        metalness: 0.05
+      });
+      const controllerBoxMat = new T.MeshStandardMaterial({
+        color: 0xe5e9ec,
+        roughness: 0.48,
+        metalness: 0.05
+      });
+      const glassLensMat = new T.MeshPhysicalMaterial({
+        color: 0xffffff,
+        transmission: 0.92,
+        transparent: true,
+        opacity: 0.65,
+        roughness: 0.08,
+        ior: 1.5
+      });
+      const rubberSealMat = new T.MeshStandardMaterial({
+        color: 0x111111,
+        roughness: 0.85
+      });
+
+      // Textura Placa Frontal "FILTROMATIC - Sistemas de Filtrado"
+      const cvL = document.createElement('canvas');
+      cvL.width = 512; cvL.height = 256;
+      const ctxL = cvL.getContext('2d');
+      ctxL.fillStyle = '#ffffff';
+      ctxL.fillRect(0, 0, 512, 256);
+      ctxL.strokeStyle = '#2980b9';
+      ctxL.lineWidth = 8;
+      ctxL.strokeRect(8, 8, 496, 240);
+      ctxL.fillStyle = '#1462a6';
+      ctxL.font = 'bold italic 68px Arial, Helvetica, sans-serif';
+      ctxL.textAlign = 'center';
+      ctxL.textBaseline = 'middle';
+      ctxL.fillText('FILTROMATIC', 256, 95);
+      ctxL.fillStyle = '#2980b9';
+      ctxL.font = 'bold 30px Arial, Helvetica, sans-serif';
+      ctxL.fillText('Sistemas de Filtrado', 256, 175);
+      const labelTex = new T.CanvasTexture(cvL);
+      const labelMat = new T.MeshStandardMaterial({
+        map: labelTex,
+        roughness: 0.35,
+        metalness: 0.05
+      });
+
+      // Textura Esfera Manómetro
+      const cvG = document.createElement('canvas');
+      cvG.width = 256; cvG.height = 256;
+      const ctxG = cvG.getContext('2d');
+      ctxG.fillStyle = '#ffffff';
+      ctxG.beginPath(); ctxG.arc(128, 128, 124, 0, Math.PI * 2); ctxG.fill();
+      ctxG.strokeStyle = '#1e2429'; ctxG.lineWidth = 4; ctxG.stroke();
+      ctxG.save();
+      ctxG.translate(128, 128);
+      for (let i = 0; i <= 20; i++) {
+        const a = Math.PI * 0.75 + (i / 20) * (Math.PI * 1.5);
+        ctxG.strokeStyle = i % 2 === 0 ? '#111827' : '#6b7280';
+        ctxG.lineWidth = i % 2 === 0 ? 3 : 1.5;
+        const r1 = 114; const r2 = i % 2 === 0 ? 98 : 104;
+        ctxG.beginPath();
+        ctxG.moveTo(Math.cos(a) * r1, Math.sin(a) * r1);
+        ctxG.lineTo(Math.cos(a) * r2, Math.sin(a) * r2);
+        ctxG.stroke();
+      }
+      ctxG.fillStyle = '#1f2937'; ctxG.font = 'bold 18px Arial'; ctxG.textAlign = 'center';
+      ctxG.fillText('bar', 0, 42);
+      ctxG.fillStyle = '#dc2626'; ctxG.font = '14px Arial'; ctxG.fillText('psi', 0, 62);
+      const needleA = Math.PI * 0.75 + (8.5 / 20) * (Math.PI * 1.5);
+      ctxG.strokeStyle = '#111827'; ctxG.lineWidth = 3.5;
+      ctxG.beginPath(); ctxG.moveTo(0, 0); ctxG.lineTo(Math.cos(needleA) * 92, Math.sin(needleA) * 92); ctxG.stroke();
+      ctxG.fillStyle = '#dc2626'; ctxG.beginPath(); ctxG.arc(0, 0, 6, 0, Math.PI * 2); ctxG.fill();
+      ctxG.restore();
+      const dialTex = new T.CanvasTexture(cvG);
+      const dialMat = new T.MeshStandardMaterial({ map: dialTex, roughness: 0.25 });
+
+      // Textura Flechas de Flujo
+      function makeArrow(dir) {
+        const cv = document.createElement('canvas');
+        cv.width = 256; cv.height = 128;
+        const ctx = cv.getContext('2d');
+        ctx.clearRect(0, 0, 256, 128);
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        if (dir === 'up') {
+          ctx.moveTo(128, 20); ctx.lineTo(170, 70); ctx.lineTo(144, 70);
+          ctx.lineTo(144, 110); ctx.lineTo(112, 110); ctx.lineTo(112, 70); ctx.lineTo(86, 70);
+        } else {
+          ctx.moveTo(180, 64); ctx.lineTo(130, 22); ctx.lineTo(130, 48);
+          ctx.lineTo(80, 48); ctx.lineTo(80, 80); ctx.lineTo(130, 80); ctx.lineTo(130, 106);
+        }
+        ctx.closePath();
+        ctx.fill();
+        return new T.CanvasTexture(cv);
+      }
+      const arrowUpMat = new T.MeshBasicMaterial({ map: makeArrow('up'), transparent: true });
+      const arrowRightMat = new T.MeshBasicMaterial({ map: makeArrow('right'), transparent: true });
+
+      // =======================================================================
+      // 1. CUERPO PRINCIPAL CILÍNDRICO (VESSEL)
+      // =======================================================================
+      const bodyRadius = 0.29; // Diámetro 58 cm
+      const bodyHeight = 1.05; // Altura cuerpo
+      const bodyBaseY = 0.35;
+      const bodyTopY = bodyBaseY + bodyHeight; // 1.40m
+
+      // Cilindro principal epoxi azul
+      const mainCylinder = new T.Mesh(new T.CylinderGeometry(bodyRadius, bodyRadius, bodyHeight, 48), blueEpoxyMat);
+      mainCylinder.position.y = bodyBaseY + bodyHeight / 2;
+      mainCylinder.castShadow = true; mainCylinder.receiveShadow = true;
+      root.add(mainCylinder);
+
+      // Fondo toriesférico inferior
+      const bottomDome = new T.Mesh(new T.SphereGeometry(bodyRadius, 32, 16, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), blueEpoxyMat);
+      bottomDome.rotation.x = Math.PI;
+      bottomDome.position.y = bodyBaseY;
+      bottomDome.castShadow = true;
+      root.add(bottomDome);
+
+      // =======================================================================
+      // 2. ENTRADA INFERIOR VERTICAL DN150 (INLET FLANGE)
+      // =======================================================================
+      const inletGroup = new T.Group();
+      inletGroup.position.set(0, 0, 0);
+
+      const inletPipe = new T.Mesh(new T.CylinderGeometry(0.09, 0.09, 0.16, 32), blueEpoxyMat);
+      inletPipe.position.y = 0.12;
+      inletPipe.castShadow = true;
+      inletGroup.add(inletPipe);
+
+      const inletArrow = new T.Mesh(new T.PlaneGeometry(0.09, 0.09), arrowUpMat);
+      inletArrow.position.set(0, 0.12, 0.092);
+      inletGroup.add(inletArrow);
+
+      const inletFlange = new T.Mesh(new T.CylinderGeometry(0.155, 0.155, 0.035, 32), blueEpoxyMat);
+      inletFlange.position.y = 0.025;
+      inletFlange.castShadow = true;
+      inletGroup.add(inletFlange);
+
+      const flangeNeck = new T.Mesh(new T.CylinderGeometry(0.11, 0.15, 0.025, 32), blueEpoxyMat);
+      flangeNeck.position.y = 0.055;
+      inletGroup.add(flangeNeck);
+
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        const bolt = new T.Mesh(new T.CylinderGeometry(0.011, 0.011, 0.045, 6), boltMat);
+        bolt.position.set(Math.cos(a) * 0.13, 0.025, Math.sin(a) * 0.13);
+        inletGroup.add(bolt);
+      }
+      root.add(inletGroup);
+
+      // =======================================================================
+      // 3. SALIDA LATERAL DERECHA DN150 (OUTLET FLANGE)
+      // =======================================================================
+      const outletGroup = new T.Group();
+      const outletY = 0.72;
+      outletGroup.position.set(0, outletY, 0);
+
+      const outletPipeLen = 0.28;
+      const outletPipe = new T.Mesh(new T.CylinderGeometry(0.09, 0.09, outletPipeLen, 32), blueEpoxyMat);
+      outletPipe.rotation.z = -Math.PI / 2;
+      outletPipe.position.x = bodyRadius + outletPipeLen / 2 - 0.04;
+      outletPipe.castShadow = true;
+      outletGroup.add(outletPipe);
+
+      const outletFlangeX = bodyRadius + outletPipeLen - 0.04;
+      const outletFlange = new T.Mesh(new T.CylinderGeometry(0.155, 0.155, 0.035, 32), blueEpoxyMat);
+      outletFlange.rotation.z = -Math.PI / 2;
+      outletFlange.position.x = outletFlangeX;
+      outletFlange.castShadow = true;
+      outletGroup.add(outletFlange);
+
+      const outletArrow = new T.Mesh(new T.PlaneGeometry(0.10, 0.07), arrowRightMat);
+      outletArrow.position.set(outletPipe.position.x, 0, 0.092);
+      outletGroup.add(outletArrow);
+
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        const bolt = new T.Mesh(new T.CylinderGeometry(0.011, 0.011, 0.045, 6), boltMat);
+        bolt.rotation.z = Math.PI / 2;
+        bolt.position.set(outletFlangeX, Math.cos(a) * 0.13, Math.sin(a) * 0.13);
+        outletGroup.add(bolt);
+      }
+      root.add(outletGroup);
+
+      // =======================================================================
+      // 4. BRIDAS INTERMEDIAS Y 16 PERNOS DE CIERRE
+      // =======================================================================
+      const splitY = bodyTopY;
+      const flangeR = bodyRadius + 0.055;
+      const flangeThick = 0.032;
+
+      const bodyFlange = new T.Mesh(new T.CylinderGeometry(flangeR, flangeR, flangeThick, 48), blueEpoxyMat);
+      bodyFlange.position.y = splitY - flangeThick / 2;
+      bodyFlange.castShadow = true;
+      root.add(bodyFlange);
+
+      const coverFlange = new T.Mesh(new T.CylinderGeometry(flangeR, flangeR, flangeThick, 48), blueEpoxyMat);
+      coverFlange.position.y = splitY + flangeThick / 2;
+      coverFlange.castShadow = true;
+      root.add(coverFlange);
+
+      for (let i = 0; i < 16; i++) {
+        const a = (i / 16) * Math.PI * 2;
+        const bX = Math.cos(a) * (bodyRadius + 0.035);
+        const bZ = Math.sin(a) * (bodyRadius + 0.035);
+        const bolt = new T.Mesh(new T.CylinderGeometry(0.010, 0.010, flangeThick * 2 + 0.035, 6), boltMat);
+        bolt.position.set(bX, splitY, bZ);
+        bolt.castShadow = true;
+        root.add(bolt);
+      }
+
+      // =======================================================================
+      // 5. CÚPULA SUPERIOR
+      // =======================================================================
+      const domeH = 0.35;
+      const domeGroup = new T.Group();
+      domeGroup.position.set(0, splitY + flangeThick, 0);
+
+      const domeGeo = new T.SphereGeometry(bodyRadius, 32, 24, 0, Math.PI * 2, 0, Math.PI / 2);
+      const domeMesh = new T.Mesh(domeGeo, blueEpoxyMat);
+      domeMesh.scale.set(1, domeH / bodyRadius, 1);
+      domeMesh.castShadow = true;
+      domeGroup.add(domeMesh);
+
+      const domeCylinder = new T.Mesh(new T.CylinderGeometry(bodyRadius, bodyRadius, 0.12, 48), blueEpoxyMat);
+      domeCylinder.position.y = 0.06;
+      domeGroup.add(domeCylinder);
+
+      root.add(domeGroup);
+
+      // =======================================================================
+      // 6. PISTÓN HIDRÁULICO VERTICAL CROMADO
+      // =======================================================================
+      const pistonBaseY = splitY + flangeThick + domeH + 0.02;
+      const pistonH = 0.64;
+      const pistonR = 0.052;
+
+      const pistonMount = new T.Mesh(new T.CylinderGeometry(0.08, 0.09, 0.045, 32), blueEpoxyMat);
+      pistonMount.position.y = pistonBaseY;
+      pistonMount.castShadow = true;
+      root.add(pistonMount);
+
+      const pistonBarrel = new T.Mesh(new T.CylinderGeometry(pistonR, pistonR, pistonH, 32), chromePistonMat);
+      pistonBarrel.position.y = pistonBaseY + 0.022 + pistonH / 2;
+      pistonBarrel.castShadow = true;
+      root.add(pistonBarrel);
+
+      const pistonCapY = pistonBaseY + 0.022 + pistonH;
+      const pistonCap = new T.Mesh(new T.CylinderGeometry(pistonR + 0.008, pistonR + 0.008, 0.065, 32), stainlessMat);
+      pistonCap.position.y = pistonCapY + 0.032;
+      pistonCap.castShadow = true;
+      root.add(pistonCap);
+
+      const pistonFitting = new T.Mesh(new T.BoxGeometry(0.03, 0.03, 0.04), brassMat);
+      pistonFitting.position.set(-0.02, pistonCapY + 0.065, 0);
+      root.add(pistonFitting);
+
+      const hosePoints = [
+        new T.Vector3(-0.04, pistonCapY + 0.065, 0),
+        new T.Vector3(-0.16, pistonCapY - 0.15, 0.08),
+        new T.Vector3(-0.25, pistonBaseY + 0.1, 0.20),
+        new T.Vector3(-0.24, 1.45, 0.26),
+        new T.Vector3(-0.12, 1.15, 0.28)
+      ];
+      const hoseCurve = new T.CatmullRomCurve3(hosePoints);
+      const hoseMesh = new T.Mesh(new T.TubeGeometry(hoseCurve, 32, 0.007, 8, false), hoseMat);
+      hoseMesh.castShadow = true;
+      root.add(hoseMesh);
+
+      // =======================================================================
+      // 7. VÁLVULA DE LAVADO A CONTRACORRIENTE (ÁNGULO 2")
+      // =======================================================================
+      const flushGroup = new T.Group();
+      const flushY = splitY + 0.18;
+      flushGroup.position.set(-bodyRadius + 0.02, flushY, 0.04);
+      flushGroup.rotation.y = Math.PI * 0.15;
+
+      const flushNeck = new T.Mesh(new T.CylinderGeometry(0.045, 0.045, 0.10, 24), blueEpoxyMat);
+      flushNeck.rotation.z = Math.PI / 2;
+      flushNeck.position.x = -0.05;
+      flushNeck.castShadow = true;
+      flushGroup.add(flushNeck);
+
+      const flushFlange = new T.Mesh(new T.CylinderGeometry(0.075, 0.075, 0.024, 24), blueEpoxyMat);
+      flushFlange.rotation.z = Math.PI / 2;
+      flushFlange.position.x = -0.10;
+      flushGroup.add(flushFlange);
+
+      const valveBody = new T.Mesh(new T.BoxGeometry(0.14, 0.14, 0.14), blackPlasticMat);
+      valveBody.position.set(-0.19, 0, 0);
+      valveBody.castShadow = true;
+      flushGroup.add(valveBody);
+
+      const bonnetG = new T.Group();
+      bonnetG.position.set(-0.22, 0.06, 0);
+      bonnetG.rotation.z = 0.45;
+
+      const bonnetCap = new T.Mesh(new T.CylinderGeometry(0.08, 0.09, 0.09, 24), blackPlasticMat);
+      bonnetCap.castShadow = true;
+      bonnetG.add(bonnetCap);
+
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        const b = new T.Mesh(new T.CylinderGeometry(0.007, 0.007, 0.02, 6), stainlessMat);
+        b.position.set(Math.cos(a) * 0.072, 0.045, Math.sin(a) * 0.072);
+        bonnetG.add(b);
+      }
+
+      const pilotActuator = new T.Mesh(new T.CylinderGeometry(0.025, 0.025, 0.05, 16), blackPlasticMat);
+      pilotActuator.position.y = 0.08;
+      bonnetG.add(pilotActuator);
+
+      flushGroup.add(bonnetG);
+
+      const exhaustPort = new T.Mesh(new T.CylinderGeometry(0.045, 0.045, 0.12, 24), blackPlasticMat);
+      exhaustPort.rotation.z = Math.PI / 2;
+      exhaustPort.position.set(-0.29, -0.02, 0);
+      flushGroup.add(exhaustPort);
+
+      root.add(flushGroup);
+
+      // =======================================================================
+      // 8. TRES MANÓMETROS DE GLICERINA (P1, P2, P3)
+      // =======================================================================
+      function createPressureGauge() {
+        const gGroup = new T.Group();
+
+        const stem = new T.Mesh(new T.CylinderGeometry(0.009, 0.009, 0.05, 12), brassMat);
+        stem.position.y = -0.05;
+        gGroup.add(stem);
+
+        const cockLever = new T.Mesh(new T.BoxGeometry(0.006, 0.025, 0.015), brassMat);
+        cockLever.position.set(0.012, -0.05, 0);
+        gGroup.add(cockLever);
+
+        const caseMesh = new T.Mesh(new T.CylinderGeometry(0.045, 0.045, 0.025, 32), stainlessMat);
+        caseMesh.rotation.x = Math.PI / 2;
+        caseMesh.castShadow = true;
+        gGroup.add(caseMesh);
+
+        const dial = new T.Mesh(new T.CircleGeometry(0.042, 32), dialMat);
+        dial.position.z = 0.013;
+        gGroup.add(dial);
+
+        const lens = new T.Mesh(new T.CircleGeometry(0.044, 32), glassLensMat);
+        lens.position.z = 0.014;
+        gGroup.add(lens);
+
+        return gGroup;
+      }
+
+      const gaugeP1 = createPressureGauge();
+      gaugeP1.position.set(-bodyRadius * 0.92, 0.38, bodyRadius * 0.38);
+      gaugeP1.rotation.y = -Math.PI * 0.35;
+      root.add(gaugeP1);
+
+      const gaugeP2 = createPressureGauge();
+      gaugeP2.position.set(-bodyRadius * 0.92, 0.88, bodyRadius * 0.38);
+      gaugeP2.rotation.y = -Math.PI * 0.35;
+      root.add(gaugeP2);
+
+      const gaugeP3 = createPressureGauge();
+      gaugeP3.position.set(-bodyRadius * 0.78, 1.62, bodyRadius * 0.45);
+      gaugeP3.rotation.y = -Math.PI * 0.35;
+      root.add(gaugeP3);
+
+      // =======================================================================
+      // 9. CAJA DE CONTROL ELECTRÓNICA IP65 Y ELECTROVÁLVULA
+      // =======================================================================
+      const ctrlGroup = new T.Group();
+      const ctrlY = 0.94;
+      ctrlGroup.position.set(0.08, ctrlY, bodyRadius + 0.01);
+
+      const ctrlBox = new T.Mesh(new T.BoxGeometry(0.20, 0.24, 0.09), controllerBoxMat);
+      ctrlBox.position.z = 0.045;
+      ctrlBox.castShadow = true;
+      ctrlGroup.add(ctrlBox);
+
+      const gasket = new T.Mesh(new T.BoxGeometry(0.205, 0.245, 0.008), rubberSealMat);
+      gasket.position.z = 0.06;
+      ctrlGroup.add(gasket);
+
+      [[-0.08, -0.10], [0.08, -0.10], [-0.08, 0.10], [0.08, 0.10]].forEach(([cx, cy]) => {
+        const screw = new T.Mesh(new T.CylinderGeometry(0.005, 0.005, 0.005, 12), stainlessMat);
+        screw.rotation.x = Math.PI / 2;
+        screw.position.set(cx, cy, 0.092);
+        ctrlGroup.add(screw);
+      });
+
+      [-0.04, 0.04].forEach((px) => {
+        const gland = new T.Mesh(new T.CylinderGeometry(0.012, 0.012, 0.025, 12), blackPlasticMat);
+        gland.position.set(px, -0.13, 0.045);
+        ctrlGroup.add(gland);
+      });
+
+      const solGroup = new T.Group();
+      solGroup.position.set(0.14, -0.02, 0.045);
+
+      const solBody = new T.Mesh(new T.BoxGeometry(0.035, 0.045, 0.035), brassMat);
+      solGroup.add(solBody);
+
+      const solCoil = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, 0.065, 16), blackPlasticMat);
+      solCoil.position.y = 0.045;
+      solGroup.add(solCoil);
+
+      const dinConnector = new T.Mesh(new T.BoxGeometry(0.025, 0.025, 0.035), blackPlasticMat);
+      dinConnector.position.set(0, 0.055, 0.02);
+      solGroup.add(dinConnector);
+
+      ctrlGroup.add(solGroup);
+      root.add(ctrlGroup);
+
+      // =======================================================================
+      // 10. PLACA EMBLEMA FILTROMATIC
+      // =======================================================================
+      const labelMesh = new T.Mesh(new T.PlaneGeometry(0.36, 0.15), labelMat);
+      labelMesh.position.set(0.06, 1.25, bodyRadius + 0.005);
+      labelMesh.castShadow = true;
+      root.add(labelMesh);
+
+      // =======================================================================
+      // 11. CIRCUITO HIDRÁULICO DE MICROTUBING NEGRO DE PILOTAJE
+      // =======================================================================
+      const p1HosePoints = [
+        new T.Vector3(-bodyRadius * 0.92, 0.33, bodyRadius * 0.38),
+        new T.Vector3(-bodyRadius * 0.85, 0.28, bodyRadius * 0.55),
+        new T.Vector3(-0.15, 0.30, bodyRadius + 0.03),
+        new T.Vector3(-0.06, 0.70, bodyRadius + 0.04),
+        new T.Vector3(0.02, 0.81, bodyRadius + 0.04)
+      ];
+      const p1Curve = new T.CatmullRomCurve3(p1HosePoints);
+      const p1Mesh = new T.Mesh(new T.TubeGeometry(p1Curve, 24, 0.0055, 8, false), hoseMat);
+      root.add(p1Mesh);
+
+      const solToFlushPoints = [
+        new T.Vector3(0.20, ctrlY - 0.02, bodyRadius + 0.045),
+        new T.Vector3(0.18, 1.35, bodyRadius * 0.7),
+        new T.Vector3(0.02, 1.55, bodyRadius * 0.5),
+        new T.Vector3(-0.15, 1.65, 0.15),
+        new T.Vector3(-0.24, 1.63, 0.04)
+      ];
+      const solCurve = new T.CatmullRomCurve3(solToFlushPoints);
+      const solHose = new T.Mesh(new T.TubeGeometry(solCurve, 32, 0.0055, 8, false), hoseMat);
+      root.add(solHose);
+
+      [p1HosePoints[0], p1HosePoints[4], solToFlushPoints[0], solToFlushPoints[4]].forEach((pos) => {
+        const fitting = new T.Mesh(new T.CylinderGeometry(0.008, 0.008, 0.02, 12), brassMat);
+        fitting.position.copy(pos);
+        root.add(fitting);
+      });
+
+      return root;
+    }
+
+    // =========================================================================
+    // BOMBA CENTRÍFUGA MULTIETAPA VERTICAL IN-LINE DE ALTA PRESIÓN
+    // =========================================================================
+    function buildVerticalPressurePumpProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Bomba_Presion_Vertical_Multietapa';
+
+      // 1. Azul motor eléctrico industrial
+      const motorBlueMat = new T.MeshStandardMaterial({
+        color: 0x165bb6,
+        roughness: 0.35,
+        metalness: 0.22,
+      });
+
+      // 2. Acero inoxidable cepillado para camisa hidráulica (textura vertical fina)
+      const cvS = document.createElement('canvas');
+      cvS.width = 256;
+      cvS.height = 512;
+      const ctxS = cvS.getContext('2d');
+      if (ctxS) {
+        ctxS.fillStyle = '#d5dde4';
+        ctxS.fillRect(0, 0, 256, 512);
+        for (let x = 0; x < 256; x += 2) {
+          ctxS.fillStyle = `rgba(255, 255, 255, ${0.08 + Math.random() * 0.1})`;
+          ctxS.fillRect(x, 0, 1, 512);
+        }
+      }
+      const sleeveTex = new T.CanvasTexture(cvS);
+      sleeveTex.wrapS = T.RepeatWrapping;
+      sleeveTex.wrapT = T.RepeatWrapping;
+      sleeveTex.repeat.set(4, 1);
+
+      const stainlessSleeveMat = new T.MeshStandardMaterial({
+        color: 0xd8e1e8,
+        map: sleeveTex,
+        metalness: 0.94,
+        roughness: 0.18,
+      });
+
+      const stainlessMat = new T.MeshStandardMaterial({
+        color: 0xdce3ea,
+        metalness: 0.92,
+        roughness: 0.2,
+      });
+
+      // 3. Fundición gris oscura para bancada y bridas
+      const darkCastIronMat = new T.MeshStandardMaterial({
+        color: 0x1f2327,
+        roughness: 0.72,
+        metalness: 0.35,
+      });
+
+      const blackMat = new T.MeshStandardMaterial({
+        color: 0x15171a,
+        roughness: 0.5,
+        metalness: 0.15,
+      });
+
+      // Rejilla de protección de acoplamiento ranurada
+      const cvG = document.createElement('canvas');
+      cvG.width = 128;
+      cvG.height = 128;
+      const ctxG = cvG.getContext('2d');
+      if (ctxG) {
+        ctxG.fillStyle = '#1c1f22';
+        ctxG.fillRect(0, 0, 128, 128);
+        ctxG.fillStyle = '#9aa5b1';
+        for (let y = 10; y < 120; y += 14) {
+          for (let x = 8; x < 120; x += 18) {
+            ctxG.fillRect(x, y, 10, 6);
+          }
+        }
+      }
+      const guardTex = new T.CanvasTexture(cvG);
+      const guardMat = new T.MeshStandardMaterial({
+        map: guardTex,
+        metalness: 0.85,
+        roughness: 0.3,
+      });
+
+      const boltMat = new T.MeshStandardMaterial({
+        color: 0xdde3ea,
+        metalness: 0.95,
+        roughness: 0.18,
+      });
+
+      const brassMat = new T.MeshStandardMaterial({
+        color: 0xd4a038,
+        metalness: 0.88,
+        roughness: 0.28,
+      });
+
+      // Placa de características técnicas
+      const cvN = document.createElement('canvas');
+      cvN.width = 256;
+      cvN.height = 128;
+      const ctxN = cvN.getContext('2d');
+      if (ctxN) {
+        ctxN.fillStyle = '#c5d0dc';
+        ctxN.fillRect(0, 0, 256, 128);
+        ctxN.strokeStyle = '#333';
+        ctxN.strokeRect(4, 4, 248, 120);
+        ctxN.fillStyle = '#111';
+        ctxN.font = 'bold 22px Arial';
+        ctxN.fillText('VERTICAL PUMP', 18, 36);
+        ctxN.font = '16px monospace';
+        ctxN.fillText('P: 18.5 kW  16 bar', 18, 68);
+        ctxN.fillText('Q: 45 m3/h  2900 rpm', 18, 96);
+      }
+      const nameplateMat = new T.MeshStandardMaterial({
+        map: new T.CanvasTexture(cvN),
+        metalness: 0.8,
+        roughness: 0.3,
+      });
+
+      // Dimensiones paramétricas
+      const baseH = 0.07;
+      const inLineH = 0.18;
+      const sleeveH = 0.98;
+      const sleeveR = 0.125;
+      const lanternH = 0.28;
+      const motorStatorH = 0.44;
+      const motorCowlH = 0.18;
+      const motorR = 0.145;
+
+      const inLineY = baseH;
+      const sleeveY = inLineY + inLineH;
+      const lanternY = sleeveY + sleeveH;
+      const motorY = lanternY + lanternH;
+
+      // 1. Bancada base de fundición
+      const baseMesh = new T.Mesh(new T.BoxGeometry(0.34, baseH, 0.34), darkCastIronMat);
+      baseMesh.position.set(0, baseH / 2, 0);
+      baseMesh.castShadow = true;
+      baseMesh.receiveShadow = true;
+      root.add(baseMesh);
+
+      // Pernos de anclaje a bancada
+      const anchorCoords = [
+        [-0.14, -0.14],
+        [0.14, -0.14],
+        [-0.14, 0.14],
+        [0.14, 0.14],
+      ];
+      anchorCoords.forEach(([bx, bz]) => {
+        const anchor = new T.Mesh(new T.CylinderGeometry(0.014, 0.014, 0.03, 16), boltMat);
+        anchor.position.set(bx, baseH + 0.015, bz);
+        anchor.castShadow = true;
+        root.add(anchor);
+      });
+
+      // 2. Cuerpo hidráulico in-line
+      const inLineGroup = new T.Group();
+      inLineGroup.position.set(0, inLineY + inLineH / 2, 0);
+
+      const chamber = new T.Mesh(new T.CylinderGeometry(sleeveR + 0.015, sleeveR + 0.02, inLineH, 32), darkCastIronMat);
+      chamber.castShadow = true;
+      chamber.receiveShadow = true;
+      inLineGroup.add(chamber);
+
+      // Boca de aspiración (-X)
+      const suctionGroup = new T.Group();
+      suctionGroup.position.set(-sleeveR - 0.06, 0, 0);
+
+      const sNeck = new T.Mesh(new T.CylinderGeometry(0.05, 0.05, 0.14, 24), darkCastIronMat);
+      sNeck.rotation.z = Math.PI / 2;
+      sNeck.castShadow = true;
+      suctionGroup.add(sNeck);
+
+      const sFlange = new T.Mesh(new T.CylinderGeometry(0.095, 0.095, 0.028, 24), stainlessMat);
+      sFlange.position.set(-0.07, 0, 0);
+      sFlange.rotation.z = Math.PI / 2;
+      sFlange.castShadow = true;
+      suctionGroup.add(sFlange);
+
+      const sInner = new T.Mesh(new T.CylinderGeometry(0.065, 0.065, 0.005, 24), darkCastIronMat);
+      sInner.position.set(-0.085, 0, 0);
+      sInner.rotation.z = Math.PI / 2;
+      suctionGroup.add(sInner);
+
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2;
+        const bolt = new T.Mesh(new T.CylinderGeometry(0.008, 0.008, 0.035, 6), boltMat);
+        bolt.position.set(-0.07, Math.cos(a) * 0.075, Math.sin(a) * 0.075);
+        bolt.rotation.z = Math.PI / 2;
+        suctionGroup.add(bolt);
+      }
+      inLineGroup.add(suctionGroup);
+
+      // Boca de impulsión (+X)
+      const dischGroup = new T.Group();
+      dischGroup.position.set(sleeveR + 0.06, 0, 0);
+
+      const dNeck = new T.Mesh(new T.CylinderGeometry(0.05, 0.05, 0.14, 24), darkCastIronMat);
+      dNeck.rotation.z = -Math.PI / 2;
+      dNeck.castShadow = true;
+      dischGroup.add(dNeck);
+
+      const dFlange = new T.Mesh(new T.CylinderGeometry(0.095, 0.095, 0.028, 24), stainlessMat);
+      dFlange.position.set(0.07, 0, 0);
+      dFlange.rotation.z = -Math.PI / 2;
+      dFlange.castShadow = true;
+      dischGroup.add(dFlange);
+
+      const dInner = new T.Mesh(new T.CylinderGeometry(0.065, 0.065, 0.005, 24), darkCastIronMat);
+      dInner.position.set(0.085, 0, 0);
+      dInner.rotation.z = -Math.PI / 2;
+      dischGroup.add(dInner);
+
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2;
+        const bolt = new T.Mesh(new T.CylinderGeometry(0.008, 0.008, 0.035, 6), boltMat);
+        bolt.position.set(0.07, Math.cos(a) * 0.075, Math.sin(a) * 0.075);
+        bolt.rotation.z = Math.PI / 2;
+        dischGroup.add(bolt);
+      }
+      inLineGroup.add(dischGroup);
+
+      // Tapón purga inferior
+      const drainPlug = new T.Mesh(new T.CylinderGeometry(0.012, 0.012, 0.02, 6), brassMat);
+      drainPlug.position.set(0, -0.06, sleeveR + 0.015);
+      drainPlug.rotation.x = Math.PI / 2;
+      inLineGroup.add(drainPlug);
+
+      root.add(inLineGroup);
+
+      // 3. Camisa cilíndrica de acero inoxidable y tirantes
+      const sleeveGroup = new T.Group();
+      sleeveGroup.position.set(0, sleeveY + sleeveH / 2, 0);
+
+      const sleeveMesh = new T.Mesh(new T.CylinderGeometry(sleeveR, sleeveR, sleeveH, 48), stainlessSleeveMat);
+      sleeveMesh.castShadow = true;
+      sleeveMesh.receiveShadow = true;
+      sleeveGroup.add(sleeveMesh);
+
+      // Anillos de refuerzo / etapas multietapa en la camisa
+      for (let s = 1; s <= 12; s++) {
+        const yPos = -sleeveH / 2 + (s / 13) * sleeveH;
+        const ring = new T.Mesh(new T.TorusGeometry(sleeveR + 0.001, 0.002, 8, 32), stainlessMat);
+        ring.rotation.x = Math.PI / 2;
+        ring.position.y = yPos;
+        sleeveGroup.add(ring);
+      }
+
+      // 4 tirantes tensores verticales pasantes
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
+        const rx = Math.cos(a) * (sleeveR + 0.014);
+        const rz = Math.sin(a) * (sleeveR + 0.014);
+
+        const tieRodGroup = new T.Group();
+        tieRodGroup.position.set(rx, 0, rz);
+
+        const rod = new T.Mesh(new T.CylinderGeometry(0.008, 0.008, sleeveH + 0.04, 16), stainlessMat);
+        rod.castShadow = true;
+        tieRodGroup.add(rod);
+
+        const topNut = new T.Mesh(new T.CylinderGeometry(0.014, 0.014, 0.02, 6), boltMat);
+        topNut.position.y = sleeveH / 2 + 0.01;
+        tieRodGroup.add(topNut);
+
+        const botNut = new T.Mesh(new T.CylinderGeometry(0.014, 0.014, 0.02, 6), boltMat);
+        botNut.position.y = -sleeveH / 2 - 0.01;
+        tieRodGroup.add(botNut);
+
+        sleeveGroup.add(tieRodGroup);
+      }
+      root.add(sleeveGroup);
+
+      // 4. Cabezal de bomba y linterna de acoplamiento (Motor Stool)
+      const lanternGroup = new T.Group();
+      lanternGroup.position.set(0, lanternY, 0);
+
+      const topFlange = new T.Mesh(new T.CylinderGeometry(sleeveR + 0.025, sleeveR + 0.025, 0.036, 32), darkCastIronMat);
+      topFlange.position.y = 0.018;
+      topFlange.castShadow = true;
+      lanternGroup.add(topFlange);
+
+      const airScrew = new T.Mesh(new T.CylinderGeometry(0.01, 0.01, 0.025, 6), brassMat);
+      airScrew.position.set(sleeveR * 0.7, 0.038, 0.05);
+      lanternGroup.add(airScrew);
+
+      const stool = new T.Mesh(new T.CylinderGeometry(sleeveR + 0.015, sleeveR + 0.02, lanternH, 32), darkCastIronMat);
+      stool.position.y = lanternH / 2;
+      stool.castShadow = true;
+      lanternGroup.add(stool);
+
+      const guard = new T.Mesh(new T.CylinderGeometry(sleeveR + 0.016, sleeveR + 0.016, lanternH * 0.55, 32, 1, true), guardMat);
+      guard.position.y = lanternH / 2;
+      lanternGroup.add(guard);
+
+      const shaft = new T.Mesh(new T.CylinderGeometry(0.028, 0.028, lanternH * 0.7, 24), stainlessMat);
+      shaft.position.y = lanternH / 2;
+      lanternGroup.add(shaft);
+
+      const nameplate = new T.Mesh(new T.PlaneGeometry(0.09, 0.045), nameplateMat);
+      nameplate.position.set(0, lanternH * 0.8, sleeveR + 0.022);
+      lanternGroup.add(nameplate);
+
+      root.add(lanternGroup);
+
+      // 5. Motor eléctrico trifásico industrial (Azul)
+      const motorGroup = new T.Group();
+      motorGroup.position.set(0, motorY, 0);
+
+      const mFlange = new T.Mesh(new T.CylinderGeometry(motorR + 0.01, motorR + 0.01, 0.036, 32), motorBlueMat);
+      mFlange.position.y = 0.018;
+      mFlange.castShadow = true;
+      motorGroup.add(mFlange);
+
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2;
+        const mb = new T.Mesh(new T.CylinderGeometry(0.009, 0.009, 0.02, 6), boltMat);
+        mb.position.set(Math.cos(a) * (motorR - 0.01), 0.038, Math.sin(a) * (motorR - 0.01));
+        motorGroup.add(mb);
+      }
+
+      const stator = new T.Mesh(new T.CylinderGeometry(motorR, motorR, motorStatorH, 32), motorBlueMat);
+      stator.position.y = 0.036 + motorStatorH / 2;
+      stator.castShadow = true;
+      stator.receiveShadow = true;
+      motorGroup.add(stator);
+
+      // 24 aletas longitudinales de refrigeración
+      for (let i = 0; i < 24; i++) {
+        const a = (i / 24) * Math.PI * 2;
+        const fin = new T.Mesh(new T.BoxGeometry(0.016, motorStatorH - 0.02, 0.005), motorBlueMat);
+        fin.position.set(Math.cos(a) * (motorR + 0.008), 0.036 + motorStatorH / 2, Math.sin(a) * (motorR + 0.008));
+        fin.rotation.y = -a;
+        fin.castShadow = true;
+        motorGroup.add(fin);
+      }
+
+      // Caja de bornes (lateral)
+      const tBox = new T.Group();
+      tBox.position.set(motorR + 0.035, 0.036 + motorStatorH * 0.65, 0);
+
+      const tBoxMesh = new T.Mesh(new T.BoxGeometry(0.07, 0.12, 0.11), motorBlueMat);
+      tBoxMesh.castShadow = true;
+      tBox.add(tBoxMesh);
+
+      const tLid = new T.Mesh(new T.BoxGeometry(0.006, 0.12, 0.11), motorBlueMat);
+      tLid.position.x = 0.036;
+      tBox.add(tLid);
+
+      const gland = new T.Mesh(new T.CylinderGeometry(0.012, 0.012, 0.025, 12), blackMat);
+      gland.position.y = -0.065;
+      tBox.add(gland);
+
+      motorGroup.add(tBox);
+
+      // Caperuza del ventilador
+      const cowl = new T.Mesh(new T.CylinderGeometry(motorR - 0.005, motorR, motorCowlH, 32), motorBlueMat);
+      cowl.position.y = 0.036 + motorStatorH + motorCowlH / 2;
+      cowl.castShadow = true;
+      motorGroup.add(cowl);
+
+      const cowlGrill = new T.Mesh(new T.CylinderGeometry(motorR - 0.02, motorR - 0.02, 0.01, 24), darkCastIronMat);
+      cowlGrill.position.y = 0.036 + motorStatorH + motorCowlH + 0.005;
+      motorGroup.add(cowlGrill);
+
+      // Cáncamo de elevación superior
+      const eyeBolt = new T.Mesh(new T.TorusGeometry(0.025, 0.006, 8, 20), boltMat);
+      eyeBolt.position.y = 0.036 + motorStatorH + motorCowlH + 0.035;
+      motorGroup.add(eyeBolt);
+
+      root.add(motorGroup);
 
       return root;
     }
