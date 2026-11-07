@@ -21,6 +21,28 @@ function AlmondTreeModel({
   const { scene } = useGLTF(url);
   const ref = useRef<Group>(null);
 
+  React.useEffect(() => {
+    if (scene) {
+      scene.traverse((child: any) => {
+        if (
+          child.isMesh &&
+          ((child.material &&
+            child.material.name &&
+            (child.material.name.includes('Soil') ||
+              child.material.name.includes('Dry') ||
+              child.material.name.includes('Mediterranean Orchard Soil'))) ||
+            (child.name &&
+              (child.name.toLowerCase().includes('soil') ||
+                child.name.toLowerCase().includes('stone') ||
+                child.name.toLowerCase().includes('root'))))
+        ) {
+          child.visible = false;
+          if (child.parent) child.parent.remove(child);
+        }
+      });
+    }
+  }, [scene]);
+
   useFrame(({ clock }) => {
     if (ref.current && windBreeze) {
       const t = clock.elapsedTime;

@@ -409,6 +409,9 @@
       <button id="export-all-glb-btn" style="background:#1f6feb; border:1px solid #388bfd; color:#fff; padding:6px; border-radius:4px; cursor:pointer; font-size:10px; margin-top:4px; font-weight:600;">
         📦 Guardar Todos los .GLB
       </button>
+      <button id="git-push-btn" style="background:#238636; border:1px solid #2ea043; color:#fff; padding:6px; border-radius:4px; cursor:pointer; font-size:10px; margin-top:4px; font-weight:600;">
+        🚀 Subir Todo a GitHub
+      </button>
     </div>
 
     <div class="instructions">
@@ -492,6 +495,18 @@
         reactComp: '<BombaPozo3D running={true} flowM3h={120} />',
         file: 'bomba-pozo.glb',
         builder: buildBombaPozoProcedural
+      },
+      {
+        id: 'grupo-electrogeno-carod',
+        name: 'Grupo Electrógeno CAROD',
+        category: 'solar',
+        icon: '⚙️',
+        title: 'Grupo Electrógeno Diésel Industrial CAROD en Bancada Abierta',
+        desc: 'Grupo electrógeno industrial de alta resistencia con bancada estructural en perfiles de acero pesado y depósito de combustible integrado, motor diésel de 4 cilindros en línea, alternador síncrono sin escobillas con tapa trasera louvers en aluminio, filtro de aire ciclónico con sombrerete, radiador frontal con ventilador protegido por rejilla de alambre, arco tubular de soporte y cuadro de control con centralita digital, seta de emergencia y bases CEE.',
+        tags: ['MARCA: CAROD', 'POTENCIA: 60 kVA', 'MOTOR: DIESEL_4_CIL', 'ALTERNADOR: SÍNCRONO_IP23', 'VOLTAJE: 400V_TRIFÁSICO', 'CUADRO: DIGITAL_DSE'],
+        reactComp: '<GrupoElectrogeno3D running={true} />',
+        type: 'procedural',
+        builder: buildGensetProcedural
       },
       {
         id: 'bomba-dosificadora-500',
@@ -701,6 +716,18 @@
         reactComp: '<FieldScene3D snapshot={snapshot} />',
         type: 'procedural',
         builder: buildFieldSceneProcedural
+      },
+      {
+        id: 'nave-hormigon-25x40',
+        name: 'Nave de Hormigón 25×40m',
+        category: 'terrain',
+        icon: '🏭',
+        title: 'Nave Agrícola / Industrial de Placas Prefabricadas de Hormigón 25×40m (1.000 m²)',
+        desc: 'Nave diáfana de 1.000 m² útiles construida con paneles prefabricados de hormigón armado machihembrados con juntas horizontales, perfiles de remate perimetrales y cumbrera en verde carruaje, cubierta a dos aguas de panel sándwich con lucernarios cenitales, gran portón de acceso para maquinaria pesada (6.2m x 5.8m) y estructura interior de pórticos de acero IPE con correas.',
+        tags: ['DIMENSIONES: 25 x 40 m', 'SUPERFICIE: 1.000 m²', 'ALTURA_ALERO: 7.8 m', 'ALTURA_CUMBRERA: 10.4 m', 'PORTÓN: 6.2 x 5.8 m', 'CERRAMIENTO: HORMIGÓN_PREFABRICADO', 'ACABADOS: VERDE_CARRUAJE'],
+        reactComp: '<NaveHormigon3D width={25} length={40} gateOpen={true} />',
+        type: 'procedural',
+        builder: buildConcreteWarehouseProcedural
       },
       {
         id: 'logo-insece-3d',
@@ -1035,34 +1062,6 @@
       const furrowMat = new T.MeshStandardMaterial({ color: 0x52412f, roughness: 0.98 });
       const stoneMat = new T.MeshStandardMaterial({ color: 0x8a8479, roughness: 0.85 });
       const weedMat = new T.MeshStandardMaterial({ color: 0x5f8034, roughness: 0.8 });
-
-      // =======================================================================
-      // 1. TERRENO AGRÍCOLA CON SURCOS Y PIEDRAS
-      // =======================================================================
-      const ground = new T.Mesh(new T.BoxGeometry(11.5, 0.2, 7.8), soilMat);
-      ground.position.y = -0.1;
-      ground.receiveShadow = true;
-      root.add(ground);
-
-      // Surcos de laboreo y huellas de paso del apero
-      for (let z of [-2.6, -1.3, 0, 1.3, 2.6]) {
-        const furrow = new T.Mesh(new T.BoxGeometry(11.2, 0.04, 0.45), furrowMat);
-        furrow.position.set(0, 0.015, z);
-        furrow.receiveShadow = true;
-        root.add(furrow);
-      }
-
-      // Pequeñas piedras de grava caliza dispersas en el suelo
-      const stoneGeo = new T.DodecahedronGeometry(0.045, 0);
-      for (let s = 0; s < 50; s++) {
-        const stone = new T.Mesh(stoneGeo, stoneMat);
-        const sx = (Math.sin(s * 13.7) * 4.8);
-        const sz = (Math.cos(s * 9.1) * 3.2);
-        stone.position.set(sx, 0.02, sz);
-        stone.scale.set(0.6 + (s % 3) * 0.4, 0.4 + (s % 2) * 0.3, 0.7 + (s % 4) * 0.3);
-        stone.rotation.set(s, s * 0.5, s * 0.3);
-        root.add(stone);
-      }
 
       // =======================================================================
       // 2. DOS HILERAS DE ESPALDERA (MARCO 2.6m ENTRE FILAS × 1.2m ENTRE CEPAS)
@@ -2065,6 +2064,1020 @@
       headGroup.add(botCapFlange);
 
       root.add(headGroup);
+
+      return root;
+    }
+
+    // -------------------------------------------------------------------------
+    // GENERADOR PROCEDURAL: GRUPO ELECTRÓGENO DIÉSEL INDUSTRIAL CAROD
+    // -------------------------------------------------------------------------
+    function buildGensetProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Grupo_Electrogeno_CAROD_Industrial';
+
+      // 1. Texturas procedimentales en Canvas
+      // Centralita digital DSE
+      const cvControl = document.createElement('canvas');
+      cvControl.width = 512; cvControl.height = 512;
+      const ctxC = cvControl.getContext('2d');
+      ctxC.fillStyle = '#14171a';
+      ctxC.fillRect(0, 0, 512, 512);
+
+      // Pantalla LCD
+      ctxC.fillStyle = '#1b2a1e';
+      ctxC.fillRect(80, 70, 350, 160);
+      ctxC.strokeStyle = '#2d4232';
+      ctxC.lineWidth = 4;
+      ctxC.strokeRect(80, 70, 350, 160);
+      ctxC.fillStyle = '#7bf192';
+      ctxC.font = 'bold 26px monospace';
+      ctxC.fillText('GENSET: AUTO READY', 100, 115);
+      ctxC.font = '22px monospace';
+      ctxC.fillText('400V 50.0Hz  0 kW', 100, 155);
+      ctxC.fillText('BAT: 12.8V  OIL: 4.8b', 100, 195);
+
+      // Botones
+      const btnColors = ['#2e7d32', '#c62828', '#1565c0', '#424242', '#424242', '#424242'];
+      const btnLabels = ['I', 'O', 'AUTO', '▲', '▼', 'OK'];
+      for (let i = 0; i < 6; i++) {
+        const bx = 90 + (i % 3) * 115;
+        const by = 260 + Math.floor(i / 3) * 80;
+        ctxC.fillStyle = btnColors[i];
+        ctxC.beginPath();
+        if (ctxC.roundRect) ctxC.roundRect(bx, by, 90, 55, 8);
+        else ctxC.rect(bx, by, 90, 55);
+        ctxC.fill();
+        ctxC.strokeStyle = '#616161';
+        ctxC.lineWidth = 2;
+        ctxC.stroke();
+        ctxC.fillStyle = '#ffffff';
+        ctxC.font = 'bold 22px sans-serif';
+        ctxC.textAlign = 'center';
+        ctxC.fillText(btnLabels[i], bx + 45, by + 36);
+      }
+      const controlPanelTex = new T.CanvasTexture(cvControl);
+
+      // Logo Carod
+      const cvCarod = document.createElement('canvas');
+      cvCarod.width = 512; cvCarod.height = 160;
+      const ctxL = cvCarod.getContext('2d');
+      ctxL.fillStyle = '#0a0b0d';
+      ctxL.fillRect(0, 0, 512, 160);
+      ctxL.strokeStyle = '#ffffff';
+      ctxL.lineWidth = 8;
+      ctxL.strokeRect(12, 12, 488, 136);
+      ctxL.fillStyle = '#ffffff';
+      ctxL.font = 'italic bold 90px "Arial Black", sans-serif';
+      ctxL.textAlign = 'center';
+      ctxL.fillText('Carod', 256, 108);
+      const carodLogoTex = new T.CanvasTexture(cvCarod);
+
+      // Señal de peligro eléctrico triángulo amarillo
+      const cvWarn = document.createElement('canvas');
+      cvWarn.width = 256; cvWarn.height = 256;
+      const ctxW = cvWarn.getContext('2d');
+      ctxW.clearRect(0, 0, 256, 256);
+      ctxW.fillStyle = '#f9a825';
+      ctxW.beginPath();
+      ctxW.moveTo(128, 20); ctxW.lineTo(240, 225); ctxW.lineTo(16, 225);
+      ctxW.closePath(); ctxW.fill();
+      ctxW.strokeStyle = '#000000'; ctxW.lineWidth = 14; ctxW.stroke();
+      ctxW.fillStyle = '#000000';
+      ctxW.beginPath();
+      ctxW.moveTo(136, 65); ctxW.lineTo(100, 140); ctxW.lineTo(132, 140);
+      ctxW.lineTo(116, 205); ctxW.lineTo(165, 125); ctxW.lineTo(132, 125);
+      ctxW.closePath(); ctxW.fill();
+      const warnTex = new T.CanvasTexture(cvWarn);
+
+      // Placa técnica
+      const cvPlate = document.createElement('canvas');
+      cvPlate.width = 256; cvPlate.height = 128;
+      const ctxP = cvPlate.getContext('2d');
+      ctxP.fillStyle = '#cfd8dc';
+      ctxP.fillRect(0, 0, 256, 128);
+      ctxP.strokeStyle = '#37474f';
+      ctxP.strokeRect(6, 6, 244, 116);
+      ctxP.fillStyle = '#212121';
+      ctxP.font = 'bold 20px sans-serif';
+      ctxP.fillText('SYNCHRONOUS ALTERNATOR', 16, 32);
+      ctxP.font = '14px monospace';
+      ctxP.fillText('3-PHASE 400V 50Hz Cos φ 0.8', 16, 60);
+      ctxP.fillText('IP23 INSUL. CLASS H 1500 RPM', 16, 85);
+      ctxP.fillText('CAROD POWER SYSTEMS', 16, 110);
+      const plateTex = new T.CanvasTexture(cvPlate);
+
+      // Materiales PBR
+      const chassisMat = new T.MeshStandardMaterial({ color: 0x141618, roughness: 0.55, metalness: 0.35 });
+      const blockMat = new T.MeshStandardMaterial({ color: 0x22262b, roughness: 0.65, metalness: 0.4 });
+      const darkMetalMat = new T.MeshStandardMaterial({ color: 0x181a1d, roughness: 0.45, metalness: 0.6 });
+      const steelMat = new T.MeshStandardMaterial({ color: 0x8a959e, roughness: 0.28, metalness: 0.88 });
+      const chromeMat = new T.MeshStandardMaterial({ color: 0xd8e0e6, roughness: 0.15, metalness: 0.95 });
+      const rubberMat = new T.MeshStandardMaterial({ color: 0x111213, roughness: 0.92, metalness: 0.02 });
+      const louverMat = new T.MeshStandardMaterial({ color: 0xc8d0d5, roughness: 0.3, metalness: 0.8 });
+      const radiatorMeshMat = new T.MeshStandardMaterial({ color: 0x374149, roughness: 0.6, metalness: 0.7 });
+      const socketBlueMat = new T.MeshStandardMaterial({ color: 0x1976d2, roughness: 0.35 });
+      const emergencyRedMat = new T.MeshStandardMaterial({ color: 0xd32f2f, roughness: 0.3 });
+      const emergencyYellowMat = new T.MeshStandardMaterial({ color: 0xfbc02d, roughness: 0.35 });
+      const dipstickYellowMat = new T.MeshStandardMaterial({ color: 0xfdd835, roughness: 0.4 });
+      const glassFilterMat = new T.MeshStandardMaterial({ color: 0xc5a059, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.75 });
+
+      // =======================================================================
+      // 1. BANCADA ESTRUCTURAL DE ACERO PESADO (SKID / FUEL TANK)
+      // =======================================================================
+      const skidGroup = new T.Group();
+      skidGroup.position.set(0, 0.14, 0);
+
+      // Depósito integrado
+      const fuelTank = new T.Mesh(new T.BoxGeometry(2.5, 0.28, 0.96), chassisMat);
+      fuelTank.position.y = 0.12;
+      fuelTank.castShadow = true; fuelTank.receiveShadow = true;
+      skidGroup.add(fuelTank);
+
+      // Largueros perimetrales UPN
+      for (const z of [-0.48, 0.48]) {
+        const upnZ = new T.Mesh(new T.BoxGeometry(2.52, 0.3, 0.04), chassisMat);
+        upnZ.position.set(0, 0.12, z);
+        upnZ.castShadow = true;
+        skidGroup.add(upnZ);
+      }
+      for (const x of [-1.25, 1.25]) {
+        const upnX = new T.Mesh(new T.BoxGeometry(0.04, 0.3, 0.98), chassisMat);
+        upnX.position.set(x, 0.12, 0);
+        upnX.castShadow = true;
+        skidGroup.add(upnX);
+      }
+
+      // Patas de apoyo transversales
+      for (const x of [-0.95, 0, 0.95]) {
+        const foot = new T.Mesh(new T.BoxGeometry(0.22, 0.08, 1.04), chassisMat);
+        foot.position.set(x, -0.07, 0);
+        foot.castShadow = true;
+        skidGroup.add(foot);
+      }
+
+      // Huecos para carretilla elevadora
+      for (const x of [-0.55, 0.55]) {
+        const fork = new T.Mesh(new T.BoxGeometry(0.24, 0.14, 1.0), new T.MeshBasicMaterial({ color: 0x000000 }));
+        fork.position.set(x, 0.08, 0);
+        skidGroup.add(fork);
+      }
+
+      // Tapones de combustible y respiradero
+      for (const x of [-0.2, 0.15]) {
+        const capG = new T.Group();
+        capG.position.set(x, 0.27, 0.28);
+        const cap = new T.Mesh(new T.CylinderGeometry(0.048, 0.048, 0.035, 16), darkMetalMat);
+        cap.castShadow = true;
+        capG.add(cap);
+        const capRib = new T.Mesh(new T.CylinderGeometry(0.055, 0.055, 0.015, 8), darkMetalMat);
+        capRib.position.y = 0.02;
+        capG.add(capRib);
+        skidGroup.add(capG);
+      }
+
+      // Placa con logo oficial CAROD en la bancada
+      const carodBadgeMat = new T.MeshStandardMaterial({ map: carodLogoTex, roughness: 0.3, metalness: 0.2 });
+      const carodBadge = new T.Mesh(new T.PlaneGeometry(0.55, 0.14), carodBadgeMat);
+      carodBadge.position.set(0.25, 0.14, 0.505);
+      skidGroup.add(carodBadge);
+
+      // Silentblocks antivibración
+      const sbCoords = [
+        [-0.85, 0.28, -0.32], [-0.85, 0.28, 0.32],
+        [-0.15, 0.28, -0.32], [-0.15, 0.28, 0.32],
+        [0.65, 0.28, -0.32], [0.65, 0.28, 0.32]
+      ];
+      sbCoords.forEach(([sx, sy, sz]) => {
+        const sb = new T.Group();
+        sb.position.set(sx, sy, sz);
+        const rubber = new T.Mesh(new T.CylinderGeometry(0.045, 0.05, 0.055, 16), rubberMat);
+        rubber.castShadow = true;
+        sb.add(rubber);
+        const stud = new T.Mesh(new T.CylinderGeometry(0.012, 0.012, 0.025, 10), steelMat);
+        stud.position.y = 0.035;
+        sb.add(stud);
+        skidGroup.add(sb);
+      });
+
+      root.add(skidGroup);
+
+      // =======================================================================
+      // 2. CONJUNTO MOTOR Y ALTERNADOR
+      // =======================================================================
+      const engineG = new T.Group();
+      engineG.position.set(0, 0.44, 0);
+
+      // --- A. ALTERNADOR SÍNCRONO (IZQUIERDA) ---
+      const altG = new T.Group();
+      altG.position.set(-0.72, 0.26, 0);
+
+      const altBody = new T.Mesh(new T.CylinderGeometry(0.31, 0.31, 0.72, 32), blockMat);
+      altBody.rotation.z = Math.PI / 2;
+      altBody.castShadow = true;
+      altG.add(altBody);
+
+      // Tapa trasera abovedada con aro
+      const altBack = new T.Mesh(new T.CylinderGeometry(0.315, 0.315, 0.04, 32), steelMat);
+      altBack.position.x = -0.37;
+      altBack.rotation.z = Math.PI / 2;
+      altBack.castShadow = true;
+      altG.add(altBack);
+
+      // Rejilla de ventilación circular plateada (louvers)
+      const louverDiscG = new T.Group();
+      louverDiscG.position.set(-0.392, 0, 0);
+      louverDiscG.rotation.y = -Math.PI / 2;
+
+      const silverPlate = new T.Mesh(new T.CircleGeometry(0.28, 32), louverMat);
+      louverDiscG.add(silverPlate);
+
+      for (let rIdx = 0; rIdx < 12; rIdx++) {
+        const ry = -0.18 + rIdx * 0.032;
+        const rw = Math.sqrt(Math.max(0, 0.25 * 0.25 - ry * ry)) * 1.85;
+        const louver = new T.Mesh(new T.BoxGeometry(rw, 0.014, 0.008), darkMetalMat);
+        louver.position.set(0, ry, 0.005);
+        louverDiscG.add(louver);
+      }
+      altG.add(louverDiscG);
+
+      // Placa de características del alternador
+      const plateMat = new T.MeshStandardMaterial({ map: plateTex, roughness: 0.3, metalness: 0.7 });
+      const plateMesh = new T.Mesh(new T.PlaneGeometry(0.24, 0.12), plateMat);
+      plateMesh.position.set(-0.15, 0.12, 0.312);
+      altG.add(plateMesh);
+
+      // Campana de acoplamiento SAE intermedia
+      const saeBell = new T.Mesh(new T.CylinderGeometry(0.34, 0.31, 0.16, 32), darkMetalMat);
+      saeBell.position.x = 0.42;
+      saeBell.rotation.z = Math.PI / 2;
+      saeBell.castShadow = true;
+      altG.add(saeBell);
+
+      const saeGrid = new T.Mesh(new T.BoxGeometry(0.12, 0.24, 0.02), louverMat);
+      saeGrid.position.set(0.42, 0.02, 0.325);
+      altG.add(saeGrid);
+
+      // Caja superior de bornes
+      const termBox = new T.Mesh(new T.BoxGeometry(0.44, 0.18, 0.38), chassisMat);
+      termBox.position.set(-0.1, 0.34, 0);
+      termBox.castShadow = true;
+      altG.add(termBox);
+
+      const warnDecalMat = new T.MeshStandardMaterial({ map: warnTex, transparent: true, roughness: 0.3 });
+      const warnDecal = new T.Mesh(new T.PlaneGeometry(0.09, 0.09), warnDecalMat);
+      warnDecal.position.set(-0.1, 0.34, 0.192);
+      altG.add(warnDecal);
+
+      // Mangueras de potencia
+      [-0.08, 0.02, 0.12].forEach((cx) => {
+        const pCable = new T.Mesh(new T.CylinderGeometry(0.016, 0.016, 0.22, 10), rubberMat);
+        pCable.position.set(cx - 0.1, 0.48, 0.12);
+        pCable.rotation.set(0.4, 0, -0.3);
+        altG.add(pCable);
+      });
+
+      engineG.add(altG);
+
+      // --- B. MOTOR DIÉSEL INDUSTRIAL (CENTRO) ---
+      const motorG = new T.Group();
+      motorG.position.set(0.18, 0.32, 0);
+
+      // Bloque
+      const engBlock = new T.Mesh(new T.BoxGeometry(0.82, 0.58, 0.52), blockMat);
+      engBlock.castShadow = true;
+      motorG.add(engBlock);
+
+      // Cárter
+      const oilPan = new T.Mesh(new T.BoxGeometry(0.76, 0.16, 0.44), blockMat);
+      oilPan.position.y = -0.34;
+      oilPan.castShadow = true;
+      motorG.add(oilPan);
+
+      // Culata
+      const cylHead = new T.Mesh(new T.BoxGeometry(0.8, 0.12, 0.48), blockMat);
+      cylHead.position.y = 0.32;
+      cylHead.castShadow = true;
+      motorG.add(cylHead);
+
+      // 4 Tapas de balancines
+      [-0.27, -0.09, 0.09, 0.27].forEach((cx) => {
+        const rockerG = new T.Group();
+        rockerG.position.set(cx, 0.42, 0);
+        const rocker = new T.Mesh(new T.BoxGeometry(0.15, 0.09, 0.42), blockMat);
+        rocker.castShadow = true;
+        rockerG.add(rocker);
+        const cap = new T.Mesh(new T.CylinderGeometry(0.025, 0.025, 0.025, 12), darkMetalMat);
+        cap.position.y = 0.055;
+        rockerG.add(cap);
+        motorG.add(rockerG);
+      });
+
+      // Riel de inyección
+      const fuelRail = new T.Mesh(new T.BoxGeometry(0.78, 0.065, 0.07), darkMetalMat);
+      fuelRail.position.set(0, 0.34, 0.26);
+      fuelRail.castShadow = true;
+      motorG.add(fuelRail);
+
+      // 4 Tubos de inyección de alta presión
+      [-0.27, -0.09, 0.09, 0.27].forEach((ix) => {
+        const pipeG = new T.Group();
+        pipeG.position.set(ix, 0.28, 0.28);
+        const pipe = new T.Mesh(new T.CylinderGeometry(0.007, 0.007, 0.2, 8), steelMat);
+        pipe.rotation.x = 0.4;
+        pipeG.add(pipe);
+        const nozzle = new T.Mesh(new T.CylinderGeometry(0.012, 0.012, 0.06, 8), steelMat);
+        nozzle.position.set(0, 0.11, 0.04);
+        nozzle.rotation.x = -0.3;
+        pipeG.add(nozzle);
+        motorG.add(pipeG);
+      });
+
+      // Varilla de aceite con tirador amarillo
+      const dipstickG = new T.Group();
+      dipstickG.position.set(0.24, 0.05, 0.29);
+      const rod = new T.Mesh(new T.CylinderGeometry(0.006, 0.006, 0.35, 8), steelMat);
+      rod.rotation.z = -0.2;
+      dipstickG.add(rod);
+      const handle = new T.Mesh(new T.TorusGeometry(0.025, 0.007, 8, 16), dipstickYellowMat);
+      handle.position.set(0.04, 0.18, 0);
+      dipstickG.add(handle);
+      motorG.add(dipstickG);
+
+      // Filtro de aceite
+      const oilFilterG = new T.Group();
+      oilFilterG.position.set(0.12, -0.08, 0.28);
+      const filterBody = new T.Mesh(new T.CylinderGeometry(0.065, 0.065, 0.16, 20), steelMat);
+      filterBody.castShadow = true;
+      oilFilterG.add(filterBody);
+      const filterHead = new T.Mesh(new T.CylinderGeometry(0.04, 0.04, 0.04, 16), darkMetalMat);
+      filterHead.position.y = 0.09;
+      oilFilterG.add(filterHead);
+      motorG.add(oilFilterG);
+
+      // Prefiltro decantador de combustible de vaso transparente
+      const preFilterG = new T.Group();
+      preFilterG.position.set(0.32, -0.15, 0.27);
+      const glassBowl = new T.Mesh(new T.CylinderGeometry(0.045, 0.045, 0.14, 16), glassFilterMat);
+      glassBowl.castShadow = true;
+      preFilterG.add(glassBowl);
+      const topCap = new T.Mesh(new T.CylinderGeometry(0.05, 0.05, 0.03, 16), darkMetalMat);
+      topCap.position.y = 0.08;
+      preFilterG.add(topCap);
+      const drainValve = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, 0.02, 12), steelMat);
+      drainValve.position.y = -0.08;
+      preFilterG.add(drainValve);
+      motorG.add(preFilterG);
+
+      // Motor de arranque
+      const starterG = new T.Group();
+      starterG.position.set(-0.28, -0.22, 0.24);
+      starterG.rotation.z = Math.PI / 2;
+      const starterM = new T.Mesh(new T.CylinderGeometry(0.085, 0.085, 0.26, 20), darkMetalMat);
+      starterM.castShadow = true;
+      starterG.add(starterM);
+      const solenoid = new T.Mesh(new T.CylinderGeometry(0.045, 0.045, 0.14, 16), darkMetalMat);
+      solenoid.position.set(0.07, 0.02, 0);
+      starterG.add(solenoid);
+      motorG.add(starterG);
+
+      // Colector de escape
+      const exhaustM = new T.Mesh(new T.BoxGeometry(0.72, 0.09, 0.09), darkMetalMat);
+      exhaustM.position.set(-0.05, 0.24, -0.28);
+      exhaustM.castShadow = true;
+      motorG.add(exhaustM);
+
+      engineG.add(motorG);
+
+      // --- C. FILTRO DE AIRE CICLÓNICO HORIZONTAL CON SOMBRERETE ---
+      const airFilterG = new T.Group();
+      airFilterG.position.set(-0.08, 0.94, 0.04);
+
+      const airCan = new T.Mesh(new T.CylinderGeometry(0.18, 0.18, 0.44, 24), darkMetalMat);
+      airCan.rotation.z = Math.PI / 2;
+      airCan.castShadow = true;
+      airFilterG.add(airCan);
+
+      [-0.12, 0.12].forEach((bx) => {
+        const band = new T.Mesh(new T.CylinderGeometry(0.188, 0.188, 0.028, 24), steelMat);
+        band.position.x = bx;
+        band.rotation.z = Math.PI / 2;
+        airFilterG.add(band);
+      });
+
+      const airEnd = new T.Mesh(new T.CylinderGeometry(0.175, 0.185, 0.035, 24), darkMetalMat);
+      airEnd.position.x = 0.23;
+      airEnd.rotation.z = Math.PI / 2;
+      airFilterG.add(airEnd);
+
+      const airNut = new T.Mesh(new T.CylinderGeometry(0.045, 0.045, 0.02, 16), darkMetalMat);
+      airNut.position.x = 0.25;
+      airNut.rotation.z = Math.PI / 2;
+      airFilterG.add(airNut);
+
+      // Sombrerete hongo vertical
+      const snorkelG = new T.Group();
+      snorkelG.position.set(-0.16, 0.26, 0);
+      const neck = new T.Mesh(new T.CylinderGeometry(0.05, 0.05, 0.16, 16), darkMetalMat);
+      neck.castShadow = true;
+      snorkelG.add(neck);
+      const mushroom = new T.Mesh(new T.CylinderGeometry(0.11, 0.06, 0.07, 24), darkMetalMat);
+      mushroom.position.y = 0.1;
+      mushroom.castShadow = true;
+      snorkelG.add(mushroom);
+      airFilterG.add(snorkelG);
+
+      // Manguito acodado hacia colector
+      const airHose = new T.Mesh(new T.CylinderGeometry(0.055, 0.055, 0.28, 16), rubberMat);
+      airHose.position.set(0.12, -0.22, 0.14);
+      airHose.rotation.set(0.6, 0.4, 0);
+      airFilterG.add(airHose);
+
+      engineG.add(airFilterG);
+
+      // --- D. RADIADOR INDUSTRIAL FRONTAL CON PROTECTOR (DERECHA) ---
+      const radG = new T.Group();
+      radG.position.set(0.88, 0.38, 0);
+
+      const radFrame = new T.Mesh(new T.BoxGeometry(0.16, 0.88, 0.84), chassisMat);
+      radFrame.castShadow = true;
+      radG.add(radFrame);
+
+      const radCore = new T.Mesh(new T.BoxGeometry(0.11, 0.72, 0.74), radiatorMeshMat);
+      radCore.position.x = 0.01;
+      radG.add(radCore);
+
+      const radTop = new T.Mesh(new T.BoxGeometry(0.17, 0.12, 0.84), chassisMat);
+      radTop.position.y = 0.44;
+      radTop.castShadow = true;
+      radG.add(radTop);
+
+      const radCap = new T.Mesh(new T.CylinderGeometry(0.04, 0.04, 0.03, 16), chromeMat);
+      radCap.position.y = 0.52;
+      radG.add(radCap);
+
+      // Rejilla de alambre de protección del ventilador
+      const guardG = new T.Group();
+      guardG.position.x = -0.1;
+      const ring1 = new T.Mesh(new T.TorusGeometry(0.32, 0.015, 8, 32), chromeMat);
+      ring1.rotation.y = Math.PI / 2;
+      guardG.add(ring1);
+      const ring2 = new T.Mesh(new T.TorusGeometry(0.2, 0.012, 8, 28), chromeMat);
+      ring2.rotation.y = Math.PI / 2;
+      guardG.add(ring2);
+
+      for (let aIdx = 0; aIdx < 8; aIdx++) {
+        const spoke = new T.Mesh(new T.BoxGeometry(0.01, 0.65, 0.01), chromeMat);
+        spoke.rotation.x = (aIdx * Math.PI) / 4;
+        guardG.add(spoke);
+      }
+      radG.add(guardG);
+
+      // Aspas del ventilador
+      const fanG = new T.Group();
+      fanG.position.x = -0.14;
+      const fanHub = new T.Mesh(new T.CylinderGeometry(0.08, 0.08, 0.04, 16), darkMetalMat);
+      fanHub.rotation.z = Math.PI / 2;
+      fanG.add(fanHub);
+
+      for (let fIdx = 0; fIdx < 7; fIdx++) {
+        const blade = new T.Mesh(new T.BoxGeometry(0.015, 0.22, 0.065), darkMetalMat);
+        blade.position.y = 0.15;
+        blade.rotation.x = (fIdx * Math.PI * 2) / 7;
+        fanG.add(blade);
+      }
+      radG.add(fanG);
+
+      // Manguito superior con abrazadera
+      const radHoseG = new T.Group();
+      radHoseG.position.set(-0.24, 0.44, 0.18);
+      const hose = new T.Mesh(new T.CylinderGeometry(0.035, 0.035, 0.32, 14), rubberMat);
+      hose.rotation.z = Math.PI / 2;
+      radHoseG.add(hose);
+      const clamp = new T.Mesh(new T.CylinderGeometry(0.04, 0.04, 0.02, 14), steelMat);
+      clamp.position.x = 0.12;
+      clamp.rotation.z = Math.PI / 2;
+      radHoseG.add(clamp);
+      radG.add(radHoseG);
+
+      engineG.add(radG);
+
+      root.add(engineG);
+
+      // =======================================================================
+      // 3. ARCO TUBULAR Y CUADRO DE CONTROL ELÉCTRICO SUPERIOR
+      // =======================================================================
+      const towerG = new T.Group();
+      towerG.position.set(-0.78, 0, 0);
+
+      for (const tz of [-0.38, 0.38]) {
+        const arch = new T.Group();
+        arch.position.z = tz;
+        for (const tx of [-0.18, 0.18]) {
+          const col = new T.Mesh(new T.CylinderGeometry(0.024, 0.024, 0.9, 14), chassisMat);
+          col.position.set(tx, 0.72, 0);
+          col.castShadow = true;
+          arch.add(col);
+        }
+        const topU = new T.Mesh(new T.TorusGeometry(0.18, 0.024, 8, 16, Math.PI), chassisMat);
+        topU.position.set(0, 1.17, 0);
+        topU.rotation.x = Math.PI / 2;
+        arch.add(topU);
+        towerG.add(arch);
+      }
+
+      for (const tx of [-0.18, 0.18]) {
+        const bar = new T.Mesh(new T.CylinderGeometry(0.018, 0.018, 0.76, 12), chassisMat);
+        bar.position.set(tx, 1.05, 0);
+        bar.rotation.x = Math.PI / 2;
+        towerG.add(bar);
+      }
+
+      // Cuadro de control
+      const cabinetG = new T.Group();
+      cabinetG.position.set(0, 1.48, 0);
+
+      const cabinet = new T.Mesh(new T.BoxGeometry(0.42, 0.62, 0.58), chassisMat);
+      cabinet.castShadow = true; cabinet.receiveShadow = true;
+      cabinetG.add(cabinet);
+
+      const roof = new T.Mesh(new T.BoxGeometry(0.46, 0.025, 0.62), chassisMat);
+      roof.position.y = 0.32;
+      cabinetG.add(roof);
+
+      // Frontis del cuadro
+      const frontG = new T.Group();
+      frontG.position.set(0, 0, 0.292);
+
+      // Centralita digital
+      const dseMat = new T.MeshStandardMaterial({ map: controlPanelTex, roughness: 0.35, metalness: 0.1 });
+      const dsePanel = new T.Mesh(new T.PlaneGeometry(0.24, 0.24), dseMat);
+      dsePanel.position.set(-0.06, 0.11, 0.005);
+      frontG.add(dsePanel);
+
+      // Seta de parada de emergencia roja
+      const eStopG = new T.Group();
+      eStopG.position.set(-0.14, 0.18, 0.015);
+      const eBase = new T.Mesh(new T.CylinderGeometry(0.038, 0.038, 0.008, 20), emergencyYellowMat);
+      eBase.rotation.x = Math.PI / 2;
+      eStopG.add(eBase);
+      const eBtn = new T.Mesh(new T.CylinderGeometry(0.032, 0.026, 0.038, 20), emergencyRedMat);
+      eBtn.position.z = 0.025;
+      eBtn.rotation.x = Math.PI / 2;
+      eBtn.castShadow = true;
+      eStopG.add(eBtn);
+      frontG.add(eStopG);
+
+      // Base CEE azul industrial
+      const socketG = new T.Group();
+      socketG.position.set(0.11, 0.16, 0.02);
+      const sBody = new T.Mesh(new T.CylinderGeometry(0.042, 0.042, 0.035, 20), socketBlueMat);
+      sBody.rotation.x = Math.PI / 2;
+      sBody.castShadow = true;
+      socketG.add(sBody);
+      const sLid = new T.Mesh(new T.CylinderGeometry(0.045, 0.045, 0.012, 20), socketBlueMat);
+      sLid.position.set(0, 0.025, 0.02);
+      sLid.rotation.x = 0.3;
+      socketG.add(sLid);
+      frontG.add(socketG);
+
+      // Disyuntor
+      const breakerBase = new T.Mesh(new T.BoxGeometry(0.22, 0.08, 0.015), darkMetalMat);
+      breakerBase.position.set(-0.06, -0.12, 0.005);
+      frontG.add(breakerBase);
+      const breakerWin = new T.Mesh(new T.BoxGeometry(0.18, 0.04, 0.01), new T.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1, transparent: true, opacity: 0.65 }));
+      breakerWin.position.set(-0.06, -0.12, 0.015);
+      frontG.add(breakerWin);
+
+      // Triángulo de advertencia eléctrico
+      const warnFront = new T.Mesh(new T.PlaneGeometry(0.09, 0.09), warnDecalMat);
+      warnFront.position.set(0.12, -0.12, 0.005);
+      frontG.add(warnFront);
+
+      // Logo Carod en el cuadro
+      const carodCuadro = new T.Mesh(new T.PlaneGeometry(0.14, 0.045), carodBadgeMat);
+      carodCuadro.position.set(-0.06, -0.02, 0.005);
+      frontG.add(carodCuadro);
+
+      cabinetG.add(frontG);
+
+      // Advertencia lateral
+      const warnSide = new T.Mesh(new T.PlaneGeometry(0.1, 0.1), warnDecalMat);
+      warnSide.position.set(-0.212, 0.12, 0);
+      warnSide.rotation.y = -Math.PI / 2;
+      cabinetG.add(warnSide);
+
+      towerG.add(cabinetG);
+      root.add(towerG);
+
+      return root;
+    }
+
+    // -------------------------------------------------------------------------
+    // GENERADOR PROCEDURAL: NAVE DE HORMIGÓN PREFABRICADO 25×40 METROS
+    // -------------------------------------------------------------------------
+    function buildConcreteWarehouseProcedural(T) {
+      const root = new T.Group();
+      root.name = 'Nave_Hormigon_Prefabricado_25x40';
+
+      const width = 25;
+      const length = 40;
+      const wallHeight = 7.8;
+      const ridgeHeight = 10.4;
+      const halfW = width / 2;
+      const halfL = length / 2;
+      const gateW = 6.2;
+      const gateH = 5.8;
+      const numBays = 6;
+      const baySpacing = length / (numBays - 1);
+
+      // Textura hormigón prefabricado con poro, árido y juntas horizontales (gris hormigón auténtico)
+      const cvC = document.createElement('canvas');
+      cvC.width = 512; cvC.height = 512;
+      const ctxC = cvC.getContext('2d');
+      ctxC.fillStyle = '#8f959b';
+      ctxC.fillRect(0, 0, 512, 512);
+
+      const imgData = ctxC.getImageData(0, 0, 512, 512);
+      const data = imgData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const noise = (Math.random() - 0.5) * 22;
+        data[i] = Math.min(255, Math.max(0, data[i] + noise));
+        data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise));
+        data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise));
+      }
+      ctxC.putImageData(imgData, 0, 0);
+
+      // Juntas horizontales entre placas prefabricadas de hormigón (con ranura y resalte)
+      for (const y of [128, 256, 384]) {
+        ctxC.strokeStyle = '#5b6167';
+        ctxC.lineWidth = 5;
+        ctxC.beginPath();
+        ctxC.moveTo(0, y);
+        ctxC.lineTo(512, y);
+        ctxC.stroke();
+
+        ctxC.strokeStyle = '#b2b8be';
+        ctxC.lineWidth = 1.5;
+        ctxC.beginPath();
+        ctxC.moveTo(0, y + 3);
+        ctxC.lineTo(512, y + 3);
+        ctxC.stroke();
+      }
+      const concreteTex = new T.CanvasTexture(cvC);
+      concreteTex.wrapS = T.RepeatWrapping;
+      concreteTex.wrapT = T.RepeatWrapping;
+      concreteTex.repeat.set(4, 2);
+
+      // Textura cubierta panel sándwich blanco Pirineo (RAL 9010)
+      const cvR = document.createElement('canvas');
+      cvR.width = 256; cvR.height = 256;
+      const ctxR = cvR.getContext('2d');
+      ctxR.fillStyle = '#ffffff';
+      ctxR.fillRect(0, 0, 256, 256);
+
+      // Grecas de cubierta con sombra y bisel
+      for (let x = 0; x < 256; x += 32) {
+        ctxR.fillStyle = '#e2e7ec';
+        ctxR.fillRect(x, 0, 8, 256);
+        ctxR.fillStyle = '#cbd2d9';
+        ctxR.fillRect(x + 7, 0, 1.5, 256);
+        ctxR.fillStyle = '#ffffff';
+        ctxR.fillRect(x > 0 ? x - 1 : 0, 0, 1, 256);
+      }
+      const roofTex = new T.CanvasTexture(cvR);
+      roofTex.wrapS = T.RepeatWrapping;
+      roofTex.wrapT = T.RepeatWrapping;
+      roofTex.repeat.set(14, 8);
+
+      // Textura chapa grecada para portadas verdes oscuras (RAL 6005 verde carruaje)
+      const cvG = document.createElement('canvas');
+      cvG.width = 256; cvG.height = 256;
+      const ctxG = cvG.getContext('2d');
+      ctxG.fillStyle = '#153a28';
+      ctxG.fillRect(0, 0, 256, 256);
+      for (let x = 0; x < 256; x += 16) {
+        ctxG.fillStyle = '#1d4c35';
+        ctxG.fillRect(x, 0, 6, 256);
+        ctxG.fillStyle = '#0e261a';
+        ctxG.fillRect(x + 5, 0, 1.5, 256);
+      }
+      const gateTex = new T.CanvasTexture(cvG);
+      gateTex.wrapS = T.RepeatWrapping;
+      gateTex.wrapT = T.RepeatWrapping;
+      gateTex.repeat.set(6, 6);
+
+      // Materiales PBR
+      const concreteMat = new T.MeshStandardMaterial({ map: concreteTex, roughness: 0.94, metalness: 0.03 });
+      const trimGreenMat = new T.MeshStandardMaterial({ color: 0x153b29, roughness: 0.38, metalness: 0.35 });
+      const gateSheetMat = new T.MeshStandardMaterial({ color: 0x18422e, map: gateTex, roughness: 0.42, metalness: 0.32 });
+      const steelDarkMat = new T.MeshStandardMaterial({ color: 0x22262a, roughness: 0.5, metalness: 0.75 });
+      const roofMat = new T.MeshStandardMaterial({ color: 0xfcffff, map: roofTex, roughness: 0.32, metalness: 0.15 });
+      const skylightMat = new T.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, metalness: 0.1, transparent: true, opacity: 0.65 });
+      const floorMat = new T.MeshStandardMaterial({ color: 0x827d74, roughness: 0.95, metalness: 0.02 });
+
+      // 1. Solera y cimentación
+      const floor = new T.Mesh(new T.BoxGeometry(width + 3, 0.12, length + 3), floorMat);
+      floor.position.y = -0.06;
+      floor.receiveShadow = true;
+      root.add(floor);
+
+      // 2. Testeros a dos aguas
+      const slopeLen = Math.hypot(halfW + 0.45, ridgeHeight - wallHeight);
+      const pitchAngle = Math.atan2(ridgeHeight - wallHeight, halfW + 0.45);
+
+      // Testero frontal con portón
+      const frontShape = new T.Shape();
+      frontShape.moveTo(-halfW, 0);
+      frontShape.lineTo(halfW, 0);
+      frontShape.lineTo(halfW, wallHeight);
+      frontShape.lineTo(0, ridgeHeight);
+      frontShape.lineTo(-halfW, wallHeight);
+      frontShape.closePath();
+
+      const gateHole = new T.Path();
+      gateHole.moveTo(-gateW / 2, 0);
+      gateHole.lineTo(gateW / 2, 0);
+      gateHole.lineTo(gateW / 2, gateH);
+      gateHole.lineTo(-gateW / 2, gateH);
+      gateHole.closePath();
+      frontShape.holes.push(gateHole);
+
+      const frontGeo = new T.ExtrudeGeometry(frontShape, { depth: 0.3, bevelEnabled: false });
+      const frontWall = new T.Mesh(frontGeo, concreteMat);
+      frontWall.position.set(0, 0, halfL - 0.3);
+      frontWall.castShadow = true; frontWall.receiveShadow = true;
+      root.add(frontWall);
+
+      // Testero trasero con portón para paso de maquinaria
+      const rearShape = new T.Shape();
+      rearShape.moveTo(-halfW, 0);
+      rearShape.lineTo(halfW, 0);
+      rearShape.lineTo(halfW, wallHeight);
+      rearShape.lineTo(0, ridgeHeight);
+      rearShape.lineTo(-halfW, wallHeight);
+      rearShape.closePath();
+
+      const rearGateHole = new T.Path();
+      rearGateHole.moveTo(-gateW / 2, 0);
+      rearGateHole.lineTo(gateW / 2, 0);
+      rearGateHole.lineTo(gateW / 2, gateH);
+      rearGateHole.lineTo(-gateW / 2, gateH);
+      rearGateHole.closePath();
+      rearShape.holes.push(rearGateHole);
+
+      const rearGeo = new T.ExtrudeGeometry(rearShape, { depth: 0.3, bevelEnabled: false });
+      const rearWall = new T.Mesh(rearGeo, concreteMat);
+      rearWall.position.set(0, 0, -halfL);
+      rearWall.castShadow = true; rearWall.receiveShadow = true;
+      root.add(rearWall);
+
+      // Paredes laterales (40m)
+      const leftWall = new T.Mesh(new T.BoxGeometry(0.3, wallHeight, length), concreteMat);
+      leftWall.position.set(-halfW + 0.15, wallHeight / 2, 0);
+      leftWall.castShadow = true; leftWall.receiveShadow = true;
+      root.add(leftWall);
+
+      const rightWall = new T.Mesh(new T.BoxGeometry(0.3, wallHeight, length), concreteMat);
+      rightWall.position.set(halfW - 0.15, wallHeight / 2, 0);
+      rightWall.castShadow = true; rightWall.receiveShadow = true;
+      root.add(rightWall);
+
+      // 3. Remates en verde carruaje
+      const corners = [
+        [-halfW, halfL], [halfW, halfL],
+        [-halfW, -halfL], [halfW, -halfL]
+      ];
+      corners.forEach(([cx, cz]) => {
+        const cTrim = new T.Mesh(new T.BoxGeometry(0.38, wallHeight + 0.05, 0.38), trimGreenMat);
+        cTrim.position.set(cx, wallHeight / 2, cz);
+        cTrim.castShadow = true;
+        root.add(cTrim);
+      });
+
+      // Modulación vertical frontal
+      [-halfW + 5.5, halfW - 5.5].forEach((fx) => {
+        const fTrim = new T.Mesh(new T.BoxGeometry(0.16, wallHeight + 1.2, 0.08), trimGreenMat);
+        fTrim.position.set(fx, wallHeight / 2 + 0.5, halfL + 0.02);
+        fTrim.castShadow = true;
+        root.add(fTrim);
+      });
+
+      // Función constructora de Portadas Verdes Oscuras (Portón corredero de 2 hojas)
+      function buildSlidingGateGroup(isFront) {
+        const gGroup = new T.Group();
+        gGroup.position.set(0, 0, isFront ? (halfL + 0.03) : (-halfL - 0.03));
+        if (!isFront) gGroup.rotation.y = Math.PI;
+
+        // Jambas y Dintel perimetrales
+        const jambL = new T.Mesh(new T.BoxGeometry(0.18, gateH, 0.12), trimGreenMat);
+        jambL.position.set(-gateW / 2 - 0.08, gateH / 2, 0);
+        jambL.castShadow = true;
+        gGroup.add(jambL);
+
+        const jambR = new T.Mesh(new T.BoxGeometry(0.18, gateH, 0.12), trimGreenMat);
+        jambR.position.set(gateW / 2 + 0.08, gateH / 2, 0);
+        jambR.castShadow = true;
+        gGroup.add(jambR);
+
+        const lintel = new T.Mesh(new T.BoxGeometry(gateW + 0.34, 0.18, 0.12), trimGreenMat);
+        lintel.position.set(0, gateH + 0.08, 0);
+        lintel.castShadow = true;
+        gGroup.add(lintel);
+
+        // Guía superior de deslizamiento
+        const rail = new T.Mesh(new T.BoxGeometry(gateW * 1.8, 0.08, 0.08), trimGreenMat);
+        rail.position.set(0, gateH + 0.22, 0.08);
+        gGroup.add(rail);
+
+        // Hojas de la portada (Portadas verdes oscuras de chapa grecada y marco reforzado)
+        const leafW = gateW / 2 + 0.12;
+        const leafH = gateH - 0.04;
+        const leafThick = 0.08;
+
+        // Hoja izquierda
+        const leafL = new T.Group();
+        leafL.position.set(-leafW / 2 + 0.06, leafH / 2, 0.04);
+
+        const sheetL = new T.Mesh(new T.BoxGeometry(leafW, leafH, 0.04), gateSheetMat);
+        sheetL.castShadow = true;
+        leafL.add(sheetL);
+
+        // Marco perimetral hoja izquierda
+        const fvL_1 = new T.Mesh(new T.BoxGeometry(0.08, leafH, leafThick), trimGreenMat);
+        fvL_1.position.set(-leafW / 2 + 0.04, 0, 0);
+        leafL.add(fvL_1);
+        const fvL_2 = new T.Mesh(new T.BoxGeometry(0.1, leafH, leafThick), trimGreenMat);
+        fvL_2.position.set(leafW / 2 - 0.05, 0, 0);
+        leafL.add(fvL_2);
+        [-leafH / 2 + 0.05, 0, leafH / 2 - 0.05].forEach((py) => {
+          const fh = new T.Mesh(new T.BoxGeometry(leafW, 0.1, leafThick), trimGreenMat);
+          fh.position.set(0, py, 0);
+          leafL.add(fh);
+        });
+        // Tirador vertical
+        const handleL = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, 0.9, 12), steelDarkMat);
+        handleL.position.set(leafW / 2 - 0.28, -0.6, 0.06);
+        leafL.add(handleL);
+        gGroup.add(leafL);
+
+        // Hoja derecha
+        const leafR = new T.Group();
+        leafR.position.set(leafW / 2 - 0.06, leafH / 2, 0.11);
+
+        const sheetR = new T.Mesh(new T.BoxGeometry(leafW, leafH, 0.04), gateSheetMat);
+        sheetR.castShadow = true;
+        leafR.add(sheetR);
+
+        // Marco perimetral hoja derecha
+        const fvR_1 = new T.Mesh(new T.BoxGeometry(0.1, leafH, leafThick), trimGreenMat);
+        fvR_1.position.set(-leafW / 2 + 0.05, 0, 0);
+        leafR.add(fvR_1);
+        const fvR_2 = new T.Mesh(new T.BoxGeometry(0.08, leafH, leafThick), trimGreenMat);
+        fvR_2.position.set(leafW / 2 - 0.04, 0, 0);
+        leafR.add(fvR_2);
+        [-leafH / 2 + 0.05, 0, leafH / 2 - 0.05].forEach((py) => {
+          const fh = new T.Mesh(new T.BoxGeometry(leafW, 0.1, leafThick), trimGreenMat);
+          fh.position.set(0, py, 0);
+          leafR.add(fh);
+        });
+        // Tirador vertical
+        const handleR = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, 0.9, 12), steelDarkMat);
+        handleR.position.set(-leafW / 2 + 0.28, -0.6, 0.06);
+        leafR.add(handleR);
+        gGroup.add(leafR);
+
+        // Rodamientos y carros de rodadura superiores
+        [-leafW / 2 + 0.4, leafW / 2 - 0.4].forEach((rx) => {
+          const rollerL = new T.Mesh(new T.CylinderGeometry(0.04, 0.04, 0.06, 12), steelDarkMat);
+          rollerL.rotation.z = Math.PI / 2;
+          rollerL.position.set(-leafW / 2 + 0.06 + rx, gateH + 0.14, 0.04);
+          gGroup.add(rollerL);
+
+          const rollerR = new T.Mesh(new T.CylinderGeometry(0.04, 0.04, 0.06, 12), steelDarkMat);
+          rollerR.rotation.z = Math.PI / 2;
+          rollerR.position.set(leafW / 2 - 0.06 + rx, gateH + 0.14, 0.11);
+          gGroup.add(rollerR);
+        });
+
+        return gGroup;
+      }
+
+      // Añadir portada frontal y trasera en verde oscuro
+      root.add(buildSlidingGateGroup(true));
+      root.add(buildSlidingGateGroup(false));
+
+      // Remates a dos aguas en testeros
+      [-halfL, halfL].forEach((z, idx) => {
+        const gableG = new T.Group();
+        gableG.position.set(0, 0, z + (idx === 1 ? 0.02 : -0.32));
+
+        const bargeL = new T.Mesh(new T.BoxGeometry(slopeLen, 0.18, 0.12), trimGreenMat);
+        bargeL.position.set(-halfW / 2, (wallHeight + ridgeHeight) / 2 + 0.04, 0);
+        bargeL.rotation.z = pitchAngle;
+        gableG.add(bargeL);
+
+        const bargeR = new T.Mesh(new T.BoxGeometry(slopeLen, 0.18, 0.12), trimGreenMat);
+        bargeR.position.set(halfW / 2, (wallHeight + ridgeHeight) / 2 + 0.04, 0);
+        bargeR.rotation.z = -pitchAngle;
+        gableG.add(bargeR);
+
+        root.add(gableG);
+      });
+
+      // Canalones longitudinales
+      [-halfW - 0.1, halfW + 0.1].forEach((gx) => {
+        const gutter = new T.Mesh(new T.BoxGeometry(0.22, 0.18, length + 0.4), trimGreenMat);
+        gutter.position.set(gx, wallHeight - 0.05, 0);
+        gutter.castShadow = true;
+        root.add(gutter);
+      });
+
+      // Bajantes
+      [
+        [-halfW - 0.12, halfL - 0.5], [halfW + 0.12, halfL - 0.5],
+        [-halfW - 0.12, -halfL + 0.5], [halfW + 0.12, -halfL + 0.5]
+      ].forEach(([dx, dz]) => {
+        const downpipe = new T.Mesh(new T.CylinderGeometry(0.07, 0.07, wallHeight, 14), trimGreenMat);
+        downpipe.position.set(dx, wallHeight / 2, dz);
+        root.add(downpipe);
+      });
+
+      // 4. Cubierta a dos aguas
+      const roofL = new T.Group();
+      roofL.position.set(-halfW / 2, (wallHeight + ridgeHeight) / 2, 0);
+      roofL.rotation.z = pitchAngle;
+      const roofDeckL = new T.Mesh(new T.BoxGeometry(slopeLen, 0.14, length + 0.3), roofMat);
+      roofDeckL.receiveShadow = true; roofDeckL.castShadow = true;
+      roofL.add(roofDeckL);
+
+      [-12, -4, 4, 12].forEach((sz) => {
+        const sky = new T.Mesh(new T.BoxGeometry(slopeLen * 0.75, 0.02, 1.4), skylightMat);
+        sky.position.set(0, 0.08, sz);
+        roofL.add(sky);
+      });
+      root.add(roofL);
+
+      const roofR = new T.Group();
+      roofR.position.set(halfW / 2, (wallHeight + ridgeHeight) / 2, 0);
+      roofR.rotation.z = -pitchAngle;
+      const roofDeckR = new T.Mesh(new T.BoxGeometry(slopeLen, 0.14, length + 0.3), roofMat);
+      roofDeckR.receiveShadow = true; roofDeckR.castShadow = true;
+      roofR.add(roofDeckR);
+
+      [-12, -4, 4, 12].forEach((sz) => {
+        const sky = new T.Mesh(new T.BoxGeometry(slopeLen * 0.75, 0.02, 1.4), skylightMat);
+        sky.position.set(0, 0.08, sz);
+        roofR.add(sky);
+      });
+      root.add(roofR);
+
+      // Cumbrera
+      const ridge = new T.Mesh(new T.BoxGeometry(0.55, 0.14, length + 0.4), trimGreenMat);
+      ridge.position.set(0, ridgeHeight + 0.1, 0);
+      root.add(ridge);
+
+      // 5. Estructura interior: Pórticos metálicos IPE/HEA
+      for (let b = 0; b < numBays; b++) {
+        const bZ = -halfL + b * baySpacing;
+        const portalG = new T.Group();
+        portalG.position.z = bZ;
+
+        const colL = new T.Mesh(new T.BoxGeometry(0.42, wallHeight, 0.22), steelDarkMat);
+        colL.position.set(-halfW + 0.45, wallHeight / 2, 0);
+        colL.castShadow = true;
+        portalG.add(colL);
+
+        const colR = new T.Mesh(new T.BoxGeometry(0.42, wallHeight, 0.22), steelDarkMat);
+        colR.position.set(halfW - 0.45, wallHeight / 2, 0);
+        colR.castShadow = true;
+        portalG.add(colR);
+
+        const rafterL = new T.Mesh(new T.BoxGeometry(slopeLen, 0.38, 0.2), steelDarkMat);
+        rafterL.position.set(-halfW / 2, (wallHeight + ridgeHeight) / 2 - 0.2, 0);
+        rafterL.rotation.z = pitchAngle;
+        rafterL.castShadow = true;
+        portalG.add(rafterL);
+
+        const rafterR = new T.Mesh(new T.BoxGeometry(slopeLen, 0.38, 0.2), steelDarkMat);
+        rafterR.position.set(halfW / 2, (wallHeight + ridgeHeight) / 2 - 0.2, 0);
+        rafterR.rotation.z = -pitchAngle;
+        rafterR.castShadow = true;
+        portalG.add(rafterR);
+
+        const apexPlate = new T.Mesh(new T.BoxGeometry(0.6, 0.4, 0.2), steelDarkMat);
+        apexPlate.position.set(0, ridgeHeight - 0.45, 0);
+        portalG.add(apexPlate);
+
+        root.add(portalG);
+      }
+
+      // Correas longitudinales
+      [-8, -4, 0, 4, 8].forEach((px) => {
+        const py = wallHeight + (1 - Math.abs(px) / halfW) * (ridgeHeight - wallHeight) - 0.42;
+        const purlin = new T.Mesh(new T.BoxGeometry(0.12, 0.16, length - 0.8), steelDarkMat);
+        purlin.position.set(px, py, 0);
+        root.add(purlin);
+      });
 
       return root;
     }
@@ -4201,6 +5214,31 @@
     // CARGADOR Y ADAPTADOR DE ESCENA
     // =========================================================================
     function setupLoadedObject(object, meta) {
+      if (meta && (meta.id === 'arbol-olivo' || meta.id === 'arbol-almendro' || meta.id === 'arbol-pistacho')) {
+        const toRemove = [];
+        object.traverse((child) => {
+          if (child.isMesh) {
+            const matName = child.material?.name || '';
+            const nodeName = child.name || '';
+            if (
+              matName.includes('Soil') ||
+              matName.includes('Dry Stony') ||
+              matName.includes('Mediterranean Orchard Soil') ||
+              matName.includes('Orchard Dry Soil') ||
+              nodeName.toLowerCase().includes('soil') ||
+              nodeName.toLowerCase().includes('stone') ||
+              nodeName.toLowerCase().includes('root')
+            ) {
+              toRemove.push(child);
+            }
+          }
+        });
+        toRemove.forEach(child => {
+          child.visible = false;
+          if (child.parent) child.parent.remove(child);
+        });
+      }
+
       currentModel = object;
 
       const box = new THREE.Box3().setFromObject(currentModel);
@@ -4469,6 +5507,34 @@
       loaderEl.style.opacity = '0';
       loaderEl.style.pointerEvents = 'none';
       alert(`✅ ¡Completado! Se han guardado ${count} modelos .glb en extracted-3d-lib/models/ listos para GitHub.`);
+    });
+
+    // Botón directo para subir todo el proyecto a GitHub
+    document.getElementById('git-push-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('git-push-btn');
+      const originalText = btn.innerText;
+      btn.innerText = '⏳ Subiendo a GitHub...';
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/git-push', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          btn.innerText = '✅ ¡Subido a GitHub!';
+          alert('🚀 ¡Éxito! Todas las modificaciones han sido subidas y guardadas en tu GitHub (repositorio tomasinsecepro/libreria-3d-upaidown).');
+          setTimeout(() => {
+            btn.innerText = originalText;
+            btn.disabled = false;
+          }, 3000);
+        } else {
+          alert('Aviso al subir a GitHub: ' + (data.error || 'Error desconocido'));
+          btn.innerText = originalText;
+          btn.disabled = false;
+        }
+      } catch (err) {
+        alert('Error de conexión con el servidor: ' + err.message);
+        btn.innerText = originalText;
+        btn.disabled = false;
+      }
     });
 
     window.addEventListener('resize', () => {

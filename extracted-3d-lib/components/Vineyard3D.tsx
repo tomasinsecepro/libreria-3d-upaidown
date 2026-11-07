@@ -38,12 +38,6 @@ export function Vineyard3D({
   return (
     <group ref={groupRef} position={position} rotation={rotation} scale={scale}>
       <Suspense fallback={null}>
-        {/* Suelo de viñedo albariza / arcillo-arenoso con surcos */}
-        <mesh position={[0, -0.05, 0]} receiveShadow>
-          <boxGeometry args={[vinesPerRow * vineSpacing + 4, 0.1, rows * rowSpacing + 3]} />
-          <meshStandardMaterial color="#6e5c46" roughness={0.95} />
-        </mesh>
-
         {Array.from({ length: rows }).map((_, rIdx) => {
           const rowZ = (rIdx - (rows - 1) / 2) * rowSpacing;
 

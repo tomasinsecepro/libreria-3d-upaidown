@@ -22,5 +22,7 @@ export * from './components/TorreMediaTension3D';
 export * from './components/Liebre3D';
 export * from './components/GalgoEspanol3D';
 export * from './components/TanqueAustraliano3D';
+export * from './components/GrupoElectrogeno3D';
+export * from './components/NaveHormigon3D';
 
 

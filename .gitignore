@@ -28,3 +28,10 @@ tmp/
 .idea/
 .vscode/
 *.swp
+recent-files.json
+*-info.json
+*-nodes.json
+children-details.json
+mesh-positions.json
+all-nodes-detail.json
+
