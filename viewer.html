@@ -348,7 +348,7 @@
 
   <!-- Filtro por categorías -->
   <div class="category-bar">
-    <button class="cat-btn active" data-cat="all">🌟 Todos (32)</button>
+    <button class="cat-btn active" data-cat="all">🌟 Todos (34)</button>
     <button class="cat-btn" data-cat="solar">☀️ Fotovoltaica & MT</button>
     <button class="cat-btn" data-cat="crops">🌿 Cultivos</button>
     <button class="cat-btn" data-cat="hydro">💧 Hidráulica & Riego</button>
@@ -447,6 +447,32 @@
         reactComp: '<IngeteamInverter3D position={[0,0,0]} scale={1} />',
         type: 'procedural',
         builder: buildIngeteamInverter
+      },
+      {
+        id: 'cuadro-insece-60x80',
+        name: 'Cuadro INSECE 60×80cm',
+        category: 'solar',
+        icon: '⚡',
+        title: 'Cuadro de Control y Bombeo Solar Directo INSECE (60×80×25 cm)',
+        desc: 'Armario metálico industrial de distribución y control para bombeo solar fotovoltaico de 600x800x250 mm en chapa de acero pintada en RAL 7035 sin fondo para integración limpia. Puerta frontal con cerraduras de doble paletón, vinilo serigrafiado oficial INSECE de alta definición con ilustración de bombeo solar (pozo, placas y sol), selector rotativo central I-0-II, rejillas laterales con filtros de ventilación IP54 y prensaestopas inferiores.',
+        tags: ['DIMENSIONES: 60 x 80 x 25 cm', 'PROTECCIÓN: IP54/IP65', 'MARCA: INSECE', 'APLICACIÓN: BOMBEO_SOLAR_DIRECTO', 'PINTURA: RAL_7035', 'ACCIONAMIENTO: SELECTOR_ROTATIVO'],
+        reactComp: '<CuadroInsece3D hasHmi={false} width={0.60} height={0.80} />',
+        type: 'procedural',
+        file: 'cuadro-insece-60x80.glb',
+        builder: (T) => buildInseceCabinetProcedural(T, false)
+      },
+      {
+        id: 'cuadro-insece-hmi-60x80',
+        name: 'Cuadro INSECE HMI 60×80cm',
+        category: 'solar',
+        icon: '🖥️',
+        title: 'Cuadro de Bombeo Solar INSECE 60×80cm con Pantalla Táctil HMI',
+        desc: 'Cuadro industrial de bombeo solar con pantalla táctil HMI industrial de alta resolución y antena de telemetría 4G/SCADA. Interfaz gráfica interactiva con parámetros de potencia FV (kW), frecuencia de variador (Hz), caudal (m³/h), presión (bar) y nivel de pozo, vinilo serigrafiado INSECE, selector de mando inferior y ventilación forzada.',
+        tags: ['DIMENSIONES: 60 x 80 x 25 cm', 'PANTALLA: HMI_TÁCTIL_COLOR', 'TELEMETRÍA: ANTENA_4G_SCADA', 'MONITORIZACIÓN: kW_Hz_m3h_bar', 'MARCA: INSECE', 'FONDO: AISLADO_3D'],
+        reactComp: '<CuadroInsece3D hasHmi={true} hmiActive={true} width={0.60} height={0.80} />',
+        type: 'procedural',
+        file: 'cuadro-insece-hmi-60x80.glb',
+        builder: (T) => buildInseceCabinetProcedural(T, true)
       },
       {
         id: 'torre-cti-transformador',
@@ -958,6 +984,445 @@
         const fx = mainX - finW / 2 + f * (finW / 27);
         m(new T.BoxGeometry(0.004, finH, rearSinkD), chassisMat, [fx, centerY, originZ - mainChassisD / 2 - rearSinkD / 2]);
       }
+
+      return root;
+    }
+
+    // =========================================================================
+    // CUADRO INDUSTRIAL INSECE 60x80 cm (ESTÁNDAR O CON PANTALLA HMI)
+    // =========================================================================
+    function buildInseceCabinetProcedural(T, hasHmi = false) {
+      const root = new T.Group();
+      root.name = hasHmi ? 'Cuadro_INSECE_HMI_60x80' : 'Cuadro_INSECE_Estandar_60x80';
+
+      const width = 0.60;
+      const height = 0.80;
+      const depth = 0.25;
+      const halfW = width / 2;
+      const halfH = height / 2;
+      const doorThickness = 0.022;
+
+      // 1. Chapa de acero RAL 7035
+      const cvMetal = document.createElement('canvas');
+      cvMetal.width = 256;
+      cvMetal.height = 256;
+      const ctxM = cvMetal.getContext('2d');
+      if (ctxM) {
+        ctxM.fillStyle = '#c8ced4';
+        ctxM.fillRect(0, 0, 256, 256);
+        for (let i = 0; i < 2500; i++) {
+          const x = Math.random() * 256;
+          const y = Math.random() * 256;
+          const v = Math.random() * 16 - 8;
+          ctxM.fillStyle = `rgba(${200 + v}, ${206 + v}, ${212 + v}, 0.25)`;
+          ctxM.fillRect(x, y, 1.5, 1.5);
+        }
+      }
+      const metalTex = new T.CanvasTexture(cvMetal);
+      metalTex.wrapS = T.RepeatWrapping;
+      metalTex.wrapT = T.RepeatWrapping;
+
+      const ral7035Mat = new T.MeshStandardMaterial({
+        color: 0xc8ced4,
+        map: metalTex,
+        roughness: 0.42,
+        metalness: 0.18,
+      });
+
+      const lockMat = new T.MeshStandardMaterial({
+        color: 0x24282c,
+        roughness: 0.35,
+        metalness: 0.8,
+      });
+
+      const switchBlackMat = new T.MeshStandardMaterial({
+        color: 0x111315,
+        roughness: 0.3,
+        metalness: 0.1,
+      });
+
+      const glandMat = new T.MeshStandardMaterial({
+        color: 0x1a1d20,
+        roughness: 0.45,
+        metalness: 0.2,
+      });
+
+      const bracketMat = new T.MeshStandardMaterial({
+        color: 0xd0d5db,
+        metalness: 0.85,
+        roughness: 0.25,
+      });
+
+      // 2. Rejilla lateral louver
+      const cvGrill = document.createElement('canvas');
+      cvGrill.width = 128;
+      cvGrill.height = 256;
+      const ctxG = cvGrill.getContext('2d');
+      if (ctxG) {
+        ctxG.fillStyle = '#c0c6cc';
+        ctxG.fillRect(0, 0, 128, 256);
+        ctxG.strokeStyle = '#9aa1a8';
+        ctxG.lineWidth = 4;
+        ctxG.strokeRect(4, 4, 120, 248);
+        for (let y = 20; y < 240; y += 12) {
+          ctxG.fillStyle = '#2b3035';
+          ctxG.fillRect(14, y, 100, 5);
+          ctxG.fillStyle = '#e2e7ec';
+          ctxG.fillRect(14, y + 5, 100, 2);
+        }
+      }
+      const ventGrillMat = new T.MeshStandardMaterial({
+        map: new T.CanvasTexture(cvGrill),
+        roughness: 0.5,
+        metalness: 0.15,
+      });
+
+      // 3. Vinilo serigrafiado frontal INSECE
+      const cvV = document.createElement('canvas');
+      cvV.width = 512;
+      cvV.height = 680;
+      const ctxV = cvV.getContext('2d');
+      if (ctxV) {
+        const skyGrad = ctxV.createLinearGradient(0, 0, 0, 480);
+        skyGrad.addColorStop(0, '#1c7ed6');
+        skyGrad.addColorStop(0.35, '#4dabf7');
+        skyGrad.addColorStop(0.7, '#a5d8ff');
+        skyGrad.addColorStop(1, '#e7f5ff');
+        ctxV.fillStyle = skyGrad;
+        ctxV.fillRect(0, 0, 512, 680);
+
+        const sunGrad = ctxV.createRadialGradient(256, 260, 5, 256, 260, 120);
+        sunGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+        sunGrad.addColorStop(0.3, 'rgba(255, 243, 191, 0.65)');
+        sunGrad.addColorStop(0.7, 'rgba(255, 230, 120, 0.25)');
+        sunGrad.addColorStop(1, 'transparent');
+        ctxV.fillStyle = sunGrad;
+        ctxV.beginPath();
+        ctxV.arc(256, 260, 120, 0, Math.PI * 2);
+        ctxV.fill();
+
+        ctxV.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ctxV.beginPath();
+        ctxV.arc(100, 140, 55, 0, Math.PI * 2);
+        ctxV.arc(145, 130, 45, 0, Math.PI * 2);
+        ctxV.arc(380, 150, 60, 0, Math.PI * 2);
+        ctxV.arc(430, 140, 50, 0, Math.PI * 2);
+        ctxV.fill();
+
+        ctxV.fillStyle = '#0f2b5c';
+        ctxV.beginPath();
+        ctxV.moveTo(330, 310);
+        ctxV.lineTo(512, 280);
+        ctxV.lineTo(512, 530);
+        ctxV.lineTo(310, 480);
+        ctxV.closePath();
+        ctxV.fill();
+
+        ctxV.strokeStyle = '#4dabf7';
+        ctxV.lineWidth = 1.5;
+        for (let i = 0; i <= 6; i++) {
+          const u = i / 6;
+          ctxV.beginPath();
+          ctxV.moveTo(330 + u * (512 - 330), 310 + u * (280 - 310));
+          ctxV.lineTo(310 + u * (512 - 310), 480 + u * (530 - 480));
+          ctxV.stroke();
+        }
+
+        ctxV.fillStyle = '#adb5bd';
+        ctxV.fillRect(70, 310, 18, 170);
+        ctxV.fillStyle = '#343a40';
+        ctxV.fillRect(68, 305, 22, 10);
+
+        const waterGrad = ctxV.createRadialGradient(85, 300, 5, 110, 290, 80);
+        waterGrad.addColorStop(0, 'rgba(255, 255, 255, 0.85)');
+        waterGrad.addColorStop(0.5, 'rgba(77, 171, 247, 0.6)');
+        waterGrad.addColorStop(1, 'transparent');
+        ctxV.fillStyle = waterGrad;
+        ctxV.beginPath();
+        ctxV.arc(110, 290, 75, 0, Math.PI * 2);
+        ctxV.fill();
+
+        ctxV.fillStyle = '#5c940d';
+        ctxV.fillRect(0, 460, 512, 100);
+
+        ctxV.fillStyle = '#ffffff';
+        ctxV.fillRect(0, 520, 512, 160);
+
+        // Logo INSECE
+        const centerX = 165;
+        const centerY = 565;
+        for (let b = 0; b < 10; b++) {
+          const angle = (b / 10) * Math.PI * 2;
+          ctxV.fillStyle = b % 2 === 0 ? '#00c3ff' : '#00488f';
+          ctxV.beginPath();
+          ctxV.moveTo(centerX, centerY);
+          ctxV.arc(centerX, centerY, 22, angle, angle + 0.35);
+          ctxV.closePath();
+          ctxV.fill();
+        }
+        ctxV.fillStyle = '#ffffff';
+        ctxV.beginPath();
+        ctxV.arc(centerX, centerY, 8, 0, Math.PI * 2);
+        ctxV.fill();
+
+        ctxV.fillStyle = '#0a3678';
+        ctxV.font = '900 42px Arial, sans-serif';
+        ctxV.fillText('INSECE', 198, 580);
+        ctxV.fillStyle = '#495057';
+        ctxV.font = 'bold 11px Arial, sans-serif';
+        ctxV.fillText('ELECTRICIDAD E INNOVACIÓN', 198, 596);
+
+        ctxV.fillStyle = 'rgba(255, 255, 255, 0.92)';
+        ctxV.strokeStyle = '#ced4da';
+        ctxV.lineWidth = 1;
+        ctxV.beginPath();
+        ctxV.roundRect(140, 240, 232, 54, 6);
+        ctxV.fill();
+        ctxV.stroke();
+        ctxV.fillStyle = '#0a3678';
+        ctxV.font = 'bold 12px Arial, sans-serif';
+        ctxV.textAlign = 'center';
+        ctxV.fillText('www.insece.es · ASISTENCIA TÉCNICA 24H', 256, 260);
+        ctxV.font = 'bold 15px monospace';
+        ctxV.fillStyle = '#1c7ed6';
+        ctxV.fillText('967 110 500 · 665 10 22 75', 256, 282);
+        ctxV.textAlign = 'left';
+
+        ctxV.fillStyle = '#181b1e';
+        ctxV.fillRect(0, 630, 512, 50);
+
+        ctxV.fillStyle = '#fab005';
+        ctxV.beginPath();
+        ctxV.moveTo(40, 665);
+        ctxV.lineTo(55, 638);
+        ctxV.lineTo(70, 665);
+        ctxV.closePath();
+        ctxV.fill();
+        ctxV.fillStyle = '#000';
+        ctxV.font = 'bold 16px Arial';
+        ctxV.fillText('⚡', 47, 661);
+
+        ctxV.fillStyle = '#e9ecef';
+        ctxV.font = 'bold 11px Arial';
+        ctxV.fillText('ATENCIÓN: RIESGO ELÉCTRICO 400V - USO EXCLUSIVO PERSONAL AUTORIZADO', 85, 655);
+
+        ctxV.strokeStyle = '#181b1e';
+        ctxV.lineWidth = 6;
+        ctxV.strokeRect(3, 3, 506, 674);
+      }
+      const vinylMat = new T.MeshStandardMaterial({
+        map: new T.CanvasTexture(cvV),
+        roughness: 0.28,
+        metalness: 0.08,
+      });
+
+      // 4. Pantalla HMI Industrial
+      const cvHmi = document.createElement('canvas');
+      cvHmi.width = 512;
+      cvHmi.height = 320;
+      const ctxH = cvHmi.getContext('2d');
+      if (ctxH) {
+        ctxH.fillStyle = '#111822';
+        ctxH.fillRect(0, 0, 512, 320);
+
+        ctxH.fillStyle = '#1a2332';
+        ctxH.fillRect(0, 0, 512, 38);
+        ctxH.fillStyle = '#00c3ff';
+        ctxH.font = 'bold 14px Arial';
+        ctxH.fillText('INSECE SOLAR CONTROL SCADA', 16, 25);
+        ctxH.fillStyle = '#51cf66';
+        ctxH.fillText('● MPPT RUNNING', 370, 25);
+
+        const drawMetric = (x, y, w, h, title, val, unit) => {
+          ctxH.fillStyle = '#182230';
+          ctxH.fillRect(x, y, w, h);
+          ctxH.strokeStyle = '#2b3a4e';
+          ctxH.strokeRect(x, y, w, h);
+          ctxH.fillStyle = '#8ca0b8';
+          ctxH.font = '11px Arial';
+          ctxH.fillText(title, x + 10, y + 20);
+          ctxH.fillStyle = '#ffffff';
+          ctxH.font = 'bold 24px monospace';
+          ctxH.fillText(val, x + 10, y + 54);
+          ctxH.fillStyle = '#00c3ff';
+          ctxH.font = 'bold 12px Arial';
+          ctxH.fillText(unit, x + w - 42, y + 54);
+        };
+
+        drawMetric(16, 52, 150, 72, 'POTENCIA SOLAR', '18.4', 'kW');
+        drawMetric(180, 52, 150, 72, 'FRECUENCIA BOMBA', '48.5', 'Hz');
+        drawMetric(344, 52, 150, 72, 'CAUDAL MEDIDO', '42.0', 'm³/h');
+
+        drawMetric(16, 136, 150, 72, 'PRESIÓN RED', '5.4', 'bar');
+        drawMetric(180, 136, 150, 72, 'NIVEL FREÁTICO', '-38.2', 'm');
+        drawMetric(344, 136, 150, 72, 'IRRADIANCIA', '985', 'W/m²');
+
+        ctxH.fillStyle = '#1a2332';
+        ctxH.fillRect(0, 276, 512, 44);
+        ['INICIO', 'PARÁMETROS', 'CURVAS', 'ALARMAS'].forEach((btn, idx) => {
+          ctxH.fillStyle = idx === 0 ? '#0077cc' : '#232d3d';
+          ctxH.fillRect(16 + idx * 122, 282, 114, 32);
+          ctxH.fillStyle = '#ffffff';
+          ctxH.font = 'bold 11px Arial';
+          ctxH.textAlign = 'center';
+          ctxH.fillText(btn, 16 + idx * 122 + 57, 302);
+        });
+        ctxH.textAlign = 'left';
+
+        ctxH.strokeStyle = '#fab005';
+        ctxH.lineWidth = 2;
+        ctxH.beginPath();
+        ctxH.moveTo(16, 255);
+        ctxH.quadraticCurveTo(150, 220, 256, 218);
+        ctxH.quadraticCurveTo(380, 222, 496, 255);
+        ctxH.stroke();
+      }
+      const hmiScreenMat = new T.MeshStandardMaterial({
+        map: new T.CanvasTexture(cvHmi),
+        roughness: 0.12,
+        metalness: 0.1,
+      });
+
+      const hmiBezelMat = new T.MeshStandardMaterial({
+        color: 0x2b3036,
+        roughness: 0.38,
+        metalness: 0.7,
+      });
+
+      // 1. Cuerpo del armario
+      const body = new T.Mesh(new T.BoxGeometry(width, height, depth), ral7035Mat);
+      body.position.set(0, halfH, -depth / 2);
+      body.castShadow = true;
+      body.receiveShadow = true;
+      root.add(body);
+
+      // Rejillas de ventilación laterales
+      const grillR = new T.Mesh(new T.PlaneGeometry(0.13, 0.22), ventGrillMat);
+      grillR.position.set(halfW + 0.001, halfH * 0.45, -depth / 2);
+      grillR.rotation.y = Math.PI / 2;
+      root.add(grillR);
+
+      const grillL = new T.Mesh(new T.PlaneGeometry(0.13, 0.22), ventGrillMat);
+      grillL.position.set(-halfW - 0.001, halfH * 0.45, -depth / 2);
+      grillL.rotation.y = -Math.PI / 2;
+      root.add(grillL);
+
+      // Prensaestopas en base
+      [-0.14, 0, 0.14].forEach((gx) => {
+        const glandG = new T.Group();
+        glandG.position.set(gx, -0.015, -depth / 2);
+
+        const gBody = new T.Mesh(new T.CylinderGeometry(0.016, 0.016, 0.03, 16), glandMat);
+        gBody.castShadow = true;
+        glandG.add(gBody);
+
+        const gNut = new T.Mesh(new T.CylinderGeometry(0.022, 0.022, 0.008, 6), glandMat);
+        gNut.position.y = -0.018;
+        glandG.add(gNut);
+
+        root.add(glandG);
+      });
+
+      // Patas de fijación mural posteriores
+      [
+        [-halfW - 0.018, height - 0.04],
+        [halfW + 0.018, height - 0.04],
+        [-halfW - 0.018, 0.04],
+        [halfW + 0.018, 0.04],
+      ].forEach(([bx, by]) => {
+        const brk = new T.Mesh(new T.BoxGeometry(0.036, 0.06, 0.008), bracketMat);
+        brk.position.set(bx, by, -depth - 0.005);
+        root.add(brk);
+      });
+
+      // Antena si tiene HMI
+      if (hasHmi) {
+        const antG = new T.Group();
+        antG.position.set(halfW - 0.08, height + 0.002, -depth / 2);
+
+        const sma = new T.Mesh(new T.CylinderGeometry(0.009, 0.009, 0.02, 12), bracketMat);
+        sma.position.y = 0.01;
+        antG.add(sma);
+
+        const rod = new T.Mesh(new T.CylinderGeometry(0.006, 0.008, 0.18, 12), switchBlackMat);
+        rod.position.y = 0.10;
+        rod.castShadow = true;
+        antG.add(rod);
+
+        const tip = new T.Mesh(new T.SphereGeometry(0.006, 8, 8), switchBlackMat);
+        tip.position.y = 0.19;
+        antG.add(tip);
+
+        root.add(antG);
+      }
+
+      // 2. Puerta frontal
+      const doorG = new T.Group();
+      doorG.position.set(0, halfH, doorThickness / 2);
+
+      const doorMesh = new T.Mesh(new T.BoxGeometry(width, height, doorThickness), ral7035Mat);
+      doorMesh.castShadow = true;
+      doorMesh.receiveShadow = true;
+      doorG.add(doorMesh);
+
+      // Cierres de doble barra
+      [height * 0.25, -height * 0.25].forEach((ly) => {
+        const lk = new T.Mesh(new T.CylinderGeometry(0.015, 0.015, 0.006, 24), lockMat);
+        lk.position.set(-halfW + 0.04, ly, doorThickness / 2 + 0.002);
+        lk.rotation.x = Math.PI / 2;
+        doorG.add(lk);
+      });
+
+      // Vinilo serigrafiado
+      const vinylMesh = new T.Mesh(new T.PlaneGeometry(width * 0.76, height * 0.78), vinylMat);
+      vinylMesh.position.set(0.015, -0.01, doorThickness / 2 + 0.001);
+      doorG.add(vinylMesh);
+
+      if (hasHmi) {
+        // Pantalla HMI
+        const hmiG = new T.Group();
+        hmiG.position.set(0.015, 0.14, doorThickness / 2 + 0.008);
+
+        const bezel = new T.Mesh(new T.BoxGeometry(0.26, 0.17, 0.014), hmiBezelMat);
+        bezel.castShadow = true;
+        hmiG.add(bezel);
+
+        const screen = new T.Mesh(new T.PlaneGeometry(0.23, 0.14), hmiScreenMat);
+        screen.position.z = 0.008;
+        hmiG.add(screen);
+
+        doorG.add(hmiG);
+
+        // Selector rotativo
+        const swG = new T.Group();
+        swG.position.set(0.015, -0.165, doorThickness / 2 + 0.004);
+
+        const swBase = new T.Mesh(new T.CylinderGeometry(0.024, 0.024, 0.006, 24), switchBlackMat);
+        swBase.rotation.x = Math.PI / 2;
+        swG.add(swBase);
+
+        const swHandle = new T.Mesh(new T.BoxGeometry(0.012, 0.038, 0.022), switchBlackMat);
+        swHandle.position.z = 0.014;
+        swG.add(swHandle);
+
+        doorG.add(swG);
+      } else {
+        // Selector rotativo central
+        const swG = new T.Group();
+        swG.position.set(0.015, -0.08, doorThickness / 2 + 0.004);
+
+        const swBase = new T.Mesh(new T.CylinderGeometry(0.026, 0.026, 0.006, 24), switchBlackMat);
+        swBase.rotation.x = Math.PI / 2;
+        swG.add(swBase);
+
+        const swHandle = new T.Mesh(new T.BoxGeometry(0.014, 0.042, 0.022), switchBlackMat);
+        swHandle.position.z = 0.014;
+        swG.add(swHandle);
+
+        doorG.add(swG);
+      }
+
+      root.add(doorG);
 
       return root;
     }
@@ -3128,34 +3593,47 @@
       root.name = 'Cenador_Madera_Rustico_6m';
 
       const diameter = 6.0;
-      const height = 3.75;
       const radius = diameter / 2; // 3.0 m
-      const eavesHeight = 2.35;
-      const roofHeight = height - eavesHeight; // 1.4 m
-      const roofOverhang = 0.38;
-      const roofRadius = radius + roofOverhang; // 3.38 m
-      const railHeight = 1.08;
+      const eavesHeight = 2.25;
+      const height = 3.65;
+      const roofHeight = height - eavesHeight; // 1.40 m
+      const roofRadius = radius + 0.45; // 3.45 m (vuelo generoso del alero)
+      const railHeight = 1.15;
       const numSides = 8;
 
-      // 1. Textura de madera rústica tratada (Postes, vigas y jabalcones)
+      // Función auxiliar matemática infalible para unir dos puntos 3D con vigas
+      function createBeam(pA, pB, rad, mat, isBox = false, bW = 0.08, bH = 0.08) {
+        const dir = new T.Vector3().subVectors(pB, pA);
+        const len = dir.length();
+        const mid = new T.Vector3().addVectors(pA, pB).multiplyScalar(0.5);
+        const geom = isBox ? new T.BoxGeometry(bW, len, bH) : new T.CylinderGeometry(rad, rad, len, 12);
+        const m = new T.Mesh(geom, mat);
+        m.position.copy(mid);
+        m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir.normalize());
+        m.castShadow = true;
+        m.receiveShadow = true;
+        return m;
+      }
+
+      // 1. Textura de madera rústica tratada
       const cvTimber = document.createElement('canvas');
       cvTimber.width = 512;
       cvTimber.height = 512;
       const ctxT = cvTimber.getContext('2d');
       if (ctxT) {
-        ctxT.fillStyle = '#3e2d1f';
+        ctxT.fillStyle = '#6e4c30';
         ctxT.fillRect(0, 0, 512, 512);
         for (let y = 0; y < 512; y += 2) {
-          const v = Math.sin(y * 0.08) * 15;
-          ctxT.fillStyle = `rgba(${50 + v}, ${35 + v * 0.7}, ${22 + v * 0.5}, ${0.15 + Math.random() * 0.25})`;
+          const v = Math.sin(y * 0.08) * 18;
+          ctxT.fillStyle = `rgba(${90 + v}, ${60 + v * 0.7}, ${38 + v * 0.5}, ${0.18 + Math.random() * 0.25})`;
           ctxT.fillRect(0, y, 512, 1 + Math.random() * 2);
         }
         for (let k = 0; k < 6; k++) {
           const kx = Math.random() * 512;
           const ky = Math.random() * 512;
           const grad = ctxT.createRadialGradient(kx, ky, 2, kx, ky, 25);
-          grad.addColorStop(0, '#1c130c');
-          grad.addColorStop(0.5, '#2e1f13');
+          grad.addColorStop(0, '#2b1c11');
+          grad.addColorStop(0.5, '#4a321e');
           grad.addColorStop(1, 'transparent');
           ctxT.fillStyle = grad;
           ctxT.beginPath();
@@ -3170,46 +3648,46 @@
 
       const timberMat = new T.MeshStandardMaterial({
         map: timberTex,
-        color: 0x4a3625,
-        roughness: 0.88,
+        color: 0x7a5537,
+        roughness: 0.76,
         metalness: 0.04,
       });
 
       const palisadeMat = new T.MeshStandardMaterial({
         map: timberTex,
-        color: 0x423020,
-        roughness: 0.92,
-        metalness: 0.03,
+        color: 0x6e4a2d,
+        roughness: 0.80,
+        metalness: 0.04,
       });
 
-      // 2. Textura hiperrealista de cubierta de brezo rústico oscuro (Heather Thatch)
+      // 2. Textura hiperrealista de cubierta de brezo rústico
       const cvRoof = document.createElement('canvas');
       cvRoof.width = 512;
       cvRoof.height = 512;
       const ctxR = cvRoof.getContext('2d');
       if (ctxR) {
-        ctxR.fillStyle = '#221c17';
+        ctxR.fillStyle = '#42362b';
         ctxR.fillRect(0, 0, 512, 512);
-        for (let i = 0; i < 3500; i++) {
+        for (let i = 0; i < 4000; i++) {
           const x = Math.random() * 512;
           const y = Math.random() * 512;
-          const len = 15 + Math.random() * 45;
-          const angle = Math.PI / 2 + (Math.random() - 0.5) * 0.45;
-          const colVal = Math.floor(45 + Math.random() * 65);
-          ctxR.strokeStyle = `rgba(${colVal + 15}, ${colVal + 5}, ${colVal - 10}, ${0.4 + Math.random() * 0.5})`;
+          const len = 12 + Math.random() * 40;
+          const angle = Math.PI / 2 + (Math.random() - 0.5) * 0.5;
+          const colVal = Math.floor(65 + Math.random() * 60);
+          ctxR.strokeStyle = `rgba(${colVal + 20}, ${colVal + 8}, ${colVal - 10}, ${0.35 + Math.random() * 0.45})`;
           ctxR.lineWidth = 1 + Math.random() * 2;
           ctxR.beginPath();
           ctxR.moveTo(x, y);
           ctxR.lineTo(x + Math.cos(angle) * len, y + Math.sin(angle) * len);
           ctxR.stroke();
         }
-        for (let j = 0; j < 650; j++) {
+        for (let j = 0; j < 900; j++) {
           const x = Math.random() * 512;
           const y = Math.random() * 512;
-          const len = 10 + Math.random() * 30;
+          const len = 12 + Math.random() * 32;
           const angle = Math.PI / 2 + (Math.random() - 0.5) * 0.7;
-          ctxR.strokeStyle = `rgba(${135 + Math.random() * 45}, ${115 + Math.random() * 35}, ${75 + Math.random() * 25}, 0.75)`;
-          ctxR.lineWidth = 1.2;
+          ctxR.strokeStyle = `rgba(${175 + Math.random() * 55}, ${145 + Math.random() * 45}, ${95 + Math.random() * 35}, 0.85)`;
+          ctxR.lineWidth = 1.3;
           ctxR.beginPath();
           ctxR.moveTo(x, y);
           ctxR.lineTo(x + Math.cos(angle) * len, y + Math.sin(angle) * len);
@@ -3219,277 +3697,181 @@
       const roofTex = new T.CanvasTexture(cvRoof);
       roofTex.wrapS = T.RepeatWrapping;
       roofTex.wrapT = T.RepeatWrapping;
-      roofTex.repeat.set(4, 3);
+      roofTex.repeat.set(4, 2);
 
       const heatherRoofMat = new T.MeshStandardMaterial({
         map: roofTex,
-        color: 0x322a22,
-        roughness: 0.96,
-        metalness: 0.02,
-      });
-
-      const roofUndersideMat = new T.MeshStandardMaterial({
-        map: timberTex,
-        color: 0x3d2b1c,
-        roughness: 0.85,
+        color: 0x58483b,
+        roughness: 0.78,
+        metalness: 0.04,
+        side: T.DoubleSide,
       });
 
       const metalBoltMat = new T.MeshStandardMaterial({
-        color: 0x1d1e20,
+        color: 0x24282c,
         metalness: 0.85,
         roughness: 0.4,
       });
 
       const benchMat = new T.MeshStandardMaterial({
         map: timberTex,
-        color: 0x5a412c,
-        roughness: 0.75,
+        color: 0x745033,
+        roughness: 0.72,
         metalness: 0.05,
       });
 
-      // Vértices del octógono
-      const vertices = [];
+      // Vértices del octógono base (pilares)
+      const postVertices = [];
       for (let i = 0; i < numSides; i++) {
-        const angle = (i / numSides) * Math.PI * 2;
-        vertices.push([Math.cos(angle) * radius, Math.sin(angle) * radius]);
+        const a = (i / numSides) * Math.PI * 2;
+        postVertices.push(new T.Vector3(Math.cos(a) * radius, 0, Math.sin(a) * radius));
       }
 
-      const roofEavesVertices = [];
+      // Vértices de los aleros de la cubierta
+      const roofEaveVertices = [];
       for (let i = 0; i < numSides; i++) {
-        const angle = (i / numSides) * Math.PI * 2;
-        roofEavesVertices.push([Math.cos(angle) * roofRadius, Math.sin(angle) * roofRadius]);
+        const a = (i / numSides) * Math.PI * 2;
+        roofEaveVertices.push(new T.Vector3(Math.cos(a) * roofRadius, eavesHeight, Math.sin(a) * roofRadius));
       }
 
-      // 1. Pilares / Columnas de madera
-      vertices.forEach(([px, pz], i) => {
-        const postGroup = new T.Group();
-        postGroup.position.set(px, eavesHeight / 2, pz);
+      // 1. Pilares / Columnas verticales
+      postVertices.forEach((pV) => {
+        const post = new T.Mesh(new T.CylinderGeometry(0.088, 0.095, eavesHeight, 20), timberMat);
+        post.position.set(pV.x, eavesHeight / 2, pV.z);
+        post.castShadow = true;
+        post.receiveShadow = true;
+        root.add(post);
 
-        const postMesh = new T.Mesh(new T.CylinderGeometry(0.085, 0.09, eavesHeight, 20), timberMat);
-        postMesh.castShadow = true;
-        postMesh.receiveShadow = true;
-        postGroup.add(postMesh);
-
-        const shoe = new T.Mesh(new T.CylinderGeometry(0.095, 0.10, 0.06, 16), metalBoltMat);
-        shoe.position.y = -eavesHeight / 2 + 0.03;
-        postGroup.add(shoe);
-
-        // Tornapuntas / Jabalcones a 45°
-        [-1, 1].forEach((dir) => {
-          const nextIdx = (i + dir + numSides) % numSides;
-          const [nx, nz] = vertices[nextIdx];
-          const dx = nx - px;
-          const dz = nz - pz;
-          const midAngle = Math.atan2(dz, dx);
-
-          const braceGroup = new T.Group();
-          braceGroup.position.set(0, eavesHeight / 2 - 0.35, 0);
-          braceGroup.rotation.y = -midAngle;
-
-          const brace = new T.Mesh(new T.BoxGeometry(0.52, 0.085, 0.08), timberMat);
-          brace.position.set(0.32, 0.18, 0);
-          brace.rotation.z = -Math.PI / 4;
-          brace.castShadow = true;
-          braceGroup.add(brace);
-
-          const pin = new T.Mesh(new T.CylinderGeometry(0.012, 0.012, 0.10, 8), metalBoltMat);
-          pin.position.set(0.12, 0.03, 0);
-          braceGroup.add(pin);
-
-          postGroup.add(braceGroup);
-        });
-
-        root.add(postGroup);
+        // Casquillo base metálico
+        const shoe = new T.Mesh(new T.CylinderGeometry(0.098, 0.105, 0.06, 16), metalBoltMat);
+        shoe.position.set(pV.x, 0.03, pV.z);
+        root.add(shoe);
       });
 
-      // 2. Vigas soleras perimetrales
-      vertices.forEach(([x1, z1], i) => {
+      // 2. Vigas soleras perimetrales superiores
+      for (let i = 0; i < numSides; i++) {
         const next = (i + 1) % numSides;
-        const [x2, z2] = vertices[next];
-        const mx = (x1 + x2) / 2;
-        const mz = (z1 + z2) / 2;
-        const length = Math.hypot(x2 - x1, z2 - z1);
-        const angle = Math.atan2(z2 - z1, x2 - x1);
+        const pA = new T.Vector3(postVertices[i].x, eavesHeight, postVertices[i].z);
+        const pB = new T.Vector3(postVertices[next].x, eavesHeight, postVertices[next].z);
+        root.add(createBeam(pA, pB, 0.075, timberMat));
+      }
 
-        const beamGroup = new T.Group();
-        beamGroup.position.set(mx, eavesHeight, mz);
-        beamGroup.rotation.y = -angle;
+      // 3. Tornapuntas / Jabalcones a 45° en cada pilar
+      for (let i = 0; i < numSides; i++) {
+        const next = (i + 1) % numSides;
+        const prev = (i - 1 + numSides) % numSides;
 
-        const beam = new T.Mesh(new T.CylinderGeometry(0.075, 0.075, length, 16), timberMat);
-        beam.rotation.z = Math.PI / 2;
-        beam.castShadow = true;
-        beam.receiveShadow = true;
-        beamGroup.add(beam);
+        const pTop = new T.Vector3(postVertices[i].x, eavesHeight, postVertices[i].z);
+        const pBraceOrigin = new T.Vector3(postVertices[i].x, eavesHeight - 0.60, postVertices[i].z);
 
-        root.add(beamGroup);
-      });
+        // Hacia adelante (next)
+        const pNextTop = new T.Vector3(postVertices[next].x, eavesHeight, postVertices[next].z);
+        const dirNext = new T.Vector3().subVectors(pNextTop, pTop).normalize();
+        const pNextTarget = new T.Vector3().addVectors(pTop, dirNext.clone().multiplyScalar(0.50));
+        root.add(createBeam(pBraceOrigin, pNextTarget, 0.042, timberMat, true, 0.08, 0.08));
 
-      // 3. Vallado perimetral de rollizos (con entrada en tramo 0)
-      vertices.forEach(([x1, z1], i) => {
-        if (i === 0) return; // Entrada despejada para entrar al cenador
+        // Hacia atrás (prev)
+        const pPrevTop = new T.Vector3(postVertices[prev].x, eavesHeight, postVertices[prev].z);
+        const dirPrev = new T.Vector3().subVectors(pPrevTop, pTop).normalize();
+        const pPrevTarget = new T.Vector3().addVectors(pTop, dirPrev.clone().multiplyScalar(0.50));
+        root.add(createBeam(pBraceOrigin, pPrevTarget, 0.042, timberMat, true, 0.08, 0.08));
+      }
+
+      // 4. Vallado perimetral de rollizos (entrada despejada en el tramo 0)
+      for (let i = 0; i < numSides; i++) {
+        if (i === 0) continue; // Entrada abierta para caminar dentro
 
         const next = (i + 1) % numSides;
-        const [x2, z2] = vertices[next];
-        const dx = x2 - x1;
-        const dz = z2 - z1;
-        const segmentLength = Math.hypot(dx, dz);
-        const segmentAngle = Math.atan2(dz, dx);
-        const numPickets = 22;
+        const p1 = postVertices[i];
+        const p2 = postVertices[next];
+        const segVec = new T.Vector3().subVectors(p2, p1);
+        const segLen = segVec.length();
+        const segDir = segVec.clone().normalize();
+        const numPickets = 20;
 
-        const palGroup = new T.Group();
-        palGroup.position.set(x1, 0, z1);
-        palGroup.rotation.y = -segmentAngle;
+        // Travesaños interiores de sujeción
+        const inOffset = new T.Vector3(-segDir.z, 0, segDir.x).multiplyScalar(0.06);
+        const r1A = new T.Vector3().addVectors(p1, inOffset).setY(0.32);
+        const r1B = new T.Vector3().addVectors(p2, inOffset).setY(0.32);
+        root.add(createBeam(r1A, r1B, 0.025, timberMat, true, 0.05, 0.04));
 
-        // Travesaños horizontales
-        const r1 = new T.Mesh(new T.BoxGeometry(segmentLength - 0.12, 0.05, 0.04), timberMat);
-        r1.position.set(segmentLength / 2, 0.28, -0.06);
-        r1.castShadow = true;
-        palGroup.add(r1);
-
-        const r2 = new T.Mesh(new T.BoxGeometry(segmentLength - 0.12, 0.05, 0.04), timberMat);
-        r2.position.set(segmentLength / 2, 0.88, -0.06);
-        r2.castShadow = true;
-        palGroup.add(r2);
+        const r2A = new T.Vector3().addVectors(p1, inOffset).setY(0.92);
+        const r2B = new T.Vector3().addVectors(p2, inOffset).setY(0.92);
+        root.add(createBeam(r2A, r2B, 0.025, timberMat, true, 0.05, 0.04));
 
         // Rollizos verticales
         for (let pIdx = 0; pIdx < numPickets; pIdx++) {
-          const u = (pIdx + 0.5) / numPickets;
-          const px = u * segmentLength;
+          const t = (pIdx + 0.5) / numPickets;
+          const pos = new T.Vector3().addVectors(p1, segDir.clone().multiplyScalar(t * segLen));
           const hVar = Math.sin(pIdx * 1.7 + i) * 0.025;
           const curH = railHeight + hVar;
-          const tilt = Math.cos(pIdx * 2.3) * 0.008;
 
-          const picketGroup = new T.Group();
-          picketGroup.position.set(px, curH / 2, 0);
-          picketGroup.rotation.z = tilt;
-
-          const picket = new T.Mesh(new T.CylinderGeometry(0.048, 0.05, curH, 14), palisadeMat);
+          // Poste cilíndrico
+          const picket = new T.Mesh(new T.CylinderGeometry(0.048, 0.052, curH, 14), palisadeMat);
+          picket.position.set(pos.x, curH / 2, pos.z);
           picket.castShadow = true;
           picket.receiveShadow = true;
-          picketGroup.add(picket);
+          root.add(picket);
 
+          // Remate redondeado
           const cap = new T.Mesh(new T.SphereGeometry(0.048, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), palisadeMat);
-          cap.position.y = curH / 2;
-          picketGroup.add(cap);
-
-          palGroup.add(picketGroup);
+          cap.position.set(pos.x, curH, pos.z);
+          root.add(cap);
         }
 
         // Banco corrido interior
-        const benchMesh = new T.Mesh(new T.BoxGeometry(segmentLength - 0.15, 0.04, 0.32), benchMat);
-        benchMesh.position.set(segmentLength / 2, 0.46, -0.22);
-        benchMesh.castShadow = true;
-        benchMesh.receiveShadow = true;
-        palGroup.add(benchMesh);
+        const bOffset = new T.Vector3(-segDir.z, 0, segDir.x).multiplyScalar(0.24);
+        const b1 = new T.Vector3().addVectors(p1, bOffset).setY(0.46);
+        const b2 = new T.Vector3().addVectors(p2, bOffset).setY(0.46);
+        root.add(createBeam(b1, b2, 0.03, benchMat, true, 0.30, 0.04));
 
-        [-segmentLength * 0.3, segmentLength * 0.3].forEach((sx) => {
-          const leg = new T.Mesh(new T.BoxGeometry(0.06, 0.38, 0.28), timberMat);
-          leg.position.set(sx, 0.26, -0.22);
-          palGroup.add(leg);
+        // Patas del banco
+        [0.28, 0.72].forEach((bt) => {
+          const legPos = new T.Vector3().addVectors(p1, segDir.clone().multiplyScalar(bt * segLen)).add(bOffset);
+          const leg = new T.Mesh(new T.BoxGeometry(0.07, 0.44, 0.25), timberMat);
+          leg.position.set(legPos.x, 0.22, legPos.z);
+          root.add(leg);
         });
-
-        root.add(palGroup);
-      });
-
-      // 4. Estructura de cubierta: Pendolón central
-      const kingPost = new T.Mesh(new T.CylinderGeometry(0.11, 0.12, roofHeight * 0.8, 8), timberMat);
-      kingPost.position.set(0, height - roofHeight * 0.45, 0);
-      kingPost.castShadow = true;
-      root.add(kingPost);
-
-      // 8 Limatesas
-      roofEavesVertices.forEach(([ex, ez]) => {
-        const yTop = height - 0.08;
-        const yBot = eavesHeight - 0.12;
-        const midX = ex / 2;
-        const midY = (yTop + yBot) / 2;
-        const midZ = ez / 2;
-        const len = Math.hypot(ex, yTop - yBot, ez);
-        const pitchAngle = Math.atan2(yTop - yBot, roofRadius);
-        const yawAngle = Math.atan2(ez, ex);
-
-        const rafterGroup = new T.Group();
-        rafterGroup.position.set(midX, midY, midZ);
-        rafterGroup.rotation.y = -yawAngle;
-
-        const rafter = new T.Mesh(new T.BoxGeometry(len, 0.10, 0.09), timberMat);
-        rafter.rotation.z = pitchAngle;
-        rafter.castShadow = true;
-        rafterGroup.add(rafter);
-
-        root.add(rafterGroup);
-      });
-
-      // Geometría del faldón de cubierta octogonal
-      const roofGeom = new T.BufferGeometry();
-      const pos = [];
-      const norm = [];
-      const uv = [];
-      const apex = [0, height, 0];
-
-      for (let i = 0; i < numSides; i++) {
-        const next = (i + 1) % numSides;
-        const [x1, z1] = roofEavesVertices[i];
-        const [x2, z2] = roofEavesVertices[next];
-        const yEaves = eavesHeight - 0.12;
-
-        pos.push(apex[0], apex[1], apex[2]);
-        pos.push(x1, yEaves, z1);
-        pos.push(x2, yEaves, z2);
-
-        const vA = new T.Vector3(x1 - apex[0], yEaves - apex[1], z1 - apex[2]);
-        const vB = new T.Vector3(x2 - apex[0], yEaves - apex[1], z2 - apex[2]);
-        const n = new T.Vector3().crossVectors(vA, vB).normalize();
-
-        norm.push(n.x, n.y, n.z);
-        norm.push(n.x, n.y, n.z);
-        norm.push(n.x, n.y, n.z);
-
-        uv.push(0.5, 1.0);
-        uv.push(0.0, 0.0);
-        uv.push(1.0, 0.0);
       }
 
-      roofGeom.setAttribute('position', new T.Float32BufferAttribute(pos, 3));
-      roofGeom.setAttribute('normal', new T.Float32BufferAttribute(norm, 3));
-      roofGeom.setAttribute('uv', new T.Float32BufferAttribute(uv, 2));
+      // 5. CUBIERTA OCTOGONAL HIPERREALISTA DE BREZO (CONE GEOMETRY PERFECTO)
+      const roofCone = new T.Mesh(
+        new T.ConeGeometry(roofRadius, roofHeight, numSides, 1, false),
+        heatherRoofMat
+      );
+      roofCone.position.set(0, eavesHeight + roofHeight / 2, 0);
+      roofCone.castShadow = true;
+      roofCone.receiveShadow = true;
+      root.add(roofCone);
 
-      const roofOuter = new T.Mesh(roofGeom, heatherRoofMat);
-      roofOuter.castShadow = true;
-      roofOuter.receiveShadow = true;
-      root.add(roofOuter);
+      // Fascia / remate perimetral de aleros (grueso de la cubierta)
+      for (let i = 0; i < numSides; i++) {
+        const next = (i + 1) % numSides;
+        root.add(createBeam(roofEaveVertices[i], roofEaveVertices[next], 0.045, timberMat));
+      }
 
-      const roofInner = new T.Mesh(roofGeom, roofUndersideMat);
-      root.add(roofInner);
+      // 8 Caballetes de limatesa en las aristas de la cubierta
+      const apexPt = new T.Vector3(0, height, 0);
+      for (let i = 0; i < numSides; i++) {
+        root.add(createBeam(apexPt, roofEaveVertices[i], 0.042, heatherRoofMat));
+      }
 
-      // Caballetes de limatesa protectores
-      roofEavesVertices.forEach(([ex, ez]) => {
-        const yTop = height;
-        const yBot = eavesHeight - 0.10;
-        const midX = ex / 2;
-        const midY = (yTop + yBot) / 2;
-        const midZ = ez / 2;
-        const len = Math.hypot(ex, yTop - yBot, ez);
-        const pitchAngle = Math.atan2(yTop - yBot, roofRadius);
-        const yawAngle = Math.atan2(ez, ex);
+      // Sombrerete cónico de cumbrera superior
+      const topCap = new T.Mesh(new T.ConeGeometry(0.38, 0.26, 16), heatherRoofMat);
+      topCap.position.set(0, height + 0.08, 0);
+      topCap.castShadow = true;
+      root.add(topCap);
 
-        const ridgeGroup = new T.Group();
-        ridgeGroup.position.set(midX, midY + 0.02, midZ);
-        ridgeGroup.rotation.y = -yawAngle;
+      // Estructura interior del techo (Bajo la cubierta, oculta desde fuera)
+      const kingPost = new T.Mesh(new T.CylinderGeometry(0.10, 0.11, 0.85, 8), timberMat);
+      kingPost.position.set(0, eavesHeight + 0.50, 0);
+      root.add(kingPost);
 
-        const ridge = new T.Mesh(new T.CylinderGeometry(0.038, 0.045, len, 8), heatherRoofMat);
-        ridge.rotation.z = pitchAngle;
-        ridge.castShadow = true;
-        ridgeGroup.add(ridge);
-
-        root.add(ridgeGroup);
-      });
-
-      // Caperuza cónica de cumbrera superior
-      const topCone = new T.Mesh(new T.ConeGeometry(0.32, 0.22, 16), heatherRoofMat);
-      topCone.position.set(0, height + 0.06, 0);
-      topCone.castShadow = true;
-      root.add(topCone);
+      const ceilingApex = new T.Vector3(0, eavesHeight + 0.80, 0);
+      for (let i = 0; i < numSides; i++) {
+        const pTop = new T.Vector3(postVertices[i].x, eavesHeight, postVertices[i].z);
+        root.add(createBeam(ceilingApex, pTop, 0.045, timberMat));
+      }
 
       return root;
     }
