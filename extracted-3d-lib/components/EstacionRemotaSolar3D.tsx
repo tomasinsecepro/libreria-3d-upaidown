@@ -465,41 +465,48 @@ export function EstacionRemotaSolar3D({
       {/* 4. SOPORTE ARTICULADO Y PLACA SOLAR EN CABEZA DE MÁSTIL             */}
       {/* =================================================================== */}
       <group position={[0.15, mastTopY, 0]}>
-        {/* Cruceta horizontal tubular soporte de perfiles */}
-        <mesh rotation={[0, 0, Math.PI / 2]} castShadow>
-          <cylinderGeometry args={[0.032, 0.032, 0.86, 18]} />
-          <primitive object={galvaMat} />
-        </mesh>
-        {/* Abrazadera de unión T entre mástil y cruceta */}
-        <mesh position={[0, -0.02, 0]} castShadow>
-          <boxGeometry args={[0.10, 0.08, 0.10]} />
-          <primitive object={galvaMat} />
-        </mesh>
+        {/* Conjunto articulado con ángulo de inclinación solar real hacia el cielo/sur (-tiltRad) */}
+        <group rotation={[-tiltRad, 0, 0]}>
+          {/* Cruceta horizontal tubular soporte de perfiles */}
+          <mesh rotation={[0, 0, Math.PI / 2]} castShadow>
+            <cylinderGeometry args={[0.032, 0.032, 0.86, 18]} />
+            <primitive object={galvaMat} />
+          </mesh>
+          {/* Abrazadera de unión T entre mástil y cruceta */}
+          <mesh position={[0, 0, -0.015]} castShadow>
+            <boxGeometry args={[0.10, 0.08, 0.09]} />
+            <primitive object={galvaMat} />
+          </mesh>
 
-        {/* Conjunto articulado con ángulo de inclinación solar (tilt) */}
-        <group rotation={[tiltRad, 0, 0]}>
-          {/* Dos perfiles Unistrut de aluminio soporte */}
+          {/* Dos perfiles Unistrut de fijación (TRAVESAÑOS) en la CARA TRASERA de la placa */}
           {[-0.34, 0.34].map((rx, idx) => (
-            <mesh key={`rail-${idx}`} position={[rx, 0, 0.04]} castShadow>
-              <boxGeometry args={[0.04, panelH + 0.16, 0.04]} />
-              <primitive object={aluMat} />
-            </mesh>
+            <React.Fragment key={`rail-group-${idx}`}>
+              <mesh position={[rx, 0, 0.038]} castShadow>
+                <boxGeometry args={[0.042, panelH + 0.18, 0.04]} />
+                <primitive object={aluMat} />
+              </mesh>
+              {/* Abrazadera U-bolt uniendo el perfil a la cruceta */}
+              <mesh position={[rx, 0, 0.005]}>
+                <cylinderGeometry args={[0.008, 0.008, 0.06, 8]} />
+                <primitive object={boltMat} />
+              </mesh>
+            </React.Fragment>
           ))}
 
-          {/* Marco exterior de aluminio de la placa solar */}
-          <group position={[0, 0, 0.075]}>
+          {/* Marco exterior de aluminio de la placa solar montado SOBRE (delante de) los travesaños */}
+          <group position={[0, 0, 0.076]}>
             <mesh castShadow receiveShadow>
               <boxGeometry args={[panelW, panelH, panelThick]} />
               <primitive object={aluMat} />
             </mesh>
 
-            {/* Cara frontal: células solares fotovoltaicas (orientadas hacia el sol) */}
+            {/* Cara frontal: células solares fotovoltaicas (orientadas hacia el sol y el cielo) */}
             <mesh position={[0, 0, panelThick / 2 + 0.001]} castShadow>
               <planeGeometry args={[panelW - 0.04, panelH - 0.04]} />
               <primitive object={solarCellMat} />
             </mesh>
 
-            {/* Cara trasera: lámina Tedlar blanca */}
+            {/* Cara trasera: lámina Tedlar blanca orientada hacia los travesaños */}
             <mesh position={[0, 0, -panelThick / 2 - 0.001]} rotation={[0, Math.PI, 0]}>
               <planeGeometry args={[panelW - 0.04, panelH - 0.04]} />
               <primitive object={solarBackMat} />

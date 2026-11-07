@@ -1824,47 +1824,65 @@
       const headG = new T.Group();
       headG.position.set(0, mastTopY, 0);
 
+      // Conjunto articulado con ángulo de inclinación solar real hacia el cielo/sur (-tiltRad)
+      const tiltedG = new T.Group();
+      tiltedG.rotation.x = -tiltRad; // Inclinación real hacia el cielo: parte superior hacia atrás, inferior hacia adelante
+
+      // Cruceta horizontal tubular galvanizada fijada en cabeza de mástil
       const crossbar = new T.Mesh(new T.CylinderGeometry(0.032, 0.032, 0.86, 18), galvaMat);
       crossbar.rotation.z = Math.PI / 2;
       crossbar.castShadow = true;
-      headG.add(crossbar);
+      tiltedG.add(crossbar);
 
-      const tClamp = new T.Mesh(new T.BoxGeometry(0.10, 0.08, 0.10), galvaMat);
-      tClamp.position.set(0, -0.02, 0);
-      headG.add(tClamp);
+      const tClamp = new T.Mesh(new T.BoxGeometry(0.10, 0.08, 0.09), galvaMat);
+      tClamp.position.set(0, 0, -0.015);
+      tiltedG.add(tClamp);
 
-      const tiltedG = new T.Group();
-      tiltedG.rotation.x = tiltRad;
-
+      // Dos perfiles Unistrut de fijación (TRAVESAÑOS) en la CARA TRASERA de la placa
       [-0.34, 0.34].forEach((rx) => {
-        const rail = new T.Mesh(new T.BoxGeometry(0.04, panelH + 0.16, 0.04), aluMat);
-        rail.position.set(rx, 0, 0.04);
+        const rail = new T.Mesh(new T.BoxGeometry(0.042, panelH + 0.18, 0.04), aluMat);
+        rail.position.set(rx, 0, 0.038);
         rail.castShadow = true;
         tiltedG.add(rail);
+
+        // Abrazaderas U-bolt fijando cada perfil a la cruceta
+        const uClip = new T.Mesh(new T.CylinderGeometry(0.008, 0.008, 0.06, 8), boltMat);
+        uClip.position.set(rx, 0, 0.005);
+        tiltedG.add(uClip);
       });
 
+      // Panel solar fotovoltaico montado SOBRE (delante de) los travesaños
       const pGroup = new T.Group();
-      pGroup.position.set(0, 0, 0.075);
+      pGroup.position.set(0, 0, 0.076);
 
+      // Marco de aluminio anodizado perimetral
       const pFrame = new T.Mesh(new T.BoxGeometry(panelW, panelH, panelThick), aluMat);
       pFrame.castShadow = true;
       pFrame.receiveShadow = true;
       pGroup.add(pFrame);
 
+      // CARA FRONTAL: Células fotovoltaicas orientadas hacia el sol y el cielo (+Z local)
       const pFront = new T.Mesh(new T.PlaneGeometry(panelW - 0.04, panelH - 0.04), solarCellMat);
       pFront.position.set(0, 0, panelThick / 2 + 0.001);
       pFront.castShadow = true;
       pGroup.add(pFront);
 
+      // CARA TRASERA: Lámina blanca Tedlar orientada hacia los travesaños (-Z local)
       const pBack = new T.Mesh(new T.PlaneGeometry(panelW - 0.04, panelH - 0.04), solarBackMat);
       pBack.position.set(0, 0, -panelThick / 2 - 0.001);
       pBack.rotation.y = Math.PI;
       pGroup.add(pBack);
 
+      // Caja de conexiones (Junction Box) en la cara trasera
       const jBox = new T.Mesh(new T.BoxGeometry(0.11, 0.09, 0.025), switchBlackMat);
       jBox.position.set(panelW * 0.28, panelH * 0.24, -panelThick / 2 - 0.015);
       jBox.castShadow = true;
       pGroup.add(jBox);
+
+      // Cableado solar saliendo de la caja de conexiones hacia el mástil
+      const sCable = new T.Mesh(new T.TorusGeometry(0.05, 0.006, 8, 16), corrugatedMat);
+      sCable.position.set(panelW * 0.28 - 0.04, panelH * 0.24 - 0.06, -panelThick / 2 - 0.01);
+      pGroup.add(sCable);
 
       tiltedG.add(pGroup);
       headG.add(tiltedG);

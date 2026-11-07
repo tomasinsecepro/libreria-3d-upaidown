@@ -215,7 +215,7 @@ const server = http.createServer((req, res) => {
         console.log('[GIT PUSH] Iniciando subida a GitHub...');
         execSync('git add -A', { cwd: __dirname });
         try {
-          execSync('git commit -m "feat: anadida estacion remota solar 3D sobre bloque hormigon con cuadro INSECE, cuadros 60x80 y cenador 6m"', { cwd: __dirname });
+          execSync('git commit -m "fix: corregida orientacion e inclinacion de placa solar y travesanos en estacion remota 3D"', { cwd: __dirname });
         } catch (e) {
           // Si no hay cambios que commitear, continúa con el push
         }
